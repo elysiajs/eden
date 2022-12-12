@@ -43,7 +43,7 @@
     "@sinclair/typebox": "^0.25.13",
     "@types/node": "^18.11.7",
     "bun-types": "^0.2.2",
-    "elysia": "../elysia",
+    "elysia": "^0.1.0-rc.4",
     "eslint": "^8.26.0",
     "rimraf": "^3.0.2",
     "typescript": "^4.8.4"
