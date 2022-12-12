@@ -1,0 +1,51 @@
+{
+  "name": "@elysiajs/eden",
+  "version": "0.1.0-rc.1",
+  "description": "Fully type-safe Elysia client",
+  "author": {
+    "name": "saltyAom",
+    "url": "https://github.com/SaltyAom",
+    "email": "saltyaom@gmail.com"
+  },
+  "main": "./dist/index.js",
+  "exports": {
+    "require": "./dist/cjs/index.js",
+    "import": "./dist/index.js",
+    "node": "./dist/index.js",
+    "default": "./dist/index.js"
+  },
+  "types": "./src/index.ts",
+  "keywords": [
+    "elysia",
+    "eden",
+    "connector"
+  ],
+  "homepage": "https://github.com/elysiajs/elysia-eden",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elysiajs/elysia-eden"
+  },
+  "bugs": "https://github.com/elysiajs/elysia-eden/issues",
+  "license": "MIT",
+  "scripts": {
+    "dev": "bun run --hot example/index.ts",
+    "test": "bun wiptest",
+    "build": "rimraf dist && npm run build:cjs && npm run build:esm",
+    "build:cjs": "tsc --project tsconfig.cjs.json",
+    "build:esm": "tsc --project tsconfig.esm.json",
+    "release": "npm run build && npm run test && npm publish --access public"
+  },
+  "peerDependencies": {
+    "elysia": ">= 0.1.0-rc.4"
+  },
+  "devDependencies": {
+    "@elysiajs/cors": "^0.1.0-rc.2",
+    "@sinclair/typebox": "^0.25.13",
+    "@types/node": "^18.11.7",
+    "bun-types": "^0.2.2",
+    "elysia": "../elysia",
+    "eslint": "^8.26.0",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.8.4"
+  }
+}
