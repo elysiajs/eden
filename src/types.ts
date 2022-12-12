@@ -36,7 +36,7 @@ export type CreateEden<
               ? 'index'
               : Path extends `:${infer params}`
               ? string
-              : Path]: Full extends keyof Server
+              : Path | CamelCase<Path>]: Full extends keyof Server
               ? {
                     [key in keyof Server[Full]]: keyof TypedRouteToParams<
                         Server[Full][key]
@@ -54,3 +54,11 @@ export type CreateEden<
                 }
               : never
       }
+
+// https://stackoverflow.com/questions/59623524/typescript-how-to-map-type-keys-to-camelcase
+type CamelCase<S extends string> =
+    S extends `${infer P1}-${infer P2}${infer P3}`
+        ? `${Lowercase<P1>}${Uppercase<P2>}${CamelCase<P3>}`
+        : Lowercase<S>
+
+type A = CamelCase<'sign-in'>

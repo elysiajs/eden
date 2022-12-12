@@ -23,6 +23,7 @@ const app = new Elysia()
         }
     })
     .get('/query', ({ query }) => query)
+    .get('/sign-in', ({ query }) => query)
     .listen(8080)
 
 const client = eden<typeof app>('http://localhost:8080')
@@ -47,6 +48,16 @@ describe('Eden', () => {
 
         expect(
             await client.query.GET({
+                $query: body
+            })
+        ).toEqual(body)
+    })
+
+    it('parse camel-case', async () => {
+        const body = { username: 'A', password: 'B' }
+
+        expect(
+            await client.signIn.GET({
                 $query: body
             })
         ).toEqual(body)

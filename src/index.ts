@@ -3,6 +3,9 @@ import type { HTTPMethod } from 'elysia'
 
 import { CreateEden, EdenCall, UnionToIntersection } from './types'
 
+const camelToDash = (str: string) =>
+    str.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
+
 const composePath = (
     domain: string,
     path: string,
@@ -10,7 +13,7 @@ const composePath = (
 ) => {
     if (!domain.endsWith('/')) domain += '/'
 
-    path = path.replace(/index/g, '')
+    path = camelToDash(path.replace(/index/g, ''))
     if (!query || !Object.keys(query).length) return `${domain}${path}`
 
     let q = ''
