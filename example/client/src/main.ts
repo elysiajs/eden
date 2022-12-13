@@ -9,13 +9,13 @@ app.textContent = `Loading`
 
 const client = eden<Server>('http://localhost:8080')
 
-client.products.nendoroid['123']
+client.products.nendoroid['1895']
     .PUT({
-        name: 'awd'
+        name: 'Skadi'
     })
     .then((result) => {
         app.textContent = `${result.id} ${result.name}`
     })
-    .catch(() => {
-        app.textContent = `Failed to load`
+    .catch((error) => {
+        app.textContent = error.message
     })

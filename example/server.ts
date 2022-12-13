@@ -5,6 +5,7 @@ const app = new Elysia()
     .use(cors())
     .get('/', () => 'Elysia')
     .post('/', () => 'Elysia')
+    .get('/sign-in', () => 'ok')
     .post('/products/nendoroid', ({ body }) => body, {
         schema: {
             body: t.Object({

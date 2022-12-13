@@ -52,7 +52,9 @@ const createProxy = (
                     ? JSON.stringify(body)
                     : undefined,
                 ...$fetch
-            }).then((res) => {
+            }).then(async (res) => {
+                if (res.status >= 300) throw new Error(await res.text())
+
                 if (res.headers.get('content-type') === 'application/json')
                     return res.json()
 

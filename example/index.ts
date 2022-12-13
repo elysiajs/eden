@@ -1,9 +1,15 @@
-import { eden } from '../src'
-import type { Server } from './server'
+import { join } from 'path'
 
-const app = eden<Server>('http://localhost:8080')
+Bun.spawn(['bun', 'server.ts'], {
+    stdout: 'pipe',
+    cwd: import.meta.dir
+})
 
-app.index.GET()
-    .then((result) => {
-        console.log(result)
-    })
+Bun.spawn(['npm', 'run', 'dev'], {
+    stdout: 'pipe',
+    cwd: join(import.meta.dir, 'client')
+})
+
+console.log(
+    'If things work properly, see http://localhost:5173'
+)
