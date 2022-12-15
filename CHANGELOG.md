@@ -1,3 +1,7 @@
+# 0.1.0-rc.5 - 16 Dec 2022
+Feature:
+- Using main entry as mjs
+
 # 0.1.0-rc.4 - 16 Dec 2022
 Feature:
 - Using `vite` for bundling

@@ -1,14 +1,13 @@
 {
   "name": "@elysiajs/eden",
-  "version": "0.1.0-rc.4",
+  "version": "0.1.0-rc.5",
   "description": "Fully type-safe Elysia client",
   "author": {
     "name": "saltyAom",
     "url": "https://github.com/SaltyAom",
     "email": "saltyaom@gmail.com"
   },
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "main": "./dist/index.mjs",
   "exports": {
     "require": "./dist/index.js",
     "import": "./dist/index.mjs",
