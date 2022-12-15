@@ -1,7 +1,7 @@
-import type { Elysia, SCHEMA } from 'elysia'
+import type { Elysia } from 'elysia'
 import type { HTTPMethod } from 'elysia'
 
-import { CreateEden, EdenCall, UnionToIntersection } from './types'
+import { CreateEden, Eden, EdenCall, UnionToIntersection } from './types'
 
 const camelToDash = (str: string) =>
     str.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
@@ -12,8 +12,8 @@ const composePath = (
     query: EdenCall['$query'] | undefined
 ) => {
     if (!domain.endsWith('/')) domain += '/'
-
     path = camelToDash(path.replace(/index/g, ''))
+
     if (!query || !Object.keys(query).length) return `${domain}${path}`
 
     let q = ''
@@ -63,14 +63,8 @@ const createProxy = (
         }
     }) as unknown as Record<string, unknown>
 
-export function eden<App extends Elysia<any>>(
-    domain: string
-): App['store'] extends {
-    [key in typeof SCHEMA]: any
-}
-    ? UnionToIntersection<CreateEden<App['store'][typeof SCHEMA]>>
-    : never {
-    return new Proxy(
+export const eden = <App extends Elysia<any>>(domain: string): Eden<App> =>
+    new Proxy(
         {},
         {
             get(target, key, value) {
@@ -78,4 +72,3 @@ export function eden<App extends Elysia<any>>(
             }
         }
     ) as any
-}

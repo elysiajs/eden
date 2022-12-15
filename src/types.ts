@@ -1,4 +1,11 @@
-import type { TypedRoute } from 'elysia'
+import type { Elysia, SCHEMA, TypedRoute } from 'elysia'
+
+export type Eden<App extends Elysia<any>> = App['store'] extends {
+    [key in typeof SCHEMA]: any
+}
+    ? UnionToIntersection<CreateEden<App['store'][typeof SCHEMA]>>
+    : never
+
 
 export interface EdenCall {
     [x: string]: any

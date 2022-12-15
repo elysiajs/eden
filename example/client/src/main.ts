@@ -5,12 +5,12 @@ import './style.css'
 
 // @ts-ignore
 const app = document.querySelector<HTMLDivElement>('#app')!
-app.textContent = `Loading`
 
 const client = eden<Server>('http://localhost:8080')
 
-client.products.nendoroid['1895']
-    .PUT({
+client.products.nendoroid
+    .POST({
+        id: 1895,
         name: 'Skadi'
     })
     .then((result) => {

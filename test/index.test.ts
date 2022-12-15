@@ -62,4 +62,14 @@ describe('Eden', () => {
             })
         ).toEqual(body)
     })
+
+    it('handle camel-case', async () => {
+        const body = { username: 'A', password: 'B' }
+
+        expect(
+            await client['sign-in'].GET({
+                $query: body
+            })
+        ).toEqual(body)
+    })
 })

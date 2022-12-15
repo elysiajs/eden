@@ -1,6 +1,6 @@
 {
   "name": "@elysiajs/eden",
-  "version": "0.1.0-rc.3",
+  "version": "0.1.0-rc.4",
   "description": "Fully type-safe Elysia client",
   "author": {
     "name": "saltyAom",
@@ -8,9 +8,10 @@
     "email": "saltyaom@gmail.com"
   },
   "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "exports": {
-    "require": "./dist/cjs/index.js",
-    "import": "./dist/index.js",
+    "require": "./dist/index.js",
+    "import": "./dist/index.mjs",
     "node": "./dist/index.js",
     "default": "./dist/index.js"
   },
@@ -30,9 +31,7 @@
   "scripts": {
     "dev": "bun run --hot example/index.ts",
     "test": "bun wiptest",
-    "build": "rimraf dist && npm run build:cjs && npm run build:esm",
-    "build:cjs": "tsc --project tsconfig.cjs.json",
-    "build:esm": "tsc --project tsconfig.esm.json",
+    "build": "vite build",
     "release": "npm run build && npm run test && npm publish --access public"
   },
   "peerDependencies": {
@@ -42,10 +41,12 @@
     "@elysiajs/cors": "^0.1.0-rc.3",
     "@sinclair/typebox": "^0.25.13",
     "@types/node": "^18.11.7",
-    "bun-types": "^0.2.2",
+    "bun-types": "^0.3.0",
     "elysia": "^0.1.0-rc.5",
     "eslint": "^8.26.0",
     "rimraf": "^3.0.2",
-    "typescript": "^4.8.4"
+    "typescript": "^4.8.4",
+    "vite": "^4.0.1",
+    "vite-plugin-dts": "^1.7.1"
   }
 }
