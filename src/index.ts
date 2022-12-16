@@ -58,7 +58,13 @@ const createProxy = (
                 if (res.headers.get('content-type') === 'application/json')
                     return res.json()
 
-                return res.text()
+                const result = await res.text()
+
+                if (!Number.isNaN(+result)) return +result
+                if (result === 'true') return true
+                if (result === 'false') return false
+
+                return result
             })
         }
     }) as unknown as Record<string, unknown>
