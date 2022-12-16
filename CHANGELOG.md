@@ -1,4 +1,4 @@
-# 0.1.0-rc.5 - 16 Dec 2022
+# 0.1.0-rc.6 - 16 Dec 2022
 Feature:
 - Auto convert number, boolean on client
 
