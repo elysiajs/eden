@@ -7,3 +7,9 @@ app.index.GET()
     .then((result) => {
         console.log(result)
     })
+
+    api.shelf.plushie.PUT({
+        name: 'Blåhaj',
+        quantity: '200'
+      })
+      

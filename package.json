@@ -1,6 +1,6 @@
 {
   "name": "@elysiajs/eden",
-  "version": "0.1.0-rc.6",
+  "version": "0.1.0",
   "description": "Fully type-safe Elysia client",
   "author": {
     "name": "saltyAom",
