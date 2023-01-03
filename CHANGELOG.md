@@ -1,3 +1,7 @@
+# 0.2.0-rc.0 - 3 Jan 2022
+Feature:
+- Experimental support for Web Socket
+
 # 0.1.0-rc.6 - 16 Dec 2022
 Feature:
 - Auto convert number, boolean on client

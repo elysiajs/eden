@@ -1,8 +1,8 @@
-import { Elysia, t } from 'elysia'
-import { cors } from '@elysiajs/cors'
+import { Elysia, t, type SCHEMA } from 'elysia'
+import { websocket } from '@elysiajs/websocket'
 
 const app = new Elysia()
-    .use(cors())
+    .use(websocket())
     .get('/', () => 'Elysia')
     .post('/', () => 'Elysia')
     .get('/sign-in', () => 'ok')
@@ -28,6 +28,17 @@ const app = new Elysia()
             }
         }
     )
+    .ws('/ws/mirror', {
+        schema: {
+            body: t.String(),
+            response: t.String()
+        },
+        message(ws, message) {
+            ws.send(message)
+        }
+    })
     .listen(8080)
 
 export type Server = typeof app
+
+type B = Server['store'][typeof SCHEMA]

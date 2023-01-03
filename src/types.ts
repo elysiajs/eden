@@ -1,11 +1,12 @@
 import type { Elysia, SCHEMA, TypedRoute } from 'elysia'
+import { TObject } from '@sinclair/typebox'
+import { EdenWS } from '.'
 
 export type Eden<App extends Elysia<any>> = App['store'] extends {
     [key in typeof SCHEMA]: any
 }
     ? UnionToIntersection<CreateEden<App['store'][typeof SCHEMA]>>
     : never
-
 
 export interface EdenCall {
     [x: string]: any
@@ -20,7 +21,13 @@ export type UnionToIntersection<U> = (
     : never
 
 type TypedRouteToParams<Route extends TypedRoute> =
-    (Route['body'] extends NonNullable<Route['body']> ? Route['body'] : {}) &
+    (Route['body'] extends NonNullable<Route['body']>
+        ? Route['body'] extends Record<any, any>
+            ? Route['body']
+            : {
+                  $body: Route['body']
+              }
+        : {}) &
         (Route['query'] extends NonNullable<Route['query']>
             ? {
                   $query: Route['query']
@@ -48,10 +55,34 @@ export type CreateEden<
                     [key in keyof Server[Full]]: keyof TypedRouteToParams<
                         Server[Full][key]
                     > extends never
-                        ? (params?: {
-                              $query?: EdenCall['$query']
-                              $fetch?: EdenCall['$fetch']
-                          }) => Promise<Server[Full][key]['response']>
+                        ? key extends 'subscribe'
+                            ? (
+                                  params?: Server[Full][key]['query'] extends NonNullable<
+                                      Server[Full][key]['query']
+                                  >
+                                      ? {
+                                            $query: Server[Full][key]['query']
+                                        }
+                                      : {
+                                            $query?: EdenCall['$query']
+                                        }
+                              ) => EdenWS<Server[Full][key]>
+                            : (params?: {
+                                  $query?: EdenCall['$query']
+                                  $fetch?: EdenCall['$fetch']
+                              }) => Promise<Server[Full][key]['response']>
+                        : key extends 'subscribe'
+                        ? (
+                              params?: Server[Full][key]['query'] extends NonNullable<
+                                  Server[Full][key]['query']
+                              >
+                                  ? {
+                                        $query: Server[Full][key]['query']
+                                    }
+                                  : {
+                                        $query?: EdenCall['$query']
+                                    }
+                          ) => EdenWS<Server[Full][key]>
                         : (
                               params: TypedRouteToParams<Server[Full][key]> & {
                                   $query?: EdenCall['$query']
@@ -68,4 +99,12 @@ type CamelCase<S extends string> =
         ? `${Lowercase<P1>}${Uppercase<P2>}${CamelCase<P3>}`
         : Lowercase<S>
 
-type A = CamelCase<'sign-in'>
+export interface EdenWSOnMessage<Data = unknown> extends MessageEvent {
+    data: Data
+    rawData: MessageEvent['data']
+}
+
+export type EdenWSEvent<
+    K extends keyof WebSocketEventMap,
+    Data = unknown
+> = K extends 'message' ? EdenWSOnMessage<Data> : WebSocketEventMap[K]

@@ -1,7 +1,107 @@
-import type { Elysia } from 'elysia'
+import type { Elysia, TypedSchema } from 'elysia'
 import type { HTTPMethod } from 'elysia'
 
-import { CreateEden, Eden, EdenCall, UnionToIntersection } from './types'
+import type {
+    CreateEden,
+    Eden,
+    EdenCall,
+    EdenWSEvent,
+    UnionToIntersection
+} from './types'
+
+export class EdenWS<Schema extends TypedSchema<any> = TypedSchema> {
+    ws: WebSocket
+    url: string
+
+    constructor(url: string) {
+        this.ws = new WebSocket(url)
+        this.url = url
+    }
+
+    send(data: Schema['body'] | Schema['body'][]) {
+        if (Array.isArray(data)) {
+            data.forEach((datum) => this.send(datum))
+
+            return this
+        }
+
+        this.ws.send(
+            typeof data === 'object' ? JSON.stringify(data) : data.toString()
+        )
+
+        return this
+    }
+
+    on<K extends keyof WebSocketEventMap>(
+        type: K,
+        listener: (event: EdenWSEvent<K, Schema['response']>) => void,
+        options?: boolean | AddEventListenerOptions
+    ) {
+        return this.addEventListener(type, listener, options)
+    }
+
+    off<K extends keyof WebSocketEventMap>(
+        type: K,
+        listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any,
+        options?: boolean | EventListenerOptions
+    ) {
+        this.ws.removeEventListener(type, listener, options)
+
+        return this
+    }
+
+    addEventListener<K extends keyof WebSocketEventMap>(
+        type: K,
+        listener: (event: EdenWSEvent<K, Schema['response']>) => void,
+        options?: boolean | AddEventListenerOptions
+    ) {
+        this.ws.addEventListener(
+            type,
+            (ws) => {
+                if (type === 'message') {
+                    let data = (ws as MessageEvent).data.toString() as any
+                    const start = data.charCodeAt(0)
+
+                    if (start === 47 || start === 123)
+                        try {
+                            data = JSON.parse(data)
+                        } catch {}
+                    else if (!Number.isNaN(+data)) data = +data
+                    else if (data === 'true') data = true
+                    else if (data === 'fase') data = false
+
+                    // @ts-ignore
+                    listener({
+                        ...ws,
+                        data
+                    })
+                } else {
+                    // @ts-ignore
+                    listener(ws)
+                }
+            },
+            options
+        )
+
+        return this
+    }
+
+    removeEventListener<K extends keyof WebSocketEventMap>(
+        type: K,
+        listener: (this: WebSocket, ev: WebSocketEventMap[K]) => any,
+        options?: boolean | EventListenerOptions
+    ) {
+        this.off(type, listener, options)
+
+        return this
+    }
+
+    close() {
+        this.ws.close()
+
+        return this
+    }
+}
 
 const camelToDash = (str: string) =>
     str.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
@@ -40,10 +140,15 @@ const createProxy = (
                 }
             ]: EdenCall[] = [{}]
         ) {
-            const i = path.lastIndexOf('/')
+            const i = path.lastIndexOf('/'),
+                method = path.slice(i + 1),
+                url = composePath(domain, path.slice(0, i), $query)
 
-            return fetch(composePath(domain, path.slice(0, i), $query), {
-                method: path.slice(i + 1),
+            if (method === 'subscribe')
+                return new EdenWS(url.replace(/^([^]+):\/\//, 'ws://'))
+
+            return fetch(url, {
+                method,
                 headers: {
                     'content-type': 'application/json',
                     ...$fetch?.['headers']
