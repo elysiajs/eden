@@ -33,13 +33,13 @@ import type { App } from './server'
 const client = eden<App>('http://localhost:8080')
 
 // return: Hi Elysia (fully type-safe)
-client.index.GET().then(console.log)
+client.index.get().then(console.log)
 
 // return: 1895
-client.id.1895.GET().then(console.log)
+client.id.1895.get().then(console.log)
 
 // return: { id: 1895, name: 'Skadi' }
-client.mirror.POST({
+client.mirror.post({
     id: 1895,
     name: 'Skadi'
 }).then(console.log)

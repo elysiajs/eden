@@ -1,5 +1,4 @@
-import type { Elysia, TypedSchema } from 'elysia'
-import type { HTTPMethod } from 'elysia'
+import type { Elysia, TypedSchema, HTTPMethod } from 'elysia'
 
 import type {
     CreateEden,
@@ -134,9 +133,10 @@ const createProxy = (
             target,
             _,
             [
-                { $query, $fetch, ...body } = {
+                { $query, $fetch, $body, ...bodyObj } = {
                     $fetch: undefined,
-                    $query: undefined
+                    $query: undefined,
+                    $body: undefined
                 }
             ]: EdenCall[] = [{}]
         ) {
@@ -147,15 +147,21 @@ const createProxy = (
             if (method === 'subscribe')
                 return new EdenWS(url.replace(/^([^]+):\/\//, 'ws://'))
 
+            const body =
+                $body ??
+                (Object.keys($body).length ? JSON.stringify($body) : undefined)
+
             return fetch(url, {
                 method,
+                body,
                 headers: {
-                    'content-type': 'application/json',
+                    'content-type':
+                        typeof body === 'object'
+                            ? 'application/json'
+                            : 'text/plain',
+                    'content-length': body.length,
                     ...$fetch?.['headers']
                 },
-                body: Object.keys(body).length
-                    ? JSON.stringify(body)
-                    : undefined,
                 ...$fetch
             }).then(async (res) => {
                 if (res.status >= 300) throw new Error(await res.text())

@@ -1,6 +1,8 @@
 import type { Elysia, SCHEMA, TypedRoute } from 'elysia'
+import type { IsPathParameter } from 'elysia/dist/types'
 import { TObject } from '@sinclair/typebox'
-import { EdenWS } from '.'
+
+import type { EdenWS } from '.'
 
 export type Eden<App extends Elysia<any>> = App['store'] extends {
     [key in typeof SCHEMA]: any
@@ -29,9 +31,11 @@ type TypedRouteToParams<Route extends TypedRoute> =
               }
         : {}) &
         (Route['query'] extends NonNullable<Route['query']>
-            ? {
-                  $query: Route['query']
-              }
+            ? unknown extends Route['query']
+                ? {}
+                : {
+                      $query: Route['query']
+                  }
             : {})
 
 export type CreateEden<
@@ -42,9 +46,13 @@ export type CreateEden<
 > = Path extends `/${infer Start}`
     ? CreateEden<Server, Start, Path>
     : Path extends `${infer A}/${infer B}`
-    ? {
-          [key in A]: CreateEden<Server, B, Full>
-      }
+    ? IsPathParameter<A> extends never
+        ? {
+              [key in A]: CreateEden<Server, B, Full>
+          }
+        : {
+              [x: string]: CreateEden<Server, B, Full>
+          }
     : {
           [key in Path extends ''
               ? 'index'
@@ -52,43 +60,61 @@ export type CreateEden<
               ? string
               : Path | CamelCase<Path>]: Full extends keyof Server
               ? {
-                    [key in keyof Server[Full]]: keyof TypedRouteToParams<
-                        Server[Full][key]
+                    [key in keyof Server[Full] extends string
+                        ? Lowercase<keyof Server[Full]>
+                        : keyof Server[Full]]: keyof TypedRouteToParams<
+                        Server[Full][key extends string ? Uppercase<key> : key]
                     > extends never
                         ? key extends 'subscribe'
-                            ? (
-                                  params?: Server[Full][key]['query'] extends NonNullable<
+                            ? unknown extends NonNullable<
+                                  Server[Full][key]['query']
+                              >
+                                ? (params?: {
+                                      $query?: EdenCall['$query']
+                                  }) => EdenWS<Server[Full][key]>
+                                : Server[Full][key]['query'] extends NonNullable<
                                       Server[Full][key]['query']
                                   >
-                                      ? {
-                                            $query: Server[Full][key]['query']
-                                        }
-                                      : {
-                                            $query?: EdenCall['$query']
-                                        }
-                              ) => EdenWS<Server[Full][key]>
+                                ? (params: {
+                                      $query: Server[Full][key]['query']
+                                  }) => EdenWS<Server[Full][key]>
+                                : (params?: {
+                                      $query?: EdenCall['$query']
+                                  }) => EdenWS<Server[Full][key]>
                             : (params?: {
                                   $query?: EdenCall['$query']
                                   $fetch?: EdenCall['$fetch']
                               }) => Promise<Server[Full][key]['response']>
                         : key extends 'subscribe'
-                        ? (
-                              params?: Server[Full][key]['query'] extends NonNullable<
+                        ? unknown extends NonNullable<
+                              Server[Full][key]['query']
+                          >
+                            ? (params?: {
+                                  $query?: EdenCall['$query']
+                              }) => EdenWS<Server[Full][key]>
+                            : Server[Full][key]['query'] extends NonNullable<
                                   Server[Full][key]['query']
                               >
-                                  ? {
-                                        $query: Server[Full][key]['query']
-                                    }
-                                  : {
-                                        $query?: EdenCall['$query']
-                                    }
-                          ) => EdenWS<Server[Full][key]>
+                            ? (params: {
+                                  $query: Server[Full][key]['query']
+                              }) => EdenWS<Server[Full][key]>
+                            : (params?: {
+                                  $query?: EdenCall['$query']
+                              }) => EdenWS<Server[Full][key]>
                         : (
-                              params: TypedRouteToParams<Server[Full][key]> & {
+                              params: TypedRouteToParams<
+                                  Server[Full][key extends string
+                                      ? Uppercase<key>
+                                      : key]
+                              > & {
                                   $query?: EdenCall['$query']
                                   $fetch?: EdenCall['$fetch']
                               }
-                          ) => Promise<Server[Full][key]['response']>
+                          ) => Promise<
+                              Server[Full][key extends string
+                                  ? Uppercase<key>
+                                  : key]['response']
+                          >
                 }
               : never
       }

@@ -1,3 +1,15 @@
+# 0.2.0-rc.1 - 4 Jan 2022
+Breaking Change:
+- Change HTTP verb to lowercase
+
+Feature:
+- Support multiple path parameters
+
+Bug fix:
+- Required query in `subscribe`
+- Make `unknown` type optional
+- Add support for non-object fetch
+
 # 0.2.0-rc.0 - 3 Jan 2022
 Feature:
 - Experimental support for Web Socket

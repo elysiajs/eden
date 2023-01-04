@@ -19,7 +19,7 @@ const chat = client.ws.mirror
 
 // REST
 client.products.nendoroid
-    .POST({
+    .post({
         id: 1895,
         name: 'Skadi'
     })
