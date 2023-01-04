@@ -145,7 +145,12 @@ const createProxy = (
                 url = composePath(domain, path.slice(0, i), $query)
 
             if (method === 'subscribe')
-                return new EdenWS(url.replace(/^([^]+):\/\//, 'ws://'))
+                return new EdenWS(
+                    url.replace(
+                        /^([^]+):\/\//,
+                        url.startsWith('https://') ? 'wss://' : 'ws://'
+                    )
+                )
 
             const body =
                 $body ?? (Object.keys(bodyObj).length ? bodyObj : undefined)

@@ -1,3 +1,7 @@
+# 0.2.0-rc.2 - 5 Jan 2022
+Improvement:
+- Auto switch between `ws` and `wss`
+
 # 0.2.0-rc.1 - 4 Jan 2022
 Breaking Change:
 - Change HTTP verb to lowercase
