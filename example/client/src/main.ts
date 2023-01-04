@@ -17,6 +17,13 @@ const chat = client.ws.mirror
         console.log('Got', data)
     })
 
+client.mirror
+    .post({
+        username: 'A',
+        password: 'b'
+    })
+    .then(console.log)
+
 // REST
 client.products.nendoroid
     .post({

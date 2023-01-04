@@ -148,20 +148,21 @@ const createProxy = (
                 return new EdenWS(url.replace(/^([^]+):\/\//, 'ws://'))
 
             const body =
-                $body ??
-                (Object.keys($body).length ? JSON.stringify($body) : undefined)
+                $body ?? (Object.keys(bodyObj).length ? bodyObj : undefined)
 
             return fetch(url, {
                 method,
-                body,
-                headers: {
-                    'content-type':
-                        typeof body === 'object'
-                            ? 'application/json'
-                            : 'text/plain',
-                    'content-length': body.length,
-                    ...$fetch?.['headers']
-                },
+                body: JSON.stringify(body),
+                headers: body
+                    ? {
+                          'content-type':
+                              typeof bodyObj === 'object'
+                                  ? 'application/json'
+                                  : 'text/plain',
+                          'content-length': body?.length,
+                          ...$fetch?.['headers']
+                      }
+                    : undefined,
                 ...$fetch
             }).then(async (res) => {
                 if (res.status >= 300) throw new Error(await res.text())

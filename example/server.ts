@@ -7,9 +7,15 @@ const app = new Elysia()
     .use(websocket())
     .get('/', () => 'Elysia')
     .post('/', () => 'Elysia')
+    .post('/mirror', ({ body }) => body, {
+        schema: {
+            body: t.Object({
+                username: t.String(),
+                password: t.String()
+            })
+        }
+    })
     .get('/sign-in', () => 'ok')
-    .get('/a/a/:b/:c/d', () => 'Ok')
-    .get('/b/:c', () => 'Ok')
     .post('/products/nendoroid', ({ body }) => body, {
         schema: {
             body: t.Object({
