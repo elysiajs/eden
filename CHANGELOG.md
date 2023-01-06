@@ -1,4 +1,4 @@
-# 0.2.0-rc.3 - 3 Jan 2022
+# 0.2.0-rc.3 - 7 Jan 2022
 Improvement:
 - Add `$params` to indicate any string params
 
