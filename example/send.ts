@@ -1,9 +1,5 @@
 import { eden } from '../src'
 import type { Server } from './server'
+import { SCHEMA } from 'elysia'
 
 const app = eden<Server>('http://localhost:8080')
-
-app.index.GET()
-    .then((result) => {
-        console.log(result)
-    })

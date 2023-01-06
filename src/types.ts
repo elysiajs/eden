@@ -40,26 +40,32 @@ type TypedRouteToParams<Route extends TypedRoute> =
 
 export type CreateEden<
     Server extends Record<string, Record<string, TypedRoute>>,
-    // @ts-ignore
-    Path extends string = keyof Server,
+    // pathnames are always string
+    Path extends string = keyof Server extends string ? keyof Server : never,
     Full extends string = ''
 > = Path extends `/${infer Start}`
     ? CreateEden<Server, Start, Path>
     : Path extends `${infer A}/${infer B}`
-    ? IsPathParameter<A> extends never
+    ? // If path parameters, accept any string
+      IsPathParameter<A> extends never
         ? {
               [key in A]: CreateEden<Server, B, Full>
           }
         : {
               [x: string]: CreateEden<Server, B, Full>
+          } & {
+              $params: `Expected path parameters ':${A}', replace this with any string`
           }
-    : {
+    : // Iterate until last string then catch method
+      {
           [key in Path extends ''
-              ? 'index'
+              ? // If end with empty, then return as index
+                'index'
               : Path extends `:${infer params}`
               ? string
               : Path | CamelCase<Path>]: Full extends keyof Server
               ? {
+                    // Check if is method
                     [key in keyof Server[Full] extends string
                         ? Lowercase<keyof Server[Full]>
                         : keyof Server[Full]]: keyof TypedRouteToParams<
@@ -84,7 +90,11 @@ export type CreateEden<
                             : (params?: {
                                   $query?: EdenCall['$query']
                                   $fetch?: EdenCall['$fetch']
-                              }) => Promise<Server[Full][key]['response']>
+                              }) => Promise<
+                                  key extends string
+                                      ? Server[Full][Uppercase<key>]['response']
+                                      : Server[Full][key]['response']
+                              >
                         : key extends 'subscribe'
                         ? unknown extends NonNullable<
                               Server[Full][key]['query']
@@ -117,7 +127,11 @@ export type CreateEden<
                           >
                 }
               : never
-      }
+      } & (Path extends `:${infer params}`
+          ? {
+                $params: `Expected path parameters ':${params}', replace this with any string`
+            }
+          : {})
 
 // https://stackoverflow.com/questions/59623524/typescript-how-to-map-type-keys-to-camelcase
 type CamelCase<S extends string> =

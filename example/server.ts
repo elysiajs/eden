@@ -7,6 +7,7 @@ const app = new Elysia()
     .use(websocket())
     .get('/', () => 'Elysia')
     .post('/', () => 'Elysia')
+    .get('/id/:id', () => 1)
     .post('/mirror', ({ body }) => body, {
         schema: {
             body: t.Object({
@@ -59,5 +60,3 @@ const app = new Elysia()
     .listen(8080)
 
 export type Server = typeof app
-
-type B = Server['store'][typeof SCHEMA]

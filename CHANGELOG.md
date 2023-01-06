@@ -1,3 +1,10 @@
+# 0.2.0-rc.3 - 3 Jan 2022
+Improvement:
+- Add `$params` to indicate any string params
+
+Bug fix:
+- Sometime Eden doesn't infer returned type
+
 # 0.2.0-rc.2 - 5 Jan 2022
 Improvement:
 - Auto switch between `ws` and `wss`
