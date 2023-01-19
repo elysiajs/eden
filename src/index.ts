@@ -172,8 +172,17 @@ const createProxy = (
             }).then(async (res) => {
                 if (res.status >= 300) throw new Error(await res.text())
 
-                if (res.headers.get('content-type') === 'application/json')
-                    return res.json()
+                if (
+                    res.headers
+                        .get('content-type')
+                        ?.includes('application/json')
+                )
+                    try {
+                        return res.json()
+                    } catch (_) {
+                        // if json is error then it's string
+                        // flow down
+                    }
 
                 const result = await res.text()
 

@@ -3,6 +3,8 @@ import { eden } from '../src'
 
 import { beforeAll, describe, expect, it } from 'bun:test'
 
+const utf8Json = { hello: 'world' }
+
 const prefix =
     <Prefix extends string = string>(prefix: Prefix) =>
     (app: Elysia) =>
@@ -12,6 +14,15 @@ const app = new Elysia()
     .get('/', () => 'hi')
     .use(prefix('/prefix'))
     .post('/', () => 'hi')
+    .get(
+        '/json-utf8',
+        () =>
+            new Response(JSON.stringify(utf8Json), {
+                headers: {
+                    'Content-Type': 'application/json;charset=utf-8'
+                }
+            })
+    )
     .post('/mirror', ({ body }) => body, {
         schema: {
             body: t.Object({
@@ -93,6 +104,10 @@ describe('Eden', () => {
 
     it('parse false', async () => {
         expect(await client.false.get()).toEqual(false)
+    })
+
+    it('parse json with extra parameters', async () => {
+        expect(await client.jsonUtf8.get()).toEqual(utf8Json)
     })
 
     // ? Test for type inference
