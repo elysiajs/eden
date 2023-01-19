@@ -17,6 +17,7 @@ const app = new Elysia()
         }
     })
     .get('/sign-in', () => 'ok')
+    .get('/products/nendoroid/skadi', () => 1)
     .post('/products/nendoroid', ({ body }) => body, {
         schema: {
             body: t.Object({
@@ -39,6 +40,7 @@ const app = new Elysia()
             }
         }
     )
+    .group('/group', (app) => app.get('/in', () => 'Hi'))
     .ws('/ws/mirror', {
         schema: {
             body: t.String(),

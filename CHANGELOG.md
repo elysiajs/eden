@@ -1,3 +1,7 @@
+# 0.2.0-rc.4 - 19 Jan 2022
+Change:
+- It's now required to specified specific version to use elysia
+
 # 0.2.0-rc.3 - 7 Jan 2022
 Improvement:
 - Add `$params` to indicate any string params

@@ -4,7 +4,11 @@ Fully type-safe Elysia client.
 ## Installation
 ```bash
 bun add @elysiajs/eden
+bun add -d elysia
 ```
+
+### note
+Eden requires type definition from elysia to infer type accurately, it's recommended to install elysia as devDependencies with the same version as your API.
 
 ## Example
 ```typescript
