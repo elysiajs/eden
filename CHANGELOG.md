@@ -1,6 +1,10 @@
+# 0.2.0-rc.7 - 24 Jan 2022
+Fix:
+- Resolve Elysia 0.2.0-rc.1 type
+
 # 0.2.0-rc.6 - 24 Jan 2022
 Improvement:
-- Handle application/json with custom encoding
+- Set minimum Elysia version to 0.2.0-rc.1
 
 # 0.2.0-rc.5 - 19 Jan 2022
 Improvement:
