@@ -1,6 +1,6 @@
 {
   "name": "@elysiajs/eden",
-  "version": "0.2.0-rc.7",
+  "version": "0.2.0-rc.8",
   "description": "Fully type-safe Elysia client",
   "author": {
     "name": "saltyAom",
@@ -38,7 +38,7 @@
   },
   "devDependencies": {
     "@elysiajs/cors": "^0.1.0",
-    "@elysiajs/websocket": "^0.2.1",
+    "@elysiajs/websocket": "^0.2.6-rc.0",
     "@sinclair/typebox": "^0.25.21",
     "@types/node": "^18.11.7",
     "bun-types": "^0.3.0",

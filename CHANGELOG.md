@@ -1,3 +1,7 @@
+# 0.2.0-rc.8 - 24 Jan 2022
+Fix:
+- Add support for Elysia WS which support Elysia 0.2.0-rc.1
+
 # 0.2.0-rc.7 - 24 Jan 2022
 Fix:
 - Resolve Elysia 0.2.0-rc.1 type
