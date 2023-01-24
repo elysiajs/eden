@@ -22,7 +22,9 @@ client.mirror
         username: 'A',
         password: 'b'
     })
-    .then(console.log)
+    .then((a) => {
+        console.log(a)
+    })
 
 // REST
 client.products.nendoroid

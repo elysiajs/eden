@@ -1,4 +1,4 @@
-import { Elysia, t, type SCHEMA } from 'elysia'
+import { Elysia, t, SCHEMA } from 'elysia'
 import { cors } from '@elysiajs/cors'
 import { websocket } from '@elysiajs/websocket'
 
@@ -59,6 +59,30 @@ const app = new Elysia()
             response: t.String()
         }
     })
+    .setModel({
+        success: t.Object({
+            success: t.Boolean(),
+            data: t.String()
+        }),
+        fail: t.Object({
+            success: t.Boolean(),
+            data: t.Null()
+        })
+    })
+    .get('/union-type', () => {
+        return {
+            success: true,
+            data: null
+        }
+    }, {
+        'schema': {
+            'response': {
+                200: 'success',
+                400: 'fail'
+            }
+        }
+    })
     .listen(8080)
 
 export type Server = typeof app
+type App = Server['store'][typeof SCHEMA]['/']['GET']['response']

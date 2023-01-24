@@ -1,3 +1,7 @@
+# 0.2.0-rc.6 - 24 Jan 2022
+Improvement:
+- Handle application/json with custom encoding
+
 # 0.2.0-rc.5 - 19 Jan 2022
 Improvement:
 - Handle application/json with custom encoding

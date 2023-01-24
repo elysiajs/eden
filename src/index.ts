@@ -154,23 +154,23 @@ const createProxy = (
 
             const body =
                 $body ?? (Object.keys(bodyObj).length ? bodyObj : undefined)
+            const isObject = typeof body === 'object'
 
             return fetch(url, {
                 method,
-                body: JSON.stringify(body),
+                body: isObject ? JSON.stringify(body) : body,
                 headers: body
                     ? {
-                          'content-type':
-                              typeof bodyObj === 'object'
-                                  ? 'application/json'
-                                  : 'text/plain',
+                          'content-type': isObject
+                              ? 'application/json'
+                              : 'text/plain',
                           'content-length': body?.length,
                           ...$fetch?.['headers']
                       }
                     : undefined,
                 ...$fetch
             }).then(async (res) => {
-                if (res.status >= 300) throw new Error(await res.text())
+                if (res.status > 300) throw new Error(await res.text())
 
                 if (
                     res.headers
@@ -178,19 +178,19 @@ const createProxy = (
                         ?.includes('application/json')
                 )
                     try {
-                        return res.json()
+                        return await res.json()
                     } catch (_) {
                         // if json is error then it's string
                         // flow down
                     }
 
-                const result = await res.text()
+                let data = await res.text()
 
-                if (!Number.isNaN(+result)) return +result
-                if (result === 'true') return true
-                if (result === 'false') return false
+                if (!Number.isNaN(+data)) return +data
+                if (data === 'true') return true
+                if (data === 'false') return false
 
-                return result
+                return data
             })
         }
     }) as unknown as Record<string, unknown>

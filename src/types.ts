@@ -1,6 +1,5 @@
-import type { Elysia, SCHEMA, TypedRoute } from 'elysia'
-import type { IsPathParameter } from 'elysia/dist/types'
-import { TObject } from '@sinclair/typebox'
+import type { Elysia, SCHEMA, TypedRoute, IsPathParameter } from 'elysia'
+import type { TObject } from '@sinclair/typebox'
 
 import type { EdenWS } from '.'
 
@@ -92,8 +91,16 @@ export type CreateEden<
                                   $fetch?: EdenCall['$fetch']
                               }) => Promise<
                                   key extends string
-                                      ? Server[Full][Uppercase<key>]['response']
-                                      : Server[Full][key]['response']
+                                      ? Server[Full][Uppercase<key>]['response'] extends {
+                                            200: infer ReturnedType
+                                        }
+                                          ? ReturnedType
+                                          : unknown
+                                      : Server[Full][key]['response'] extends {
+                                            200: infer ReturnedType
+                                        }
+                                      ? ReturnedType
+                                      : unknown
                               >
                         : key extends 'subscribe'
                         ? unknown extends NonNullable<
@@ -123,7 +130,11 @@ export type CreateEden<
                           ) => Promise<
                               Server[Full][key extends string
                                   ? Uppercase<key>
-                                  : key]['response']
+                                  : key]['response'] extends {
+                                  200: infer ReturnedType
+                              }
+                                  ? ReturnedType
+                                  : unknown
                           >
                 }
               : never
