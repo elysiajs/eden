@@ -1,3 +1,7 @@
+# 0.2.1 - 27 Jan 2022
+Fix:
+- Eden doesn't transform path reference
+
 # 0.2.0-rc.9 - 27 Jan 2022
 Improvement:
 - Add params name for warning instead of `$params`

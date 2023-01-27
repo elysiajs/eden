@@ -10,14 +10,11 @@ type IsAny<T> = unknown extends T
     : false
 
 export type Eden<App extends Elysia<any>> = App['store'] extends {
-    [key in typeof SCHEMA]: infer Schema extends Record<
-        string,
-        Record<string, TypedRoute>
-    >
+    [key in typeof SCHEMA]: any
 }
     ? IsAny<Elysia> extends true
         ? 'Please installed Elysia before using Eden'
-        : UnionToIntersection<Schema>
+        : UnionToIntersection<CreateEden<App['store'][typeof SCHEMA]>>
     : never
 
 export interface EdenCall {
