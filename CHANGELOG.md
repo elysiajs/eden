@@ -1,3 +1,8 @@
+# 0.2.0-rc.9 - 27 Jan 2022
+Improvement:
+- Add params name for warning instead of `$params`
+- Add warning to install Elysia before using Eden
+
 # 0.2.0-rc.8 - 24 Jan 2022
 Fix:
 - Add support for Elysia WS which support Elysia 0.2.0-rc.1

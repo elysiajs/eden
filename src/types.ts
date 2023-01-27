@@ -3,10 +3,18 @@ import type { TObject } from '@sinclair/typebox'
 
 import type { EdenWS } from '.'
 
+type IsAny<T> = unknown extends T
+    ? [T] extends [object]
+        ? true
+        : false
+    : false
+
 export type Eden<App extends Elysia<any>> = App['store'] extends {
-    [key in typeof SCHEMA]: any
+    [key in typeof SCHEMA]: infer Schema extends Record<string, Record<string, TypedRoute>>
 }
-    ? UnionToIntersection<CreateEden<App['store'][typeof SCHEMA]>>
+    ? IsAny<Elysia> extends true
+        ? 'Please installed Elysia before using Eden'
+        : UnionToIntersection<Schema>
     : never
 
 export interface EdenCall {
@@ -50,11 +58,11 @@ export type CreateEden<
         ? {
               [key in A]: CreateEden<Server, B, Full>
           }
-        : {
-              [x: string]: CreateEden<Server, B, Full>
-          } & {
-              $params: `Expected path parameters ':${A}', replace this with any string`
-          }
+        : Record<string, CreateEden<Server, B, Full>> &
+              Record<
+                  `$${A}`,
+                  `Expected path parameters ':${A}', replace this with any string`
+              >
     : // Iterate until last string then catch method
       {
           [key in Path extends ''
@@ -139,9 +147,10 @@ export type CreateEden<
                 }
               : never
       } & (Path extends `:${infer params}`
-          ? {
-                $params: `Expected path parameters ':${params}', replace this with any string`
-            }
+          ? Record<
+                `$${params}`,
+                `Expected path parameters ':${params}', replace this with any string`
+            >
           : {})
 
 // https://stackoverflow.com/questions/59623524/typescript-how-to-map-type-keys-to-camelcase
