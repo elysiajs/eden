@@ -1,7 +1,13 @@
-import type { Elysia, SCHEMA, TypedRoute, IsPathParameter } from 'elysia'
+import type {
+    Elysia,
+    SCHEMA,
+    TypedRoute,
+    IsPathParameter,
+    EXPOSED
+} from 'elysia'
 import type { TObject } from '@sinclair/typebox'
 
-import type { EdenWS } from '.'
+import type { EdenWS, Signal } from '.'
 
 type IsAny<T> = unknown extends T
     ? [T] extends [object]
@@ -9,12 +15,42 @@ type IsAny<T> = unknown extends T
         : false
     : false
 
+type Promisify<T extends (...args: any[]) => any> = T extends (
+    ...args: infer Args
+) => infer Return
+    ? Return extends Promise<any>
+        ? T
+        : (...args: Args) => Promise<Return>
+    : never
+
+type Asynctify<T> = T extends infer Fn extends (...args: any) => any
+    ? Promisify<Fn>
+    : T extends Record<string, any>
+    ? {
+          [K in keyof T]: EdenFn<T[K]>
+      }
+    : never
+
+type EdenFn<T> = T extends {
+    [EXPOSED]: true
+    value: infer Value
+}
+    ? Asynctify<Value>
+    : Asynctify<T>
+
+type CreateEdenFn<Exposed extends Record<string, any>> = EdenFn<Exposed> & {
+    $set(config: EdenConfig): void
+    $clone(config?: EdenConfig): CreateEdenFn<Exposed>
+}
+
 export type Eden<App extends Elysia<any>> = App['store'] extends {
     [key in typeof SCHEMA]: any
 }
     ? IsAny<Elysia> extends true
-        ? 'Please installed Elysia before using Eden'
-        : UnionToIntersection<CreateEden<App['store'][typeof SCHEMA]>>
+        ? 'Please install Elysia before using Eden'
+        : UnionToIntersection<CreateEden<App['store'][typeof SCHEMA]>> & {
+              $fn: CreateEdenFn<App['store'][typeof EXPOSED]>
+          }
     : never
 
 export interface EdenCall {
@@ -28,6 +64,11 @@ export type UnionToIntersection<U> = (
 ) extends (k: infer I) => void
     ? I
     : never
+
+// https://twitter.com/mattpocockuk/status/1622730173446557697?s=20
+type Prettify<T> = {
+    [K in keyof T]: T[K]
+} & {}
 
 type TypedRouteToParams<Route extends TypedRoute> =
     (Route['body'] extends NonNullable<Route['body']>
@@ -75,75 +116,54 @@ export type CreateEden<
                     // Check if is method
                     [key in keyof Server[Full] extends string
                         ? Lowercase<keyof Server[Full]>
-                        : keyof Server[Full]]: keyof TypedRouteToParams<
+                        : keyof Server[Full]]: [
                         Server[Full][key extends string ? Uppercase<key> : key]
-                    > extends never
-                        ? key extends 'subscribe'
-                            ? unknown extends NonNullable<
-                                  Server[Full][key]['query']
-                              >
-                                ? (params?: {
-                                      $query?: EdenCall['$query']
-                                  }) => EdenWS<Server[Full][key]>
-                                : Server[Full][key]['query'] extends NonNullable<
-                                      Server[Full][key]['query']
-                                  >
-                                ? (params: {
-                                      $query: Server[Full][key]['query']
-                                  }) => EdenWS<Server[Full][key]>
-                                : (params?: {
-                                      $query?: EdenCall['$query']
-                                  }) => EdenWS<Server[Full][key]>
-                            : (params?: {
+                    ] extends [infer Route extends TypedRoute]
+                        ? undefined extends Route['body']
+                            ? (params?: {
                                   $query?: EdenCall['$query']
                                   $fetch?: EdenCall['$fetch']
                               }) => Promise<
-                                  key extends string
-                                      ? Server[Full][Uppercase<key>]['response'] extends {
-                                            200: infer ReturnedType
-                                        }
-                                          ? ReturnedType
-                                          : unknown
-                                      : Server[Full][key]['response'] extends {
-                                            200: infer ReturnedType
-                                        }
+                                  Route['response'] extends {
+                                      200: infer ReturnedType
+                                  }
+                                      ? ReturnedType
+                                      : unknown
+                              >
+                            : (
+                                  params: Prettify<
+                                      TypedRouteToParams<Route> & {
+                                          $query?: EdenCall['$query']
+                                          $fetch?: EdenCall['$fetch']
+                                      }
+                                  >
+                              ) => Promise<
+                                  Route['response'] extends {
+                                      200: infer ReturnedType
+                                  }
                                       ? ReturnedType
                                       : unknown
                               >
                         : key extends 'subscribe'
-                        ? unknown extends NonNullable<
+                        ? // Since subscribe key is only a lower letter
+                          [
+                              Server[Full][key],
                               Server[Full][key]['query']
-                          >
-                            ? (params?: {
-                                  $query?: EdenCall['$query']
-                              }) => EdenWS<Server[Full][key]>
-                            : Server[Full][key]['query'] extends NonNullable<
-                                  Server[Full][key]['query']
-                              >
-                            ? (params: {
-                                  $query: Server[Full][key]['query']
-                              }) => EdenWS<Server[Full][key]>
-                            : (params?: {
-                                  $query?: EdenCall['$query']
-                              }) => EdenWS<Server[Full][key]>
-                        : (
-                              params: TypedRouteToParams<
-                                  Server[Full][key extends string
-                                      ? Uppercase<key>
-                                      : key]
-                              > & {
-                                  $query?: EdenCall['$query']
-                                  $fetch?: EdenCall['$fetch']
-                              }
-                          ) => Promise<
-                              Server[Full][key extends string
-                                  ? Uppercase<key>
-                                  : key]['response'] extends {
-                                  200: infer ReturnedType
-                              }
-                                  ? ReturnedType
-                                  : unknown
-                          >
+                          ] extends [
+                              infer Route extends TypedRoute,
+                              infer Query extends TypedRoute['query']
+                          ]
+                            ? unknown extends NonNullable<Query>
+                                ? (params?: {
+                                      $query?: EdenCall['$query']
+                                  }) => EdenWS<Route>
+                                : Query extends NonNullable<Query>
+                                ? (params: { $query: Query }) => EdenWS<Route>
+                                : (params?: {
+                                      $query?: EdenCall['$query']
+                                  }) => EdenWS<Route>
+                            : never
+                        : never
                 }
               : never
       } & (Path extends `:${infer params}`
@@ -168,3 +188,7 @@ export type EdenWSEvent<
     K extends keyof WebSocketEventMap,
     Data = unknown
 > = K extends 'message' ? EdenWSOnMessage<Data> : WebSocketEventMap[K]
+
+export interface EdenConfig {
+    fetch?: Omit<RequestInit, 'body'>
+}

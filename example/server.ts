@@ -1,4 +1,4 @@
-import { Elysia, t, SCHEMA } from 'elysia'
+import { Elysia, t } from 'elysia'
 import { cors } from '@elysiajs/cors'
 import { websocket } from '@elysiajs/websocket'
 
@@ -69,19 +69,35 @@ const app = new Elysia()
             data: t.Null()
         })
     })
-    .get('/union-type', () => {
-        return {
-            success: true,
-            data: null
-        }
-    }, {
-        'schema': {
-            'response': {
-                200: 'success',
-                400: 'fail'
+    .get(
+        '/union-type',
+        () => {
+            return {
+                success: true,
+                data: null
+            }
+        },
+        {
+            schema: {
+                response: {
+                    200: 'success',
+                    400: 'fail'
+                }
             }
         }
+    )
+    .expose({
+        mirror: async <T>(a: T) => a
     })
+    .expose(({ permission }) => ({
+        authorized: permission({
+            value: () => 'authorized',
+            allow({ request: { headers } }) {
+                if (!headers.has('Authorization'))
+                    throw new Error('Authorization is required')
+            }
+        })
+    }))
     .listen(8080)
 
 export type Server = typeof app

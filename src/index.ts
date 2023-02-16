@@ -1,9 +1,11 @@
 import type { Elysia, TypedSchema, HTTPMethod } from 'elysia'
+import { serialize, deserialize } from 'superjson'
 
 import type {
     CreateEden,
     Eden,
     EdenCall,
+    EdenConfig,
     EdenWSEvent,
     UnionToIntersection
 } from './types'
@@ -121,13 +123,133 @@ const composePath = (
     return `${domain}${path}?${q.slice(0, -1)}`
 }
 
+export class Signal {
+    private url: string
+    private config: EdenConfig
+
+    private pendings: Array<{ n: string[] } | { n: string[]; p: any }> = []
+    private operation: Promise<any[]> | null = null
+    private isFetching = false
+
+    private sJson: Promise<{
+        serialize: typeof serialize
+        deserialize: typeof deserialize
+    }>
+
+    constructor(url: string, config: EdenConfig) {
+        this.url = url
+        this.config = config
+
+        this.sJson = import('superjson').then((superJson) => {
+            return {
+                serialize: superJson.serialize,
+                deserialize: superJson.deserialize
+            }
+        })
+    }
+
+    setConfig(config: EdenConfig) {
+        this.config = config
+    }
+
+    clone(config?: EdenConfig) {
+        return new Signal(this.url, config ?? this.config)
+    }
+
+    async run(procedure: string[], params: any) {
+        const current = +this.pendings.length
+        this.pendings.push(
+            params !== undefined
+                ? { n: procedure, p: params }
+                : { n: procedure }
+        )
+
+        if (this.isFetching) return this.operation?.then((x) => x[current])
+        this.isFetching = true
+
+        this.operation = new Promise((resolve) => {
+            setTimeout(async () => {
+                const requests = [...this.pendings]
+                this.pendings = []
+
+                const results = await fetch(`${this.url}/~fn`, {
+                    method: 'POST',
+                    ...this.config.fetch,
+                    headers: {
+                        'content-type': 'elysia/fn',
+                        ...this.config.fetch?.headers
+                    },
+                    body: JSON.stringify((await this.sJson).serialize(requests))
+                })
+
+                if (results.status === 200)
+                    resolve(results.json().then((x) => deserialize(x as any)))
+                else
+                    resolve(
+                        Array(requests.length).fill(
+                            new Error(await results.text())
+                        )
+                    )
+            }, 33)
+        })
+
+        const result = await this.operation.then((results) => results[current])
+
+        this.operation = null
+        this.isFetching = false
+
+        return result
+    }
+}
+
+const createFn = (
+    domain: string,
+    procedure: string[],
+    signal: Signal
+): Record<string, unknown> =>
+    // @ts-ignore
+    new Proxy((...v: any[]) => {}, {
+        get(target, key, value) {
+            return createFn(domain, [...procedure, key as string], signal)
+        },
+        apply(target, _, params) {
+            const param = params[0]
+
+            if (procedure.length === 1) {
+                if (
+                    procedure[0] in Object.prototype ||
+                    procedure[0] in Promise.prototype
+                )
+                    return target(params)
+
+                switch (procedure[0]) {
+                    case 'toJSON':
+                        return target(params)
+
+                    case '$set':
+                        return signal.setConfig(param)
+
+                    case '$clone':
+                        return createFn(domain, [], signal.clone(param))
+                }
+            }
+
+            return signal.run(procedure, param).then((result) => {
+                if (result instanceof Error) throw result
+
+                return result
+            })
+        }
+    })
+
 const createProxy = (
     domain: string,
-    path: string = ''
+    path: string = '',
+    config: EdenConfig
 ): Record<string, unknown> =>
     new Proxy(() => {}, {
         get(target, key, value) {
-            return createProxy(domain, `${path}/${key.toString()}`)
+            return createProxy(domain, `${path}/${key.toString()}`, config)
         },
         apply(
             target,
@@ -159,16 +281,17 @@ const createProxy = (
             return fetch(url, {
                 method,
                 body: isObject ? JSON.stringify(body) : body,
+                ...config.fetch,
+                ...$fetch,
                 headers: body
                     ? {
                           'content-type': isObject
                               ? 'application/json'
                               : 'text/plain',
-                          'content-length': body?.length,
+                          ...config.fetch?.headers,
                           ...$fetch?.['headers']
                       }
-                    : undefined,
-                ...$fetch
+                    : undefined
             }).then(async (res) => {
                 if (res.status > 300) throw new Error(await res.text())
 
@@ -195,12 +318,18 @@ const createProxy = (
         }
     }) as unknown as Record<string, unknown>
 
-export const eden = <App extends Elysia<any>>(domain: string): Eden<App> =>
+export const eden = <App extends Elysia<any>>(
+    domain: string,
+    config: EdenConfig = {}
+): Eden<App> =>
     new Proxy(
         {},
         {
-            get(target, key, value) {
-                return createProxy(domain, key as string)
+            get(target, key) {
+                if (key === '$fn')
+                    return createFn(domain, [], new Signal(domain, config))
+
+                return createProxy(domain, key as string, config)
             }
         }
     ) as any

@@ -49,7 +49,7 @@ const app = new Elysia()
 
 const client = eden<typeof app>('http://localhost:8080')
 
-describe('Eden', () => {
+describe('Eden Rest', () => {
     it('get index', async () => {
         expect(await client.index.get()).toBe('hi')
     })
@@ -65,13 +65,13 @@ describe('Eden', () => {
     })
 
     it('get query', async () => {
-        const body = { username: 'A', password: 'B' }
+        const $query = { username: 'A', password: 'B' }
 
         expect(
             await client.query.get({
-                $query: body
+                $query
             })
-        ).toEqual(body)
+        ).toEqual($query)
     })
 
     it('parse camel-case', async () => {
