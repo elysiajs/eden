@@ -7,7 +7,8 @@ import type {
 } from 'elysia'
 import type { TObject } from '@sinclair/typebox'
 
-import type { EdenWS, Signal } from '.'
+import type { EdenWS } from '.'
+import { type EdenFetchError, type Signal } from './utils'
 
 type IsAny<T> = unknown extends T
     ? [T] extends [object]
@@ -127,7 +128,9 @@ export type CreateEden<
                                   Route['response'] extends {
                                       200: infer ReturnedType
                                   }
-                                      ? ReturnedType
+                                      ?
+                                            | ReturnedType
+                                            | MapError<Route['response']>
                                       : unknown
                               >
                             : (
@@ -141,7 +144,9 @@ export type CreateEden<
                                   Route['response'] extends {
                                       200: infer ReturnedType
                                   }
-                                      ? ReturnedType
+                                      ?
+                                            | ReturnedType
+                                            | MapError<Route['response']>
                                       : unknown
                               >
                         : key extends 'subscribe'
@@ -190,5 +195,31 @@ export type EdenWSEvent<
 > = K extends 'message' ? EdenWSOnMessage<Data> : WebSocketEventMap[K]
 
 export interface EdenConfig {
+    fn?: string
     fetch?: Omit<RequestInit, 'body'>
 }
+
+type Enumerate<
+    N extends number,
+    Acc extends number[] = []
+> = Acc['length'] extends N
+    ? Acc[number]
+    : Enumerate<N, [...Acc, Acc['length']]>
+
+// https://stackoverflow.com/a/39495173
+type Range<F extends number, T extends number> = Exclude<
+    Enumerate<T>,
+    Enumerate<F>
+>
+
+type ErrorRange = Range<300, 599>
+
+type MapError<T extends Record<number, unknown>> = [
+    {
+        [K in keyof T]-?: K extends ErrorRange ? K : never
+    }[keyof T]
+] extends [infer A extends number]
+    ? {
+          [K in A]: EdenFetchError<K, T[K]>
+      }[A]
+    : false

@@ -1,6 +1,7 @@
 import { Elysia, t } from 'elysia'
 import { cors } from '@elysiajs/cors'
 import { websocket } from '@elysiajs/websocket'
+import { prisma } from '../../../hello/hello-prisma/src'
 
 const app = new Elysia()
     .use(cors())
@@ -8,6 +9,17 @@ const app = new Elysia()
     .get('/', () => 'Elysia')
     .post('/', () => 'Elysia')
     .get('/id/:id', () => 1)
+    .get(
+        '/error',
+        ({ set }) => {
+            set.status = 400
+
+            return {
+                error: true,
+                message: 'Something'
+            }
+        }
+    )
     .post('/mirror', ({ body }) => body, {
         schema: {
             body: t.Object({
@@ -86,10 +98,10 @@ const app = new Elysia()
             }
         }
     )
-    .expose({
+    .fn({
         mirror: async <T>(a: T) => a
     })
-    .expose(({ permission }) => ({
+    .fn(({ permission }) => ({
         authorized: permission({
             value: () => 'authorized',
             allow({ request: { headers } }) {

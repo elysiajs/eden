@@ -16,7 +16,7 @@ export default defineConfig({
             formats: ['es', 'cjs', 'umd']
         },
         rollupOptions: {
-            external: ['elysia'],
+            external: ['elysia', 'superjson'],
             assetFileNames: `[name].[ext]`
         }
     }

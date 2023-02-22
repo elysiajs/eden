@@ -1,6 +1,6 @@
 {
   "name": "@elysiajs/eden",
-  "version": "0.3.0-beta.0",
+  "version": "0.3.0-exp-230222.2125",
   "description": "Fully type-safe Elysia client",
   "author": {
     "name": "saltyAom",
@@ -9,10 +9,12 @@
   },
   "main": "./dist/index.js",
   "exports": {
-    "require": "./dist/index.js",
-    "import": "./dist/index.mjs",
-    "node": "./dist/index.js",
-    "default": "./dist/index.js"
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "node": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
   },
   "types": "./src/index.ts",
   "keywords": [
@@ -43,7 +45,7 @@
     "@types/node": "^18.11.7",
     "bun-types": "^0.5.0",
     "eslint": "^8.26.0",
-    "elysia": "0.3.0-exp-230217.0335",
+    "elysia": "../elysia",
     "rimraf": "^3.0.2",
     "typescript": "^4.8.4",
     "vite": "^4.0.1",

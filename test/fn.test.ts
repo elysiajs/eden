@@ -7,7 +7,7 @@ const app = new Elysia()
     .state('version', 1)
     .decorate('getVersion', () => 1)
     .decorate('mirrorDecorator', <T>(v: T) => v)
-    .expose(({ getVersion, mirrorDecorator, store: { version } }) => ({
+    .fn(({ getVersion, mirrorDecorator, store: { version } }) => ({
         ping: () => 'pong',
         mirror: (value: any) => value,
         version: () => version,
@@ -19,7 +19,7 @@ const app = new Elysia()
             }
         }
     }))
-    .expose(({ permission }) => ({
+    .fn(({ permission }) => ({
         authorized: permission({
             value: () => 'authorized',
             allow({ request: { headers } }) {
@@ -60,7 +60,7 @@ describe('Eden Fn', () => {
         expect(await fn.mirror(set)).toEqual(set)
     })
 
-    it('handle falesy value', async () => {
+    it('handle falsey value', async () => {
         expect(await fn.mirror(0)).toEqual(0)
         expect(await fn.mirror(false)).toEqual(false)
         expect(await fn.mirror(null)).toEqual(null)
@@ -113,9 +113,25 @@ describe('Eden Fn', () => {
     it('multiple batch', async () => {
         expect(await fn.mirror(0)).toEqual(0)
 
-        await new Promise(resolve => setTimeout(resolve, 50))
+        await new Promise((resolve) => setTimeout(resolve, 50))
 
-        expect(await fn.mirror(0)).toEqual(0) 
+        expect(await fn.mirror(0)).toEqual(0)
     })
 
+    it('custom path', async () => {
+        const app = new Elysia({
+            fn: '/custom'
+        })
+            .fn(() => ({
+                mirror: async <T>(value: T) => value
+            }))
+            .listen(8081)
+
+        const client = eden<typeof app>('http://localhost:8081', {
+            fn: '/custom'
+        })
+        const fn = client.$fn
+
+        expect(await fn.mirror(0)).toEqual(0)
+    })
 })

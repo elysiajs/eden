@@ -1,5 +1,4 @@
 import type { Elysia, TypedSchema, HTTPMethod } from 'elysia'
-import { serialize, deserialize } from 'superjson'
 
 import type {
     CreateEden,
@@ -9,6 +8,7 @@ import type {
     EdenWSEvent,
     UnionToIntersection
 } from './types'
+import { composePath, EdenFetchError, Signal } from './utils'
 
 export class EdenWS<Schema extends TypedSchema<any> = TypedSchema> {
     ws: WebSocket
@@ -104,104 +104,6 @@ export class EdenWS<Schema extends TypedSchema<any> = TypedSchema> {
     }
 }
 
-const camelToDash = (str: string) =>
-    str.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
-
-const composePath = (
-    domain: string,
-    path: string,
-    query: EdenCall['$query'] | undefined
-) => {
-    if (!domain.endsWith('/')) domain += '/'
-    path = camelToDash(path.replace(/index/g, ''))
-
-    if (!query || !Object.keys(query).length) return `${domain}${path}`
-
-    let q = ''
-    for (const [key, value] of Object.entries(query)) q += `${key}=${value}&`
-
-    return `${domain}${path}?${q.slice(0, -1)}`
-}
-
-export class Signal {
-    private url: string
-    private config: EdenConfig
-
-    private pendings: Array<{ n: string[] } | { n: string[]; p: any }> = []
-    private operation: Promise<any[]> | null = null
-    private isFetching = false
-
-    private sJson: Promise<{
-        serialize: typeof serialize
-        deserialize: typeof deserialize
-    }>
-
-    constructor(url: string, config: EdenConfig) {
-        this.url = url
-        this.config = config
-
-        this.sJson = import('superjson').then((superJson) => {
-            return {
-                serialize: superJson.serialize,
-                deserialize: superJson.deserialize
-            }
-        })
-    }
-
-    setConfig(config: EdenConfig) {
-        this.config = config
-    }
-
-    clone(config?: EdenConfig) {
-        return new Signal(this.url, config ?? this.config)
-    }
-
-    async run(procedure: string[], params: any) {
-        const current = +this.pendings.length
-        this.pendings.push(
-            params !== undefined
-                ? { n: procedure, p: params }
-                : { n: procedure }
-        )
-
-        if (this.isFetching) return this.operation?.then((x) => x[current])
-        this.isFetching = true
-
-        this.operation = new Promise((resolve) => {
-            setTimeout(async () => {
-                const requests = [...this.pendings]
-                this.pendings = []
-
-                const results = await fetch(`${this.url}/~fn`, {
-                    method: 'POST',
-                    ...this.config.fetch,
-                    headers: {
-                        'content-type': 'elysia/fn',
-                        ...this.config.fetch?.headers
-                    },
-                    body: JSON.stringify((await this.sJson).serialize(requests))
-                })
-
-                if (results.status === 200)
-                    resolve(results.json().then((x) => deserialize(x as any)))
-                else
-                    resolve(
-                        Array(requests.length).fill(
-                            new Error(await results.text())
-                        )
-                    )
-            }, 33)
-        })
-
-        const result = await this.operation.then((results) => results[current])
-
-        this.operation = null
-        this.isFetching = false
-
-        return result
-    }
-}
-
 const createFn = (
     domain: string,
     procedure: string[],
@@ -293,7 +195,23 @@ const createProxy = (
                       }
                     : undefined
             }).then(async (res) => {
-                if (res.status > 300) throw new Error(await res.text())
+                if (res.status > 300) {
+                    let data
+
+                    if (
+                        res.headers
+                            .get('content-type')
+                            ?.includes('application/json')
+                    )
+                        try {
+                            data = await res.json()
+                        } catch (_) {
+                            data = await res.text()
+                        }
+                    else data = await res.text()
+
+                    return new EdenFetchError(res.status, data)
+                }
 
                 if (
                     res.headers
