@@ -136,7 +136,7 @@ const createFn = (
                 }
             }
 
-            return signal.run(procedure, param).then((result) => {
+            return signal.run(procedure, params).then((result) => {
                 if (result instanceof Error) throw result
 
                 return result
