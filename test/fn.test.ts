@@ -22,7 +22,7 @@ const app = new Elysia()
     .fn(({ permission }) => ({
         authorized: permission({
             value: () => 'authorized',
-            allow({ request: { headers } }) {
+            check({ request: { headers } }) {
                 if (!headers.has('Authorization'))
                     throw new Error('Authorization is required')
             }
@@ -38,8 +38,8 @@ const app = new Elysia()
                     }
                 }
             },
-            allow({ key, params }) {
-                if (key === 'user.delete' && params === 'Arona')
+            check({ key, params }) {
+                if (key === 'user.delete' && params[0] === 'Arona')
                     throw new Error('Forbidden')
             }
         })
