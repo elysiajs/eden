@@ -8,6 +8,8 @@ const fn = client.$fn
 // @ts-ignore
 const app = document.querySelector<HTMLDivElement>('#app')!
 
+fn.mirror()
+
 // app.textContent = await fn.mirror(1)
 
 // Promise.allSettled([fn.mirror(1), fn.authorized()]).then(console.log)

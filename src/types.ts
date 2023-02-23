@@ -33,7 +33,7 @@ type Asynctify<T> = T extends infer Fn extends (...args: any) => any
     : never
 
 type EdenFn<T> = T extends {
-    [EXPOSED]: true
+    [EXPOSED]: any
     value: infer Value
 }
     ? Asynctify<Value>

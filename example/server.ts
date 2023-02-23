@@ -104,7 +104,7 @@ const app = new Elysia()
     .fn(({ permission }) => ({
         authorized: permission({
             value: () => 'authorized',
-            allow({ request: { headers } }) {
+            check({ request: { headers } }) {
                 if (!headers.has('Authorization'))
                     throw new Error('Authorization is required')
             }
