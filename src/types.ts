@@ -44,15 +44,16 @@ type CreateEdenFn<Exposed extends Record<string, any>> = EdenFn<Exposed> & {
     $clone(config?: EdenConfig): CreateEdenFn<Exposed>
 }
 
-export type Eden<App extends Elysia<any>> = App['store'] extends {
-    [key in typeof SCHEMA]: any
+export type Eden<App extends Elysia<any>> = App['meta'] extends {
+    [key in typeof SCHEMA]: infer Schema extends Record<
+        string,
+        Record<string, TypedRoute>
+    >
 }
-    ? IsAny<Elysia> extends true
-        ? 'Please install Elysia before using Eden'
-        : UnionToIntersection<CreateEden<App['store'][typeof SCHEMA]>> & {
-              $fn: CreateEdenFn<App['store'][typeof EXPOSED]>
-          }
-    : never
+    ? UnionToIntersection<CreateEden<Schema>> & {
+          $fn: CreateEdenFn<App['meta'][typeof EXPOSED]>
+      }
+    : 'Please install Elysia before using Eden'
 
 export interface EdenCall {
     [x: string]: any
