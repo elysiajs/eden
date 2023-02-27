@@ -1,12 +1,11 @@
-import type { Elysia, TypedSchema, HTTPMethod } from 'elysia'
+import type { Elysia, TypedSchema } from 'elysia'
 
 import type {
     CreateEden,
     Eden,
     EdenCall,
     EdenConfig,
-    EdenWSEvent,
-    UnionToIntersection
+    EdenWSEvent
 } from './types'
 import { composePath, EdenFetchError, Signal } from './utils'
 

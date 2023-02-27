@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { join } from 'path'
 
 Bun.spawn(['bun', 'server.ts'], {

@@ -26,14 +26,14 @@ await client.mirror.post({
     username: 'a'
 })
 
-const chat = client.ws.mirror
-    .subscribe()
-    .on('open', () => {
-        chat.send('hi')
-    })
-    .on('message', ({ data }) => {
-        console.log('Got', data)
-    })
+// const chat = client.ws.mirror
+//     .subscribe()
+//     .on('open', () => {
+//         chat.send('hi')
+//     })
+//     .on('message', ({ data }) => {
+//         console.log('Got', data)
+//     })
 
 client.mirror
     .post({

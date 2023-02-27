@@ -1,3 +1,7 @@
+# 0.3.0-beta.2 - 28 Feb 2023
+Improvement:
+- Optimize type inference
+
 # 0.3.0-beta.1 - 27 Feb 2023
 Improvement:
 - Add TypeBox as peer dependencies

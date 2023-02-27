@@ -1,19 +1,20 @@
 import type {
     Elysia,
     SCHEMA,
-    TypedRoute,
     IsPathParameter,
-    EXPOSED
+    EXPOSED,
+    AnyTypedSchema
 } from 'elysia'
-import type { TObject } from '@sinclair/typebox'
 
 import type { EdenWS } from '.'
-import { type EdenFetchError, type Signal } from './utils'
+import { type EdenFetchError } from './utils'
 
-type IsAny<T> = unknown extends T
-    ? [T] extends [object]
-        ? true
-        : false
+export type IsAny<T> = 0 extends 1 & T ? true : false
+
+export type IsUnknown<T> = IsAny<T> extends true
+    ? false
+    : unknown extends T
+    ? true
     : false
 
 type Promisify<T extends (...args: any[]) => any> = T extends (
@@ -47,10 +48,12 @@ type CreateEdenFn<Exposed extends Record<string, any>> = EdenFn<Exposed> & {
 export type Eden<App extends Elysia<any>> = App['meta'] extends {
     [key in typeof SCHEMA]: infer Schema extends Record<
         string,
-        Record<string, TypedRoute>
+        Record<string, AnyTypedSchema>
     >
 }
-    ? UnionToIntersection<CreateEden<Schema>> & {
+    ? UnionToIntersection<
+          CreateEden<Schema, Exclude<keyof Schema, number | symbol>>
+      > & {
           $fn: CreateEdenFn<App['meta'][typeof EXPOSED]>
       }
     : 'Please install Elysia before using Eden'
@@ -61,37 +64,18 @@ export interface EdenCall {
     $query?: Record<string, string | boolean | number>
 }
 
-export type UnionToIntersection<U> = (
-    U extends any ? (k: U) => void : never
-) extends (k: infer I) => void
+type UnionToIntersection<U> = (U extends any ? (k: U) => void : never) extends (
+    k: infer I
+) => void
     ? I
     : never
 
-// https://twitter.com/mattpocockuk/status/1622730173446557697?s=20
-type Prettify<T> = {
-    [K in keyof T]: T[K]
-} & {}
-
-type TypedRouteToParams<Route extends TypedRoute> =
-    (Route['body'] extends NonNullable<Route['body']>
-        ? Route['body'] extends Record<any, any>
-            ? Route['body']
-            : {
-                  $body: Route['body']
-              }
-        : {}) &
-        (Route['query'] extends NonNullable<Route['query']>
-            ? unknown extends Route['query']
-                ? {}
-                : {
-                      $query: Route['query']
-                  }
-            : {})
+export type MergeUnionObjects<T> = {} & { [P in keyof T]: T[P] }
 
 export type CreateEden<
-    Server extends Record<string, Record<string, TypedRoute>>,
+    Server extends Record<string, Record<string, AnyTypedSchema>>,
     // pathnames are always string
-    Path extends string = keyof Server extends string ? keyof Server : never,
+    Path extends string,
     Full extends string = ''
 > = Path extends `/${infer Start}`
     ? CreateEden<Server, Start, Path>
@@ -111,17 +95,15 @@ export type CreateEden<
           [key in Path extends ''
               ? // If end with empty, then return as index
                 'index'
-              : Path extends `:${infer params}`
-              ? string
               : Path | CamelCase<Path>]: Full extends keyof Server
               ? {
                     // Check if is method
                     [key in keyof Server[Full] extends string
                         ? Lowercase<keyof Server[Full]>
-                        : keyof Server[Full]]: [
-                        Server[Full][key extends string ? Uppercase<key> : key]
-                    ] extends [infer Route extends TypedRoute]
-                        ? undefined extends Route['body']
+                        : keyof Server[Full]]: Server[Full][key extends string
+                        ? Uppercase<key>
+                        : key] extends infer Route extends AnyTypedSchema
+                        ? IsUnknown<Route['body']> extends true
                             ? (params?: {
                                   $query?: EdenCall['$query']
                                   $fetch?: EdenCall['$fetch']
@@ -135,8 +117,8 @@ export type CreateEden<
                                       : unknown
                               >
                             : (
-                                  params: Prettify<
-                                      TypedRouteToParams<Route> & {
+                                  params: MergeUnionObjects<
+                                      Route['body'] & {
                                           $query?: EdenCall['$query']
                                           $fetch?: EdenCall['$fetch']
                                       }
@@ -152,19 +134,17 @@ export type CreateEden<
                               >
                         : key extends 'subscribe'
                         ? // Since subscribe key is only a lower letter
-                          [
-                              Server[Full][key],
-                              Server[Full][key]['query']
-                          ] extends [
-                              infer Route extends TypedRoute,
-                              infer Query extends TypedRoute['query']
-                          ]
-                            ? unknown extends NonNullable<Query>
+                          Server[Full][key] extends infer Route extends AnyTypedSchema
+                            ? IsUnknown<Route['query']> extends true
                                 ? (params?: {
                                       $query?: EdenCall['$query']
                                   }) => EdenWS<Route>
-                                : Query extends NonNullable<Query>
-                                ? (params: { $query: Query }) => EdenWS<Route>
+                                : Route['query'] extends NonNullable<
+                                      Route['query']
+                                  >
+                                ? (params: {
+                                      $query: Route['query']
+                                  }) => EdenWS<Route>
                                 : (params?: {
                                       $query?: EdenCall['$query']
                                   }) => EdenWS<Route>
@@ -172,12 +152,13 @@ export type CreateEden<
                         : never
                 }
               : never
-      } & (Path extends `:${infer params}`
-          ? Record<
-                `$${params}`,
-                `Expected path parameters ':${params}', replace this with any string`
-            >
-          : {})
+      }
+// & (Path extends `:${infer params}`
+//     ? Record<
+//           `$${params}`,
+//           `Expected path parameters ':${params}', replace this with any string`
+//       >
+//     : {})
 
 // https://stackoverflow.com/questions/59623524/typescript-how-to-map-type-keys-to-camelcase
 type CamelCase<S extends string> =

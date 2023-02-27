@@ -65,24 +65,24 @@ const app = new Elysia()
         }
     )
     .group('/group', (app) => app.get('/in', () => 'Hi'))
-    .ws('/ws/mirror', {
-        schema: {
-            body: t.String(),
-            response: t.String()
-        },
-        message(ws, message) {
-            ws.send(message)
-        }
-    })
-    .ws('/chat/:room/:name', {
-        message(ws, message) {
-            ws.send(message)
-        },
-        schema: {
-            body: t.String(),
-            response: t.String()
-        }
-    })
+    // .ws('/ws/mirror', {
+    //     schema: {
+    //         body: t.String(),
+    //         response: t.String()
+    //     },
+    //     message(ws, message) {
+    //         ws.send(message)
+    //     }
+    // })
+    // .ws('/chat/:room/:name', {
+    //     message(ws, message) {
+    //         ws.send(message)
+    //     },
+    //     schema: {
+    //         body: t.String(),
+    //         response: t.String()
+    //     }
+    // })
     .setModel({
         success: t.Object({
             success: t.Boolean(),
