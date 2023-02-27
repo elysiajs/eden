@@ -1,3 +1,8 @@
+# 0.3.0-beta.1 - 27 Feb 2023
+Improvement:
+- Add TypeBox as peer dependencies
+- Minimum support for Elysia >= 0.3.0-beta.3
+
 # 0.3.0-beta.0 - 25 Feb 2023
 Fix:
 - Eden doesn't transform path reference
