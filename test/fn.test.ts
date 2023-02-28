@@ -47,7 +47,7 @@ const app = new Elysia()
     .listen(8080)
 
 const client = eden<typeof app>('http://localhost:8080')
-const fn = client.$fn
+const fn = client.fn
 
 describe('Eden Fn', () => {
     it('ping', async () => {
@@ -130,7 +130,7 @@ describe('Eden Fn', () => {
         const client = eden<typeof app>('http://localhost:8081', {
             fn: '/custom'
         })
-        const fn = client.$fn
+        const fn = client.fn
 
         expect(await fn.mirror(0)).toEqual(0)
     })

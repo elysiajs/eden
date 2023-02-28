@@ -1,4 +1,4 @@
-module.exports = {
+{
     "env": {
         "es2021": true,
         "node": true
@@ -16,8 +16,8 @@ module.exports = {
         "@typescript-eslint"
     ],
     "rules": {
-        "@typescript-eslint/ban-types": 'off',
-        '@typescript-eslint/no-explicit-any': 'off'
+        "@typescript-eslint/ban-types": "off",
+        "@typescript-eslint/no-explicit-any": "off"
     },
     "ignorePatterns": ["example/*", "tests/**/*"]
 }

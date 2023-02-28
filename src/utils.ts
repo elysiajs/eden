@@ -1,5 +1,5 @@
 import type { serialize, deserialize } from 'superjson'
-import type { EdenCall, EdenConfig } from './types'
+import type { EdenConfig } from './types'
 
 export class EdenFetchError<
     Status extends number = number,
@@ -14,26 +14,6 @@ export class EdenFetchError<
         this.status = status
         this.value = value
     }
-}
-
-
-const camelToDash = (str: string) =>
-    str.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)
-
-export const composePath = (
-    domain: string,
-    path: string,
-    query: EdenCall['$query'] | undefined
-) => {
-    if (!domain.endsWith('/')) domain += '/'
-    path = camelToDash(path.replace(/index/g, ''))
-
-    if (!query || !Object.keys(query).length) return `${domain}${path}`
-
-    let q = ''
-    for (const [key, value] of Object.entries(query)) q += `${key}=${value}&`
-
-    return `${domain}${path}?${q.slice(0, -1)}`
 }
 
 export class Signal {

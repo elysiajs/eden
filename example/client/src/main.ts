@@ -1,4 +1,5 @@
 import './style.css'
 
+import './fetch'
 import './fn'
-import './rest'
+import './legacy'

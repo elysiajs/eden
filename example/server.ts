@@ -1,12 +1,15 @@
 import { Elysia, t } from 'elysia'
 import { cors } from '@elysiajs/cors'
-import { websocket } from '@elysiajs/websocket'
 
 const app = new Elysia()
-    .use(cors())
-    .use(websocket())
     .get('/', () => 'Elysia')
-    .post('/', () => 'Elysia')
+    .post('/', () => 'Elysia', {
+        schema: {
+            body: t.Object({
+                id: t.Number()
+            })
+        }
+    })
     .get('/id/:id', () => 1)
     .get(
         '/error',
@@ -52,15 +55,26 @@ const app = new Elysia()
     })
     .put(
         '/products/nendoroid/:id',
-        ({ body, params: { id } }) => ({
-            ...body,
+        ({ body: { name }, params: { id } }) => ({
+            name,
             id
         }),
         {
             schema: {
                 body: t.Object({
                     name: t.String()
-                })
+                }),
+                response: {
+                    200: t.Object({
+                        name: t.String(),
+                        id: t.String()
+                    }),
+                    400: t.Object({
+                        error: t.String(),
+                        name: t.String(),
+                        id: t.String()
+                    })
+                }
             }
         }
     )
@@ -122,6 +136,10 @@ const app = new Elysia()
             }
         })
     }))
+
+app
+    // @ts-ignore
+    .use(cors())
     .listen(8080)
 
 export type Server = typeof app

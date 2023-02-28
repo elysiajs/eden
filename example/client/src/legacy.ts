@@ -1,4 +1,4 @@
-import { eden } from '@elysia/eden'
+import { eden } from '@elysia/eden/dist/legacy'
 import type { Server } from '../../server'
 
 // @ts-ignore
@@ -6,20 +6,11 @@ const app = document.querySelector<HTMLDivElement>('#app')!
 
 export const client = eden<Server>('http://localhost:8080')
 
-await client.error.get().then((res) => {
-    // Should have type error because error isn't handled yet
-    res.myName
-
-    if (res instanceof Error)
-        switch (res.status) {
-            case 400:
-                console.log(res.value.message)
-
-                throw res
-        }
-
-    res.myName
+client.products.nendoroid[':id'].put({
+    name: 'a'
 })
+
+await client.error.get()
 
 await client.mirror.post({
     password: 'a',

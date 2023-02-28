@@ -10,10 +10,11 @@ export default defineConfig({
         emptyOutDir: true,
         minify: 'esbuild',
         lib: {
-            entry: resolve(__dirname, 'src/index.ts'),
-            name: '@elysia/eden',
-            fileName: 'index',
-            formats: ['es', 'cjs', 'umd']
+            'entry': {
+                'index': resolve(__dirname, 'src/index.ts'),
+                'legacy/index': resolve(__dirname, 'src/legacy/index.ts')
+            },
+            formats: ['es', 'cjs']
         },
         rollupOptions: {
             external: ['elysia', 'superjson'],

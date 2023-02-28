@@ -1,5 +1,5 @@
 import { Elysia, t } from 'elysia'
-import { eden } from '../src'
+import { eden } from '../src/legacy'
 
 import { beforeAll, describe, expect, it } from 'bun:test'
 
