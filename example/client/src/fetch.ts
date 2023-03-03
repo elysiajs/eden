@@ -12,5 +12,3 @@ const data = await app.fetch('/products/nendoroid/:id', {
         id: 'a'
     }
 })
-
-console.log({ data })

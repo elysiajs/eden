@@ -1,12 +1,11 @@
 import type { Elysia, TypedSchema } from 'elysia'
 
-import type {
-    LegacyEden,
-    LegacyEdenCall,
-    LegacyEdenConfig,
-    LegacyEdenWSEvent
-} from './types'
+import { EdenFetchError } from '../utils'
+
 import { composePath } from './utils'
+import type { EdenTreaty } from './types'
+
+export type { EdenTreaty } from './types'
 
 export class EdenWS<Schema extends TypedSchema<any> = TypedSchema> {
     ws: WebSocket
@@ -33,7 +32,7 @@ export class EdenWS<Schema extends TypedSchema<any> = TypedSchema> {
 
     on<K extends keyof WebSocketEventMap>(
         type: K,
-        listener: (event: LegacyEdenWSEvent<K, Schema['response']>) => void,
+        listener: (event: EdenTreaty.WSEvent<K, Schema['response']>) => void,
         options?: boolean | AddEventListenerOptions
     ) {
         return this.addEventListener(type, listener, options)
@@ -51,7 +50,7 @@ export class EdenWS<Schema extends TypedSchema<any> = TypedSchema> {
 
     addEventListener<K extends keyof WebSocketEventMap>(
         type: K,
-        listener: (event: LegacyEdenWSEvent<K, Schema['response']>) => void,
+        listener: (event: EdenTreaty.WSEvent<K, Schema['response']>) => void,
         options?: boolean | AddEventListenerOptions
     ) {
         this.ws.addEventListener(
@@ -105,7 +104,7 @@ export class EdenWS<Schema extends TypedSchema<any> = TypedSchema> {
 const createProxy = (
     domain: string,
     path: string = '',
-    config: LegacyEdenConfig
+    config: {}
 ): Record<string, unknown> =>
     new Proxy(() => {}, {
         get(target, key, value) {
@@ -120,7 +119,7 @@ const createProxy = (
                     $query: undefined,
                     $body: undefined
                 }
-            ]: LegacyEdenCall[] = [{}]
+            ]: EdenTreaty.CallOption[] = [{}]
         ) {
             const i = path.lastIndexOf('/'),
                 method = path.slice(i + 1),
@@ -141,71 +140,45 @@ const createProxy = (
             return fetch(url, {
                 method,
                 body: isObject ? JSON.stringify(body) : body,
-                ...config.fetch,
+                // ...config.fetch,
                 ...$fetch,
                 headers: body
                     ? {
                           'content-type': isObject
                               ? 'application/json'
                               : 'text/plain',
-                          ...config.fetch?.headers,
+                          //   ...config.fetch?.headers,
                           ...$fetch?.['headers']
                       }
                     : undefined
             }).then(async (res) => {
-                if (res.status > 300) throw new Error(await res.text())
+                let data: Promise<unknown>
 
-                // if (res.status > 300) {
-                //     let data
+                switch (res.headers.get('Content-Type')) {
+                    case 'application/json':
+                        data = res.json()
+                        break
 
-                //     if (
-                //         res.headers
-                //             .get('content-type')
-                //             ?.includes('application/json')
-                //     )
-                //         try {
-                //             data = await res.json()
-                //         } catch (_) {
-                //             data = await res.text()
-                //         }
-                //     else data = await res.text()
+                    default:
+                        data = res.text().then((data) => {
+                            if (!Number.isNaN(+data)) return +data
+                            if (data === 'true') return true
+                            if (data === 'false') return false
+                        })
+                }
 
-                //     // return new EdenFetchError(res.status, data)
-                // }
-
-                if (
-                    res.headers
-                        .get('content-type')
-                        ?.includes('application/json')
-                )
-                    try {
-                        return await res.json()
-                    } catch (_) {
-                        // if json is error then it's string
-                        // flow down
-                    }
-
-                let data = await res.text()
-
-                if (!Number.isNaN(+data)) return +data
-                if (data === 'true') return true
-                if (data === 'false') return false
+                if (res.status > 300)
+                    return new EdenFetchError(res.status, await data)
 
                 return data
             })
         }
     }) as unknown as Record<string, unknown>
 
-/**
- * Legacy Eden might has performance impact on your application,
- * consider using new Eden function instead
- * 
- * @deprecated
- */
-export const eden = <App extends Elysia<any>>(
+export const edenTreaty = <App extends Elysia<any>>(
     domain: string,
-    config: LegacyEdenConfig = {}
-): LegacyEden<App> =>
+    config: {} = {}
+): EdenTreaty.Create<App> =>
     new Proxy(
         {},
         {
@@ -214,3 +187,5 @@ export const eden = <App extends Elysia<any>>(
             }
         }
     ) as any
+
+export default edenTreaty

@@ -9,9 +9,6 @@ const main = async () => {
         body: {
             name: 'awd'
         },
-        headers: {
-            Authorization: 'awd'
-        },
         params: {
             id: '1'
         }

@@ -1,3 +1,12 @@
+# 0.3.0-beta.4 - 4 Mar 2023
+Improvement:
+- Separate Eden type
+- Rewrite Eden Treaty
+
+# 0.3.0-beta.3 - 1 Mar 2023
+Improvement:
+- Add support for Elysia 0.3.0-beta.5
+
 # 0.3.0-beta.2 - 28 Feb 2023
 Improvement:
 - Optimize type inference

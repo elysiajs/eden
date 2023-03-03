@@ -1,10 +1,7 @@
-import { SCHEMA, EXPOSED } from 'elysia'
+import { SCHEMA, EXPOSED, type IsPathParameter } from 'elysia'
+import { Prettify } from 'elysia/src/types'
 
-import { eden } from '../src/legacy'
+import { edenTreaty } from '../src'
 import type { Server } from './server'
 
-const app = eden<Server>('http://localhost:8080')
-
-const handle = async () => {
-    const user = await app.error.get()
-}
+const treaty = edenTreaty<Server>('http://localhost:8080')

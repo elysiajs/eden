@@ -1,8 +1,9 @@
-import { Elysia, t } from 'elysia'
+import { Elysia, SCHEMA, t } from 'elysia'
 import { cors } from '@elysiajs/cors'
 
 const app = new Elysia()
-    .get('/', () => 'Elysia')
+    .get('/something/here', () => 'Elysia')
+    .post('/number/1', () => 'A')
     .post('/', () => 'Elysia', {
         schema: {
             body: t.Object({
@@ -10,7 +11,10 @@ const app = new Elysia()
             })
         }
     })
-    .get('/id/:id', () => 1)
+    .post('/name/:name', () => 1)
+    .post('/a/bcd/:name/b', () => 1)
+    .post('/id/here', () => 1)
+    .post('/id/here/a', () => 1)
     .get(
         '/error',
         ({ set }) => {
@@ -127,15 +131,15 @@ const app = new Elysia()
     .fn({
         mirror: async <T>(a: T) => a
     })
-    .fn(({ permission }) => ({
-        authorized: permission({
-            value: () => 'authorized',
-            check({ request: { headers } }) {
-                if (!headers.has('Authorization'))
-                    throw new Error('Authorization is required')
-            }
-        })
-    }))
+// .fn(({ permission }) => ({
+//     authorized: permission({
+//         value: () => 'authorized',
+//         check({ request: { headers } }) {
+//             if (!headers.has('Authorization'))
+//                 throw new Error('Authorization is required')
+//         }
+//     })
+// }))
 
 app
     // @ts-ignore
