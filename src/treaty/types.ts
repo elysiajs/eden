@@ -17,14 +17,14 @@ export namespace EdenTreaty {
     export type Sign<A> = {
         [Path in keyof A as Path extends `/${infer Prefix}/${infer _}`
             ? Prefix
-            : Path extends `/${infer Prefix}`
-            ? Prefix
             : Path extends `/`
             ? 'index'
+            : Path extends `/${infer Prefix}`
+            ? Prefix
             : never]: UnionToIntersect<
-            Path extends infer Endpoint
+            Path extends `/${infer _}/${infer Rest}`
                 ? NestPath<
-                      Endpoint extends `/${infer _}/${infer Rest}` ? Rest : '',
+                      Rest,
                       {
                           [Method in keyof A[Path]]: A[Path][Method] extends infer Route extends AnyTypedSchema
                               ? Method extends 'subscribe'
@@ -70,7 +70,47 @@ export namespace EdenTreaty {
                               : never
                       }
                   >
-                : never
+                : {
+                      [Method in keyof A[Path]]: A[Path][Method] extends infer Route extends AnyTypedSchema
+                          ? Method extends 'subscribe'
+                              ? IsUnknown<Route['query']> extends true
+                                  ? (params?: {
+                                        $query?: Record<string, string>
+                                    }) => EdenWS<Route>
+                                  : undefined extends Route['query']
+                                  ? (params: {
+                                        $query: Route['query']
+                                    }) => EdenWS<Route>
+                                  : (params?: {
+                                        $query?: Record<string, string>
+                                    }) => EdenWS<Route>
+                              : IsUnknown<Route['body']> extends true
+                              ? (params?: {
+                                    $query?: Record<string, string>
+                                    $fetch?: RequestInit
+                                }) =>
+                                    | Promise<Route['response']['200']>
+                                    | (MapError<
+                                          Route['response']
+                                      > extends infer Errors
+                                          ? IsNever<Errors> extends true
+                                              ? EdenFetchError<number, string>
+                                              : Errors
+                                          : never)
+                              : (
+                                    params: Route['body'] & {
+                                        $query?: Record<string, string>
+                                        $fetch?: RequestInit
+                                    }
+                                ) => Promise<
+                                    Route['response'] extends {
+                                        200: infer ReturnedType
+                                    }
+                                        ? ReturnedType
+                                        : unknown
+                                >
+                          : never
+                  }
         >
     }
 

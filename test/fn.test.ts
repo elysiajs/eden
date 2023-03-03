@@ -1,7 +1,7 @@
 import { Elysia } from 'elysia'
 import { describe, expect, it, beforeAll } from 'bun:test'
 
-import { eden } from '../src'
+import { edenFn } from '../src'
 
 const app = new Elysia()
     .state('version', 1)
@@ -46,8 +46,7 @@ const app = new Elysia()
     }))
     .listen(8080)
 
-const client = eden<typeof app>('http://localhost:8080')
-const fn = client.fn
+const fn = edenFn<typeof app>('http://localhost:8080')
 
 describe('Eden Fn', () => {
     it('ping', async () => {
@@ -127,10 +126,9 @@ describe('Eden Fn', () => {
             }))
             .listen(8081)
 
-        const client = eden<typeof app>('http://localhost:8081', {
+        const fn = edenFn<typeof app>('http://localhost:8081', {
             fn: '/custom'
         })
-        const fn = client.fn
 
         expect(await fn.mirror(0)).toEqual(0)
     })

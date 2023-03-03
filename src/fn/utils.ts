@@ -14,7 +14,7 @@ export class Signal {
         deserialize: typeof deserialize
     }>
 
-    constructor(url: string, config: EdenFn.Config) {
+    constructor(url: string, config: EdenFn.Config = {}) {
         this.url = url
         this.config = config
 

@@ -1,12 +1,12 @@
 import { Elysia, t } from 'elysia'
-import { eden } from '../src/legacy'
+import { edenTreaty } from '../src'
 
 import { beforeAll, describe, expect, it } from 'bun:test'
 
 const utf8Json = { hello: 'world' }
 
 const prefix =
-    <Prefix extends string = string>(prefix: Prefix) =>
+    <Prefix extends string>(prefix: Prefix) =>
     (app: Elysia) =>
         app.get(`${prefix}/prefixed`, () => 'hi')
 
@@ -47,7 +47,7 @@ const app = new Elysia()
     .get('/false', () => false)
     .listen(8080)
 
-const client = eden<typeof app>('http://localhost:8080')
+const client = edenTreaty<typeof app>('http://localhost:8080')
 
 describe('Eden Rest', () => {
     it('get index', async () => {
@@ -74,26 +74,6 @@ describe('Eden Rest', () => {
         ).toEqual($query)
     })
 
-    it('parse camel-case', async () => {
-        const body = { username: 'A', password: 'B' }
-
-        expect(
-            await client.signIn.get({
-                $query: body
-            })
-        ).toEqual(body)
-    })
-
-    it('handle camel-case', async () => {
-        const body = { username: 'A', password: 'B' }
-
-        expect(
-            await client['sign-in'].get({
-                $query: body
-            })
-        ).toEqual(body)
-    })
-
     it('parse number', async () => {
         expect(await client.number.get()).toEqual(1)
     })
@@ -107,7 +87,7 @@ describe('Eden Rest', () => {
     })
 
     it('parse json with extra parameters', async () => {
-        expect(await client.jsonUtf8.get()).toEqual(utf8Json)
+        expect(await client['json-utf8'].get()).toEqual(utf8Json)
     })
 
     // ? Test for type inference

@@ -1,7 +1,8 @@
-import { Signal } from './utils'
-import type { EdenFn } from './types'
-import Elysia from 'elysia'
+import type { Elysia } from 'elysia'
 
+import { Signal } from './utils'
+
+import type { EdenFn } from './types'
 export type { EdenFn } from './types'
 
 const createProxy = (
