@@ -1,9 +1,9 @@
-import { eden } from '@elysia/eden'
+import { edenFetch } from '@elysia/eden'
 import type { Server } from '../../server'
 
-const app = eden<Server>('http://localhost:8080')
+const fetch = edenFetch<Server>('http://localhost:8080')
 
-const data = await app.fetch('/products/nendoroid/:id', {
+const data = await fetch('/products/nendoroid/:id', {
     method: 'PUT',
     body: {
         name: 'a'

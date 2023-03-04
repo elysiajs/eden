@@ -35,7 +35,7 @@ export namespace EdenFetch {
                   }) &
             (undefined extends Route['headers']
                 ? {
-                      headers?: Route['headers']
+                      headers?: Record<string, string>
                   }
                 : {
                       headers: Route['headers']

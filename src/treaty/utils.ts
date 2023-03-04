@@ -4,6 +4,7 @@ export const composePath = (
     query: Record<string, string> | undefined
 ) => {
     if (!domain.endsWith('/')) domain += '/'
+    if (path === 'index') path = ''
 
     if (!query || !Object.keys(query).length) return `${domain}${path}`
 

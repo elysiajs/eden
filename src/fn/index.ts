@@ -51,5 +51,3 @@ export const edenFn = <App extends Elysia<any>>(
 ): EdenFn.Create<App> =>
     // @ts-ignore
     createProxy(domain, [], new Signal(domain, config))
-
-export default edenFn

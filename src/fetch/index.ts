@@ -5,18 +5,12 @@ import type { EdenFetch } from './types'
 export type { EdenFetch } from './types'
 
 export const edenFetch =
-    (server: string, config?: EdenFetch.Config) =>
-    async (
-        endpoint: string,
-        {
-            params,
-            body,
-            ...options
-        }: Omit<RequestInit, 'headers'> & {
-            headers?: Record<string, unknown>
-            params?: Record<string, string>
-        }
-    ) => {
+    <App extends Elysia<any>>(
+        server: string,
+        config?: EdenFetch.Config
+    ): EdenFetch.Create<App> =>
+    // @ts-ignore
+    async (endpoint: string, { params, body, ...options } = {}) => {
         if (params)
             Object.entries(params).forEach(([key, value]) => {
                 endpoint = endpoint.replace(`:${key}`, value)
@@ -27,6 +21,7 @@ export const edenFetch =
         if (!contentType || contentType === 'application/json')
             body = JSON.stringify(body)
 
+        // @ts-ignore
         return fetch(server + endpoint, {
             ...options,
             headers: {
@@ -37,7 +32,7 @@ export const edenFetch =
         }).then(async (res) => {
             let data: Promise<unknown>
 
-            switch (res.headers.get('Content-Type')) {
+            switch (res.headers.get('Content-Type')?.split(';')[0]) {
                 case 'application/json':
                     data = res.json()
                     break
@@ -47,6 +42,8 @@ export const edenFetch =
                         if (!Number.isNaN(+data)) return +data
                         if (data === 'true') return true
                         if (data === 'false') return false
+
+                        return data
                     })
             }
 
@@ -56,5 +53,3 @@ export const edenFetch =
             return data
         })
     }
-
-export default edenFetch

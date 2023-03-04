@@ -5,7 +5,7 @@ specifiers:
   '@elysiajs/websocket': ^0.3.0-beta.0
   '@sinclair/typebox': ^0.25.21
   '@types/node': ^18.11.7
-  bun-types: ^0.5.0
+  bun-types: ^0.5.7
   elysia: ../elysia
   eslint: ^8.26.0
   rimraf: ^3.0.2
@@ -18,8 +18,8 @@ dependencies:
   superjson: 1.12.2
 
 devDependencies:
-  '@elysiajs/cors': 0.1.0_elysia@elysia
-  '@elysiajs/websocket': 0.3.0-beta.0_elysia@elysia
+  '@elysiajs/cors': 0.1.0
+  '@elysiajs/websocket': 0.3.0-beta.0
   '@sinclair/typebox': 0.25.24
   '@types/node': 18.14.2
   bun-types: 0.5.7
@@ -32,21 +32,18 @@ devDependencies:
 
 packages:
 
-  /@elysiajs/cors/0.1.0_elysia@elysia:
+  /@elysiajs/cors/0.1.0:
     resolution: {integrity: sha512-UE+aJY8jI++j4BnJ5I4bU3HH5KXHogSTjlJ84ZqTr97Uorz20tR2pLz2ZL94MNK3aLyESk1etjXg8qdfrWeHUg==}
     peerDependencies:
       elysia: '>= 0.1.0-rc.5'
-    dependencies:
-      elysia: link:../elysia
     dev: true
 
-  /@elysiajs/websocket/0.3.0-beta.0_elysia@elysia:
+  /@elysiajs/websocket/0.3.0-beta.0:
     resolution: {integrity: sha512-DNzW/qYhGmWPEdHfGnc9OX/MYs000PdMrx1zhHGF3st3vZYb+3Tk5n2N4mgN1tincvhWg+EgHf7wI0SUIz4cSw==}
     peerDependencies:
       elysia: '>= 0.3.0-beta.0'
       raikiri: '>= 0.0.0-beta.6'
     dependencies:
-      elysia: link:../elysia
       nanoid: 4.0.1
     dev: true
 

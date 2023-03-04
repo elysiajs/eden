@@ -154,7 +154,7 @@ const createProxy = (
             }).then(async (res) => {
                 let data: Promise<unknown>
 
-                switch (res.headers.get('Content-Type')) {
+                switch (res.headers.get('Content-Type')?.split(';')[0]) {
                     case 'application/json':
                         data = res.json()
                         break
@@ -164,6 +164,8 @@ const createProxy = (
                             if (!Number.isNaN(+data)) return +data
                             if (data === 'true') return true
                             if (data === 'false') return false
+
+                            return data
                         })
                 }
 
@@ -188,4 +190,3 @@ export const edenTreaty = <App extends Elysia<any>>(
         }
     ) as any
 
-export default edenTreaty

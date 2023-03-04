@@ -1,5 +1,5 @@
 import './style.css'
 
-import './fetch'
-import './fn'
-import './legacy'
+// import './fetch'
+// import './fn'
+import './treaty'
