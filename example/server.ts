@@ -1,52 +1,54 @@
-import { Elysia, SCHEMA, t } from 'elysia'
+import { Elysia, ws, t } from 'elysia'
 import { cors } from '@elysiajs/cors'
 
 const app = new Elysia()
+    .use(ws())
+    // .use(cors())
     .get('/something/here', () => 'Elysia')
-    .post('/number/1', () => 'A')
-    .post('/', () => 'Elysia', {
-        schema: {
-            body: t.Object({
-                id: t.Number()
-            })
-        }
-    })
+    // .post('/number/1', () => 'A')
+    // .post('/', () => 'Elysia', {
+    //     schema: {
+    //         body: t.Object({
+    //             id: t.Number()
+    //         })
+    //     }
+    // })
     .post('/name/:name', () => 1)
     .post('/a/bcd/:name/b', () => 1)
     .post('/id/here', () => 1)
     .post('/id/here/a', () => 1)
-    .get(
-        '/error',
-        ({ set }) => {
-            set.status = 400
+    // .get(
+    //     '/error',
+    //     ({ set }) => {
+    //         set.status = 400
 
-            return {
-                error: true,
-                message: 'Something'
-            }
-        },
-        {
-            schema: {
-                response: {
-                    200: t.Object({
-                        myName: t.String()
-                    }),
-                    400: t.Object({
-                        error: t.Boolean(),
-                        message: t.String()
-                    })
-                }
-            }
-        }
-    )
-    .post('/mirror', ({ body }) => body, {
-        schema: {
-            body: t.Object({
-                username: t.String(),
-                password: t.String()
-            })
-        }
-    })
+    //         return {
+    //             error: true,
+    //             message: 'Something'
+    //         }
+    //     },
+    //     {
+    //         schema: {
+    //             response: {
+    //                 200: t.Object({
+    //                     myName: t.String()
+    //                 }),
+    //                 400: t.Object({
+    //                     error: t.Boolean(),
+    //                     message: t.String()
+    //                 })
+    //             }
+    //         }
+    //     }
+    // )
+    // .post('/mirror', ({ body }) => body, {
+    //     schema: {
+    //         body: t.Object({
+    //             username: t.String(),
+    //             password: t.String()
+    //         })
+    //     }
+    // })
     .get('/sign-in', () => 'ok')
     .get('/products/nendoroid/skadi', () => 1)
     .post('/products/nendoroid', ({ body }) => body, {
@@ -83,24 +85,24 @@ const app = new Elysia()
         }
     )
     .group('/group', (app) => app.get('/in', () => 'Hi'))
-    // .ws('/ws/mirror', {
-    //     schema: {
-    //         body: t.String(),
-    //         response: t.String()
-    //     },
-    //     message(ws, message) {
-    //         ws.send(message)
-    //     }
-    // })
-    // .ws('/chat/:room/:name', {
-    //     message(ws, message) {
-    //         ws.send(message)
-    //     },
-    //     schema: {
-    //         body: t.String(),
-    //         response: t.String()
-    //     }
-    // })
+    .ws('/ws/mirror', {
+        schema: {
+            body: t.String(),
+            response: t.String()
+        },
+        message(ws, message) {
+            ws.send(message)
+        }
+    })
+    .ws('/chat/:room/:name', {
+        message(ws, message) {
+            ws.send(message)
+        },
+        schema: {
+            body: t.String(),
+            response: t.String()
+        }
+    })
     .setModel({
         success: t.Object({
             success: t.Boolean(),
@@ -128,22 +130,16 @@ const app = new Elysia()
             }
         }
     )
-    .fn({
-        mirror: async <T>(a: T) => a
-    })
-// .fn(({ permission }) => ({
-//     authorized: permission({
-//         value: () => 'authorized',
-//         check({ request: { headers } }) {
-//             if (!headers.has('Authorization'))
-//                 throw new Error('Authorization is required')
-//         }
-//     })
-// }))
-
-app
-    // @ts-ignore
-    .use(cors())
+    .fn(({ permission }) => ({
+        mirror: async <T>(a: T) => a,
+        // authorized: permission({
+        //     value: () => 'authorized',
+        //     check({ request: { headers } }) {
+        //         if (!headers.has('Authorization'))
+        //             throw new Error('Authorization is required')
+        //     }
+        // })
+    }))
     .listen(8080)
 
 export type Server = typeof app

@@ -1,81 +1,80 @@
 {
-    "name": "@elysiajs/eden",
-    "version": "0.3.0-beta.4",
-    "description": "Fully type-safe Elysia client",
-    "author": {
-        "name": "saltyAom",
-        "url": "https://github.com/SaltyAom",
-        "email": "saltyaom@gmail.com"
+  "name": "@elysiajs/eden",
+  "version": "0.3.0-rc.0",
+  "description": "Fully type-safe Elysia client",
+  "author": {
+    "name": "saltyAom",
+    "url": "https://github.com/SaltyAom",
+    "email": "saltyaom@gmail.com"
+  },
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "node": "./dist/index.js",
+      "default": "./dist/index.js"
     },
-    "main": "./dist/index.js",
-    "exports": {
-        ".": {
-            "require": "./dist/index.js",
-            "import": "./dist/index.mjs",
-            "node": "./dist/index.js",
-            "default": "./dist/index.js"
-        },
-        "./treaty": {
-            "require": "./dist/treaty.js",
-            "import": "./dist/treaty.mjs",
-            "node": "./dist/treaty.js",
-            "default": "./dist/treaty.js"
-        },
-        "./fetch": {
-            "require": "./dist/fetch.js",
-            "import": "./dist/fetch.mjs",
-            "node": "./dist/fetch.js",
-            "default": "./dist/fetch.js"
-        },
-        "./fn": {
-            "require": "./dist/fn.js",
-            "import": "./dist/fn.mjs",
-            "node": "./dist/fn.js",
-            "default": "./dist/fn.js"
-        }
+    "./treaty": {
+      "require": "./dist/treaty.js",
+      "import": "./dist/treaty.mjs",
+      "node": "./dist/treaty.js",
+      "default": "./dist/treaty.js"
     },
-    "types": "./src/index.ts",
-    "keywords": [
-        "elysia",
-        "eden",
-        "connector"
-    ],
-    "homepage": "https://github.com/elysiajs/elysia-eden",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/elysiajs/elysia-eden"
+    "./fetch": {
+      "require": "./dist/fetch.js",
+      "import": "./dist/fetch.mjs",
+      "node": "./dist/fetch.js",
+      "default": "./dist/fetch.js"
     },
-    "bugs": "https://github.com/elysiajs/elysia-eden/issues",
-    "license": "MIT",
-    "scripts": {
-        "dev": "bun run --hot example/index.ts",
-        "test": "bun wiptest",
-        "build": "vite build",
-        "release": "npm run build && npm run test && npm publish --access public"
-    },
-    "peerDependencies": {
-        "@sinclair/typebox": ">= 0.25.21",
-        "elysia": ">= 0.3.0-beta.5"
-    },
-    "peerDependenciesMeta": {
-        "@sinclair/typebox": {
-            "optional": true
-        }
-    },
-    "devDependencies": {
-        "@elysiajs/cors": "^0.1.0",
-        "@elysiajs/websocket": "^0.3.0-beta.0",
-        "@sinclair/typebox": "^0.25.21",
-        "@types/node": "^18.11.7",
-        "bun-types": "^0.5.7",
-        "elysia": "../elysia",
-        "eslint": "^8.26.0",
-        "rimraf": "^3.0.2",
-        "typescript": "^4.8.4",
-        "vite": "^4.0.1",
-        "vite-plugin-dts": "^1.7.1"
-    },
-    "dependencies": {
-        "superjson": "^1.12.2"
+    "./fn": {
+      "require": "./dist/fn.js",
+      "import": "./dist/fn.mjs",
+      "node": "./dist/fn.js",
+      "default": "./dist/fn.js"
     }
+  },
+  "types": "./src/index.ts",
+  "keywords": [
+    "elysia",
+    "eden",
+    "connector"
+  ],
+  "homepage": "https://github.com/elysiajs/elysia-eden",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elysiajs/elysia-eden"
+  },
+  "bugs": "https://github.com/elysiajs/elysia-eden/issues",
+  "license": "MIT",
+  "scripts": {
+    "dev": "bun run --hot example/index.ts",
+    "test": "bun wiptest",
+    "build": "vite build",
+    "release": "npm run build && npm run test && npm publish --access public"
+  },
+  "peerDependencies": {
+    "@sinclair/typebox": ">= 0.25.21",
+    "elysia": ">= 0.3.0-rc.1"
+  },
+  "peerDependenciesMeta": {
+    "@sinclair/typebox": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@elysiajs/cors": "^0.1.0",
+    "@sinclair/typebox": "^0.25.21",
+    "@types/node": "^18.11.7",
+    "bun-types": "^0.5.7",
+    "elysia": "../elysia",
+    "eslint": "^8.26.0",
+    "rimraf": "^3.0.2",
+    "typescript": "^4.8.4",
+    "vite": "^4.0.1",
+    "vite-plugin-dts": "^1.7.1"
+  },
+  "dependencies": {
+    "superjson": "^1.12.2"
+  }
 }

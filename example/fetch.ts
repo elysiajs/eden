@@ -71,20 +71,3 @@ const data = await fetch('/name/:name', {
 
 console.log(data)
 
-// const data = await fetch('/headers', {
-//     method: 'POST',
-//     headers: {
-//         'x-affiliation': 'Arius'
-//     }
-// })
-
-// const data = await fetch('/throw-error', {})
-// if (data instanceof Error) expect(data.value).toEqual('hare')
-
-// const data = await fetch('/direct-error', {})
-
-// if (data instanceof Error)
-//     switch (data.status) {
-//         case 500:
-//             expect(data.value).toEqual('hare')
-//     }

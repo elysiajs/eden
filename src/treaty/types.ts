@@ -28,7 +28,7 @@ export namespace EdenTreaty {
                       {
                           [Method in keyof A[Path]]: A[Path][Method] extends infer Route extends AnyTypedSchema
                               ? Method extends 'subscribe'
-                                  ? IsUnknown<Route['query']> extends true
+                                  ? undefined extends Route['query']
                                       ? (params?: {
                                             $query?: Record<string, string>
                                         }) => EdenWS<Route>
