@@ -79,6 +79,11 @@ const app = new Elysia()
                         error: t.String(),
                         name: t.String(),
                         id: t.String()
+                    }),
+                    401: t.Object({
+                        error: t.String(),
+                        name: t.String(),
+                        id: t.String()
                     })
                 }
             }

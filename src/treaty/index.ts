@@ -48,6 +48,15 @@ export class EdenWS<Schema extends TypedSchema<any> = TypedSchema> {
         return this
     }
 
+    subscribe(
+        onMessage: (
+            event: EdenTreaty.WSEvent<'message', Schema['response']>
+        ) => void,
+        options?: boolean | AddEventListenerOptions
+    ) {
+        return this.addEventListener('message', onMessage, options)
+    }
+
     addEventListener<K extends keyof WebSocketEventMap>(
         type: K,
         listener: (event: EdenTreaty.WSEvent<K, Schema['response']>) => void,

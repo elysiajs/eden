@@ -81,10 +81,19 @@ export namespace EdenTreaty {
                                           }
                                         | {
                                               data: null
-                                              error: EdenFetchError<
-                                                  number,
-                                                  string
-                                              >
+                                              error: MapError<
+                                                  Route['response']
+                                              > extends infer Errors
+                                                  ? IsNever<Errors> extends true
+                                                      ? EdenFetchError<
+                                                            number,
+                                                            string
+                                                        >
+                                                      : Errors
+                                                  : EdenFetchError<
+                                                        number,
+                                                        string
+                                                    >
                                           }
                                     >
                               : never
