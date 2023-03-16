@@ -51,52 +51,69 @@ const client = edenTreaty<typeof app>('http://localhost:8080')
 
 describe('Eden Rest', () => {
     it('get index', async () => {
-        expect(await client.index.get()).toBe('hi')
+        const { data } = await client.index.get()
+
+        expect(data).toBe('hi')
     })
 
     it('post index', async () => {
-        expect(await client.index.get()).toBe('hi')
+        const { data } = await client.index.get()
+
+        expect(data).toBe('hi')
     })
 
     it('post mirror', async () => {
         const body = { username: 'A', password: 'B' }
 
-        expect(await client.mirror.post(body)).toEqual(body)
+        const { data } = await client.mirror.post(body)
+
+        expect(data).toEqual(body)
     })
 
     it('get query', async () => {
         const $query = { username: 'A', password: 'B' }
 
-        expect(
-            await client.query.get({
-                $query
-            })
-        ).toEqual($query)
+        const { data } = await client.query.get({
+            $query
+        })
+
+        expect(data).toEqual($query)
     })
 
     it('parse number', async () => {
-        expect(await client.number.get()).toEqual(1)
+        const { data } = await client.number.get()
+
+        expect(data).toEqual(1)
     })
 
     it('parse true', async () => {
-        expect(await client.true.get()).toEqual(true)
+        const { data } = await client.true.get()
+
+        expect(data).toEqual(true)
     })
 
     it('parse false', async () => {
-        expect(await client.false.get()).toEqual(false)
+        const { data } = await client.false.get()
+
+        expect(data).toEqual(false)
     })
 
     it('parse json with extra parameters', async () => {
-        expect(await client['json-utf8'].get()).toEqual(utf8Json)
+        const { data } = await client['json-utf8'].get()
+        expect(data).toEqual(utf8Json)
     })
 
     // ? Test for type inference
     it('handle group and guard', async () => {
-        expect(await client.v2.data.get()).toEqual('hi')
+        const { data } = await client.v2.data.get()
+
+        expect(data).toEqual('hi')
     })
 
     // ? Test for type inference
     it('strictly type plugin prefix', async () => {
-        expect(await client.prefix.prefixed.get()).toBe('hi')
+        const { data } = await client.prefix.prefixed.get()
+
+        expect(data).toBe('hi')
     })
 })

@@ -161,15 +161,15 @@ const createProxy = (
                       }
                     : undefined
             }).then(async (res) => {
-                let data: Promise<unknown>
+                let data
 
                 switch (res.headers.get('Content-Type')?.split(';')[0]) {
                     case 'application/json':
-                        data = res.json()
+                        data = await res.json()
                         break
 
                     default:
-                        data = res.text().then((data) => {
+                        data = await res.text().then((data) => {
                             if (!Number.isNaN(+data)) return +data
                             if (data === 'true') return true
                             if (data === 'false') return false

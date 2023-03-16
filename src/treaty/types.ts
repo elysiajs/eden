@@ -142,11 +142,27 @@ export namespace EdenTreaty {
                                         $fetch?: RequestInit
                                     }
                                 ) => Promise<
-                                    Route['response'] extends {
-                                        200: infer ReturnedType
-                                    }
-                                        ? ReturnedType
-                                        : unknown
+                                    | {
+                                          data: Route['response'] extends {
+                                              200: infer ReturnedType
+                                          }
+                                              ? ReturnedType
+                                              : unknown
+                                          error: null
+                                      }
+                                    | {
+                                          data: null
+                                          error: MapError<
+                                              Route['response']
+                                          > extends infer Errors
+                                              ? IsNever<Errors> extends true
+                                                  ? EdenFetchError<
+                                                        number,
+                                                        string
+                                                    >
+                                                  : Errors
+                                              : EdenFetchError<number, string>
+                                      }
                                 >
                           : never
                   }
