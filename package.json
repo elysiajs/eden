@@ -54,7 +54,7 @@
     "release": "npm run build && npm run test && npm publish --access public"
   },
   "peerDependencies": {
-    "@sinclair/typebox": ">= 0.25.21",
+    "@sinclair/typebox": ">= 0.25.24",
     "elysia": ">= 0.3.0-rc.1"
   },
   "peerDependenciesMeta": {
@@ -64,10 +64,10 @@
   },
   "devDependencies": {
     "@elysiajs/cors": "^0.1.0",
-    "@sinclair/typebox": "^0.25.21",
+    "@sinclair/typebox": "^0.25.24",
     "@types/node": "^18.11.7",
     "bun-types": "^0.5.7",
-    "elysia": "0.3.0-rc.2",
+    "elysia": "rc",
     "eslint": "^8.26.0",
     "rimraf": "^3.0.2",
     "typescript": "^4.8.4",

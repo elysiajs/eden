@@ -43,29 +43,49 @@ export namespace EdenTreaty {
                                   ? (params?: {
                                         $query?: Record<string, string>
                                         $fetch?: RequestInit
-                                    }) =>
-                                        | Promise<Route['response']['200']>
-                                        | (MapError<
-                                              Route['response']
-                                          > extends infer Errors
-                                              ? IsNever<Errors> extends true
-                                                  ? EdenFetchError<
+                                    }) => Promise<
+                                        | {
+                                              data: Route['response']['200']
+                                              error: null
+                                          }
+                                        | {
+                                              data: null
+                                              error: MapError<
+                                                  Route['response']
+                                              > extends infer Errors
+                                                  ? IsNever<Errors> extends true
+                                                      ? EdenFetchError<
+                                                            number,
+                                                            string
+                                                        >
+                                                      : Errors
+                                                  : EdenFetchError<
                                                         number,
                                                         string
                                                     >
-                                                  : Errors
-                                              : never)
+                                          }
+                                    >
                                   : (
                                         params: Route['body'] & {
                                             $query?: Record<string, string>
                                             $fetch?: RequestInit
                                         }
                                     ) => Promise<
-                                        Route['response'] extends {
-                                            200: infer ReturnedType
-                                        }
-                                            ? ReturnedType
-                                            : unknown
+                                        | {
+                                              data: Route['response'] extends {
+                                                  200: infer ReturnedType
+                                              }
+                                                  ? ReturnedType
+                                                  : unknown
+                                              error: null
+                                          }
+                                        | {
+                                              data: null
+                                              error: EdenFetchError<
+                                                  number,
+                                                  string
+                                              >
+                                          }
                                     >
                               : never
                       }
@@ -88,15 +108,25 @@ export namespace EdenTreaty {
                               ? (params?: {
                                     $query?: Record<string, string>
                                     $fetch?: RequestInit
-                                }) =>
-                                    | Promise<Route['response']['200']>
-                                    | (MapError<
-                                          Route['response']
-                                      > extends infer Errors
-                                          ? IsNever<Errors> extends true
-                                              ? EdenFetchError<number, string>
-                                              : Errors
-                                          : never)
+                                }) => Promise<
+                                    | {
+                                          data: Route['response']['200']
+                                          error: null
+                                      }
+                                    | {
+                                          data: null
+                                          error: MapError<
+                                              Route['response']
+                                          > extends infer Errors
+                                              ? IsNever<Errors> extends true
+                                                  ? EdenFetchError<
+                                                        number,
+                                                        string
+                                                    >
+                                                  : Errors
+                                              : EdenFetchError<number, string>
+                                      }
+                                >
                               : (
                                     params: Route['body'] & {
                                         $query?: Record<string, string>
@@ -133,8 +163,8 @@ export namespace EdenTreaty {
 
 type NestPath<T extends string, V> = T extends `${infer First}/${infer Rest}`
     ? First extends `:${infer Parameter}`
-        ? Record<(string & {}) | `:${Parameter}`, NestPath<Rest, V>>
+        ? Record<string | number | `:${Parameter}`, NestPath<Rest, V>>
         : Record<First, NestPath<Rest, V>>
     : T extends `:${infer Parameter}`
-    ? Record<(string & {}) | T, V>
+    ? Record<string | number | T, V>
     : Record<T, V>

@@ -170,9 +170,12 @@ const createProxy = (
                 }
 
                 if (res.status > 300)
-                    return new EdenFetchError(res.status, await data)
+                    return {
+                        data,
+                        error: new EdenFetchError(res.status, await data)
+                    }
 
-                return data
+                return { data, error: null }
             })
         }
     }) as unknown as Record<string, unknown>
@@ -189,4 +192,3 @@ export const edenTreaty = <App extends Elysia<any>>(
             }
         }
     ) as any
-

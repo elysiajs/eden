@@ -5,7 +5,7 @@ specifiers:
   '@sinclair/typebox': ^0.25.21
   '@types/node': ^18.11.7
   bun-types: ^0.5.7
-  elysia: ../elysia
+  elysia: rc
   eslint: ^8.26.0
   rimraf: ^3.0.2
   superjson: ^1.12.2
@@ -17,11 +17,11 @@ dependencies:
   superjson: 1.12.2
 
 devDependencies:
-  '@elysiajs/cors': 0.1.0_elysia@elysia
+  '@elysiajs/cors': 0.1.0_elysia@0.3.0-rc.6
   '@sinclair/typebox': 0.25.24
   '@types/node': 18.14.6
   bun-types: 0.5.7
-  elysia: link:../elysia
+  elysia: 0.3.0-rc.6
   eslint: 8.35.0
   rimraf: 3.0.2
   typescript: 4.9.5
@@ -30,12 +30,12 @@ devDependencies:
 
 packages:
 
-  /@elysiajs/cors/0.1.0_elysia@elysia:
+  /@elysiajs/cors/0.1.0_elysia@0.3.0-rc.6:
     resolution: {integrity: sha512-UE+aJY8jI++j4BnJ5I4bU3HH5KXHogSTjlJ84ZqTr97Uorz20tR2pLz2ZL94MNK3aLyESk1etjXg8qdfrWeHUg==}
     peerDependencies:
       elysia: '>= 0.1.0-rc.5'
     dependencies:
-      elysia: link:../elysia
+      elysia: 0.3.0-rc.6
     dev: true
 
   /@esbuild/android-arm/0.16.17:
@@ -537,7 +537,6 @@ packages:
     engines: {node: '>=12.13'}
     dependencies:
       is-what: 4.1.8
-    dev: false
 
   /cross-spawn/7.0.3:
     resolution: {integrity: sha512-iRDPJKUPVEND7dHPO8rkbOnPpyDygcDFtWjpeWNCgy8WP2rXcxXL8TskReQl6OrB2G7+UJrags1q15Fudc7G6w==}
@@ -569,6 +568,21 @@ packages:
     engines: {node: '>=6.0.0'}
     dependencies:
       esutils: 2.0.3
+    dev: true
+
+  /elysia/0.3.0-rc.6:
+    resolution: {integrity: sha512-A5jwbhMkJIRAs3K4feHRiJolPN+Htborjsup980RmHm0pXvz/fNKJ4CxW/crb3EQFPKOhE5K8dfhjJ9W28sxew==}
+    peerDependenciesMeta:
+      '@sinclair/typebox':
+        optional: true
+      openapi-types:
+        optional: true
+    dependencies:
+      '@sinclair/typebox': 0.25.24
+      nanoid: 4.0.1
+      openapi-types: 12.1.0
+      raikiri: 0.0.0-beta.8
+      superjson: 1.12.2
     dev: true
 
   /esbuild/0.16.17:
@@ -934,7 +948,6 @@ packages:
   /is-what/4.1.8:
     resolution: {integrity: sha512-yq8gMao5upkPoGEU9LsB2P+K3Kt8Q3fQFCGyNCWOAnJAMzEXVV9drYb0TXr42TTliLLhKIBvulgAXgtLLnwzGA==}
     engines: {node: '>=12.13'}
-    dev: false
 
   /isexe/2.0.0:
     resolution: {integrity: sha512-RHxMLp9lnKHGHRng9QFhRCMbYAcVpn69smSGcq3f36xjgVVWThj4qqLbTLlq7Ssj8B+fIQ1EuCEGI2lKsyQeIw==}
@@ -1061,6 +1074,12 @@ packages:
     hasBin: true
     dev: true
 
+  /nanoid/4.0.1:
+    resolution: {integrity: sha512-udKGtCCUafD3nQtJg9wBhRP3KMbPglUsgV5JVsXhvyBs/oefqb4sqMEhKBBgqZncYowu58p1prsZQBYvAj/Gww==}
+    engines: {node: ^14 || ^16 || >=18}
+    hasBin: true
+    dev: true
+
   /natural-compare/1.4.0:
     resolution: {integrity: sha512-OWND8ei3VtNC9h7V60qff3SVobHr996CTwgxubgyQYEpg290h9J0buyECNNJexkFm5sOajh5G116RYA1c8ZMSw==}
     dev: true
@@ -1069,6 +1088,10 @@ packages:
     resolution: {integrity: sha512-lNaJgI+2Q5URQBkccEKHTQOPaXdUxnZZElQTZY0MFUAuaEqe1E+Nyvgdz/aIyNi6Z9MzO5dv1H8n58/GELp3+w==}
     dependencies:
       wrappy: 1.0.2
+    dev: true
+
+  /openapi-types/12.1.0:
+    resolution: {integrity: sha512-XpeCy01X6L5EpP+6Hc3jWN7rMZJ+/k1lwki/kTmWzbVhdPie3jd5O2ZtedEx8Yp58icJ0osVldLMrTB/zslQXA==}
     dev: true
 
   /optionator/0.9.1:
@@ -1157,6 +1180,10 @@ packages:
 
   /queue-microtask/1.2.3:
     resolution: {integrity: sha512-NuaNSa6flKT5JaSYQzJok04JzTL1CA6aGhv5rfLW3PgqA+M2ChpZQnAC8h8i4ZFkBS8X5RqkDBHA7r4hej3K9A==}
+    dev: true
+
+  /raikiri/0.0.0-beta.8:
+    resolution: {integrity: sha512-cH/yfvkiGkN8IBB2MkRHikpPurTnd2sMkQ/xtGpXrp3O76P4ppcWPb+86mJaBDzKaclLnSX+9NnT79D7ifH4/w==}
     dev: true
 
   /regexpp/3.2.0:
@@ -1267,7 +1294,6 @@ packages:
     engines: {node: '>=10'}
     dependencies:
       copy-anything: 3.0.3
-    dev: false
 
   /supports-color/7.2.0:
     resolution: {integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==}

@@ -3,8 +3,16 @@ import type { Server } from '../../server'
 
 export const client = edenTreaty<Server>('http://localhost:8080')
 
-const a = await client.index.post({
-    id: 1
+client.products.nendoroid[':id']
+
+const { data, error } = await client.products.nendoroid['1902'].put({
+    name: 'Anya Forger'
 })
 
-console.log(a)
+if (!error) console.log(data)
+
+const mirror = client.ws.mirror.subscribe()
+
+setInterval(() => {
+    mirror.send('a')
+}, 200)

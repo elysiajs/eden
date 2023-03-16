@@ -3,9 +3,9 @@ import { cors } from '@elysiajs/cors'
 
 const app = new Elysia()
     .use(ws())
-    // .use(cors())
+    .use(cors())
     .get('/something/here', () => 'Elysia')
-    // .post('/number/1', () => 'A')
+    .post('/', () => 'A')
     // .post('/', () => 'Elysia', {
     //     schema: {
     //         body: t.Object({

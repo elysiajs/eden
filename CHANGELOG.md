@@ -1,3 +1,22 @@
+# 0.3.0-rc.1 - 16 Mar 2023
+Improvement:
+- Update @sinclair/typebox to 0.25.24
+
+Breaking Change:
+- Eden Treaty error handling using object destructuring
+    - To migrate:
+    ```ts
+    // to
+    const anya = await client.products.nendoroid['1902'].put({
+        name: 'Anya Forger'
+    })
+
+    // From
+    const { data: anya, error } = await client.products.nendoroid['1902'].put({
+        name: 'Anya Forger'
+    })
+    ```
+
 # 0.3.0-rc.0 - 7 Mar 2023
 Improvement:
 - Add support for Elysia 0.3.0-rc.0
