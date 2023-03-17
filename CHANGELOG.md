@@ -1,9 +1,13 @@
+# 0.3.0-rc.2 - 17 Mar 2023
+Breaking Change:
+- Eden Fetch error handling use object destructuring, migration as same as Eden Treaty (0.3.0-rc.1)
+
 # 0.3.0-rc.1 - 16 Mar 2023
 Improvement:
 - Update @sinclair/typebox to 0.25.24
 
 Breaking Change:
-- Eden Treaty error handling using object destructuring
+- Eden Treaty error handling use object destructuring
     - To migrate:
     ```ts
     // to

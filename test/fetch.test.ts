@@ -64,13 +64,13 @@ const fetch = edenFetch<typeof app>('http://localhost:8080')
 
 describe('Eden Fetch', () => {
     it('get by default', async () => {
-        const data = await fetch('/', {})
+        const { data } = await fetch('/', {})
 
         expect(data).toBe('hi')
     })
 
     it('post', async () => {
-        const data = await fetch('/', {
+        const { data } = await fetch('/', {
             method: 'POST'
         })
 
@@ -78,19 +78,19 @@ describe('Eden Fetch', () => {
     })
 
     it('parse json', async () => {
-        const data = await fetch('/json', {})
+        const { data } = await fetch('/json', {})
 
         expect(data).toEqual(json)
     })
 
     it('parse json with additional parameters', async () => {
-        const data = await fetch('/json-utf8', {})
+        const { data } = await fetch('/json-utf8', {})
 
         expect(data).toEqual(json)
     })
 
     it('send parameters', async () => {
-        const data = await fetch('/name/:name', {
+        const { data } = await fetch('/name/:name', {
             params: {
                 name: 'Elysia'
             }
@@ -100,7 +100,7 @@ describe('Eden Fetch', () => {
     })
 
     it('send headers', async () => {
-        const data = await fetch('/headers', {
+        const { data } = await fetch('/headers', {
             method: 'POST',
             headers: {
                 'x-affiliation': 'Arius'
@@ -111,40 +111,40 @@ describe('Eden Fetch', () => {
     })
 
     it('parse number', async () => {
-        const data = await fetch('/number', {})
+        const { data } = await fetch('/number', {})
 
         expect(data).toEqual(1)
     })
 
     it('parse true', async () => {
-        const data = await fetch('/true', {})
+        const { data } = await fetch('/true', {})
 
         expect(data).toEqual(true)
     })
 
     it('parse false', async () => {
-        const data = await fetch('/false', {})
+        const { data } = await fetch('/false', {})
 
         expect(data).toEqual(false)
     })
 
     it('handle throw error', async () => {
-        const data = await fetch('/throw-error', {})
+        const { data, error } = await fetch('/throw-error', {})
 
-        expect(data instanceof Error).toEqual(true)
+        expect(error instanceof Error).toEqual(true)
 
-        if (data instanceof Error) expect(data.value).toEqual('hare')
+        expect(error?.value).toEqual('hare')
     })
 
     it('scope down error', async () => {
-        const data = await fetch('/direct-error', {})
+        const { data, error } = await fetch('/direct-error', {})
 
-        expect(data instanceof Error).toEqual(true)
+        expect(error instanceof Error).toEqual(true)
 
-        if (data instanceof Error)
-            switch (data.status) {
+        if (error)
+            switch (error.status) {
                 case 500:
-                    expect(data.value).toEqual('hare')
+                    expect(error.value).toEqual('hare')
             }
     })
 })

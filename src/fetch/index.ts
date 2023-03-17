@@ -30,15 +30,15 @@ export const edenFetch =
             },
             body
         }).then(async (res) => {
-            let data: Promise<unknown>
+            let data
 
             switch (res.headers.get('Content-Type')?.split(';')[0]) {
                 case 'application/json':
-                    data = res.json()
+                    data = await res.json()
                     break
 
                 default:
-                    data = res.text().then((data) => {
+                    data = await res.text().then((data) => {
                         if (!Number.isNaN(+data)) return +data
                         if (data === 'true') return true
                         if (data === 'false') return false
@@ -48,8 +48,11 @@ export const edenFetch =
             }
 
             if (res.status > 300)
-                return new EdenFetchError(res.status, await data)
+                return {
+                    data: null,
+                    error: new EdenFetchError(res.status, data)
+                }
 
-            return data
+            return { data, error: null }
         })
     }

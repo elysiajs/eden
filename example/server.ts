@@ -137,13 +137,23 @@ const app = new Elysia()
     )
     .fn(({ permission }) => ({
         mirror: async <T>(a: T) => a,
-        // authorized: permission({
-        //     value: () => 'authorized',
-        //     check({ request: { headers } }) {
-        //         if (!headers.has('Authorization'))
-        //             throw new Error('Authorization is required')
-        //     }
-        // })
+        authorized: permission({
+            value: {
+                a: (a: string) => {},
+                b: () => {}
+            },
+            check({ key, request: { headers }, match }) {
+                if (!headers.has('Authorization'))
+                    throw new Error('Authorization is required')
+
+                return match({
+                    a(param) {
+
+                    },
+                    default() {}
+                })
+            }
+        })
     }))
     .listen(8080)
 

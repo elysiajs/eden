@@ -1,15 +1,20 @@
-// import { eden } from '@elysia/eden'
-// import type { Server } from '../../server'
+import { edenFn } from '@elysia/eden'
+import type { Server } from '../../server'
 
-// export const client = eden<Server>('http://localhost:8080')
-// const fn = client.fn
+export const fn = edenFn<Server>('http://localhost:8080', {
+    fn: '/~fn',
+    fetch: {
+        headers: {
+            Authorized: something
+        }
+    }
+})
 
-// // @ts-ignore
-// const app = document.querySelector<HTMLDivElement>('#app')!
+// @ts-ignore
+const app = document.querySelector<HTMLDivElement>('#app')!
 
-// app.textContent = await fn.mirror(1).then((x) => x.toString())
+app.textContent = await fn.mirror(1).then((x) => x.toString())
 
-// Promise.allSettled([fn.mirror(1), fn.authorized()]).then(console.log)
-// Promise.all(new Array(100).fill(null).map((_, i) => fn.mirror(i))).then(
-//     console.log
-// )
+Promise.all(new Array(100).fill(null).map((_, i) => fn.mirror(i))).then(
+    console.log
+)

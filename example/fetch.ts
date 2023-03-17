@@ -63,7 +63,7 @@ const fetch = edenFetch<typeof app>('http://localhost:8080')
 
 await fetch('/json-utf8', {})
 
-const data = await fetch('/name/:name', {
+const { data } = await fetch('/name/:name', {
     params: {
         name: 'elysia'
     }

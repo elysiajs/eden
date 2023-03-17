@@ -3,7 +3,7 @@ import type { Server } from '../../server'
 
 const fetch = edenFetch<Server>('http://localhost:8080')
 
-const data = await fetch('/products/nendoroid/:id', {
+const { data, error } = await fetch('/products/nendoroid/:id', {
     method: 'PUT',
     body: {
         name: 'a'
@@ -12,3 +12,6 @@ const data = await fetch('/products/nendoroid/:id', {
         id: 'a'
     }
 })
+
+data
+error

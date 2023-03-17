@@ -1,14 +1,10 @@
 # @elysiajs/eden
-Fully type-safe Elysia client.
+Fully type-safe Elysia client refers to the [documentation](https://elysiajs.com/plugins/eden/overview)
 
 ## Installation
 ```bash
-bun add @elysiajs/eden
-bun add -d elysia
+bun add elysia @elysiajs/eden
 ```
-
-### note
-Eden requires type definition from elysia to infer type accurately, it's recommended to install elysia as devDependencies with the same version as your API.
 
 ## Example
 ```typescript
@@ -31,20 +27,20 @@ const app = new Elysia()
 export type App = typeof app
 
 // client.ts
-import { eden } from '@elysiajs/eden'
+import { edenTreaty } from '@elysiajs/eden'
 import type { App } from './server'
 
-const client = eden<App>('http://localhost:8080')
+const app = edenTreaty<App>('http://localhost:8080')
 
-// return: Hi Elysia (fully type-safe)
-client.index.get().then(console.log)
+// data: Hi Elysia (fully type-safe)
+const { data: pong } = app.index.get()
 
-// return: 1895
-client.id.1895.get().then(console.log)
+// data: 1895
+const { data: id } = client.id.1895.get()
 
-// return: { id: 1895, name: 'Skadi' }
-client.mirror.post({
+// data: { id: 1895, name: 'Skadi' }
+const { data: nendoroid } = app.mirror.post({
     id: 1895,
     name: 'Skadi'
-}).then(console.log)
+})
 ```

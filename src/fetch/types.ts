@@ -43,11 +43,18 @@ export namespace EdenFetch {
             (IsUnknown<Route['body']> extends false
                 ? { body: Route['body'] }
                 : { body?: unknown })
-    ) =>
-        | Promise<Route['response']['200']>
-        | (MapError<Route['response']> extends infer Errors
-              ? IsNever<Errors> extends true
-                  ? EdenFetchError<number, string>
-                  : Errors
-              : never)
+    ) => Promise<
+        | {
+              data: Route['response']['200']
+              error: null
+          }
+        | {
+              data: null
+              error: MapError<Route['response']> extends infer Errors
+                  ? IsNever<Errors> extends true
+                      ? EdenFetchError<number, string>
+                      : Errors
+                  : EdenFetchError<number, string>
+          }
+    >
 }
