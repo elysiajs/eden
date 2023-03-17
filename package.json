@@ -1,6 +1,6 @@
 {
   "name": "@elysiajs/eden",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Fully type-safe Elysia client",
   "author": {
     "name": "saltyAom",
@@ -9,10 +9,30 @@
   },
   "main": "./dist/index.js",
   "exports": {
-    "require": "./dist/index.js",
-    "import": "./dist/index.mjs",
-    "node": "./dist/index.js",
-    "default": "./dist/index.js"
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "node": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./treaty": {
+      "require": "./dist/treaty.js",
+      "import": "./dist/treaty.mjs",
+      "node": "./dist/treaty.js",
+      "default": "./dist/treaty.js"
+    },
+    "./fetch": {
+      "require": "./dist/fetch.js",
+      "import": "./dist/fetch.mjs",
+      "node": "./dist/fetch.js",
+      "default": "./dist/fetch.js"
+    },
+    "./fn": {
+      "require": "./dist/fn.js",
+      "import": "./dist/fn.mjs",
+      "node": "./dist/fn.js",
+      "default": "./dist/fn.js"
+    }
   },
   "types": "./src/index.ts",
   "keywords": [
@@ -34,19 +54,27 @@
     "release": "npm run build && npm run test && npm publish --access public"
   },
   "peerDependencies": {
-    "elysia": ">= 0.2.0"
+    "@sinclair/typebox": ">= 0.25.24",
+    "elysia": ">= 0.3.0"
+  },
+  "peerDependenciesMeta": {
+    "@sinclair/typebox": {
+      "optional": true
+    }
   },
   "devDependencies": {
     "@elysiajs/cors": "^0.1.0",
-    "@elysiajs/websocket": "^0.2.6",
-    "@sinclair/typebox": "^0.25.21",
+    "@sinclair/typebox": "^0.25.24",
     "@types/node": "^18.11.7",
-    "bun-types": "^0.3.0",
+    "bun-types": "^0.5.7",
+    "elysia": "^0.3.0",
     "eslint": "^8.26.0",
-    "elysia": "^0.2.0",
     "rimraf": "^3.0.2",
     "typescript": "^4.8.4",
     "vite": "^4.0.1",
     "vite-plugin-dts": "^1.7.1"
+  },
+  "dependencies": {
+    "superjson": "^1.12.2"
   }
 }

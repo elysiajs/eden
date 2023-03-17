@@ -11,6 +11,7 @@ pnpm-lock.yaml
 jest.config.js
 nodemon.json
 
+trace
 example
 tests
 test

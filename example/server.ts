@@ -1,21 +1,54 @@
-import { Elysia, t, SCHEMA } from 'elysia'
+import { Elysia, ws, t } from 'elysia'
 import { cors } from '@elysiajs/cors'
-import { websocket } from '@elysiajs/websocket'
 
 const app = new Elysia()
+    .use(ws())
     .use(cors())
-    .use(websocket())
-    .get('/', () => 'Elysia')
-    .post('/', () => 'Elysia')
-    .get('/id/:id', () => 1)
-    .post('/mirror', ({ body }) => body, {
-        schema: {
-            body: t.Object({
-                username: t.String(),
-                password: t.String()
-            })
-        }
-    })
+    .get('/something/here', () => 'Elysia')
+    .post('/', () => 'A')
+    // .post('/', () => 'Elysia', {
+    //     schema: {
+    //         body: t.Object({
+    //             id: t.Number()
+    //         })
+    //     }
+    // })
+    .post('/name/:name', () => 1)
+    .post('/a/bcd/:name/b', () => 1)
+    .post('/id/here', () => 1)
+    .post('/id/here/a', () => 1)
+    // .get(
+    //     '/error',
+    //     ({ set }) => {
+    //         set.status = 400
+
+    //         return {
+    //             error: true,
+    //             message: 'Something'
+    //         }
+    //     },
+    //     {
+    //         schema: {
+    //             response: {
+    //                 200: t.Object({
+    //                     myName: t.String()
+    //                 }),
+    //                 400: t.Object({
+    //                     error: t.Boolean(),
+    //                     message: t.String()
+    //                 })
+    //             }
+    //         }
+    //     }
+    // )
+    // .post('/mirror', ({ body }) => body, {
+    //     schema: {
+    //         body: t.Object({
+    //             username: t.String(),
+    //             password: t.String()
+    //         })
+    //     }
+    // })
     .get('/sign-in', () => 'ok')
     .get('/products/nendoroid/skadi', () => 1)
     .post('/products/nendoroid', ({ body }) => body, {
@@ -28,15 +61,31 @@ const app = new Elysia()
     })
     .put(
         '/products/nendoroid/:id',
-        ({ body, params: { id } }) => ({
-            ...body,
+        ({ body: { name }, params: { id } }) => ({
+            name,
             id
         }),
         {
             schema: {
                 body: t.Object({
                     name: t.String()
-                })
+                }),
+                response: {
+                    200: t.Object({
+                        name: t.String(),
+                        id: t.String()
+                    }),
+                    400: t.Object({
+                        error: t.String(),
+                        name: t.String(),
+                        id: t.String()
+                    }),
+                    401: t.Object({
+                        error: t.String(),
+                        name: t.String(),
+                        id: t.String()
+                    })
+                }
             }
         }
     )
@@ -69,19 +118,43 @@ const app = new Elysia()
             data: t.Null()
         })
     })
-    .get('/union-type', () => {
-        return {
-            success: true,
-            data: null
-        }
-    }, {
-        'schema': {
-            'response': {
-                200: 'success',
-                400: 'fail'
+    .get(
+        '/union-type',
+        () => {
+            return {
+                success: true,
+                data: null
+            }
+        },
+        {
+            schema: {
+                response: {
+                    200: 'success',
+                    400: 'fail'
+                }
             }
         }
-    })
+    )
+    .fn(({ permission }) => ({
+        mirror: async <T>(a: T) => a,
+        authorized: permission({
+            value: {
+                a: (a: string) => {},
+                b: () => {}
+            },
+            check({ key, request: { headers }, match }) {
+                if (!headers.has('Authorization'))
+                    throw new Error('Authorization is required')
+
+                return match({
+                    a(param) {
+
+                    },
+                    default() {}
+                })
+            }
+        })
+    }))
     .listen(8080)
 
 export type Server = typeof app
