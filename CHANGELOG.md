@@ -1,3 +1,7 @@
+# 0.3.0 - 17 Mar 2023
+Improvement:
+- Add support for Elysia 0.3.0
+
 # 0.3.0-rc.2 - 17 Mar 2023
 Breaking Change:
 - Eden Fetch error handling use object destructuring, migration as same as Eden Treaty (0.3.0-rc.1)
