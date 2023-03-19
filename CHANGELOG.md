@@ -1,3 +1,7 @@
+# 0.3.1 - 20 Mar 2023
+Improvement:
+- Path parameter inference
+
 # 0.3.0 - 17 Mar 2023
 Improvement:
 - Add support for Elysia 0.3.0

@@ -188,8 +188,8 @@ export namespace EdenTreaty {
 
 type NestPath<T extends string, V> = T extends `${infer First}/${infer Rest}`
     ? First extends `:${infer Parameter}`
-        ? Record<string | number | `:${Parameter}`, NestPath<Rest, V>>
+        ? Record<(string & {}) | number | `:${Parameter}`, NestPath<Rest, V>>
         : Record<First, NestPath<Rest, V>>
     : T extends `:${infer Parameter}`
-    ? Record<string | number | T, V>
+    ? Record<(string & {}) | number | T, V>
     : Record<T, V>

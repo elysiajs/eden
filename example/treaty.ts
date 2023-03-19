@@ -7,14 +7,16 @@ const { data, error } = await treaty.products.nendoroid[1902].put({
     name: 'Anya Forger'
 })
 
-if(error)
-    switch(error.status) {
+treaty.products.nendoroid[':id']
+
+if (error)
+    switch (error.status) {
         case 400:
         case 401:
             break
     }
 
-if(data) {
+if (data) {
     console.log(data)
 }
 
