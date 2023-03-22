@@ -4,6 +4,12 @@ import type { EdenWS } from './index'
 import type { IsNever, IsUnknown, MapError, UnionToIntersect } from '../types'
 import { EdenFetchError } from '../utils'
 
+type Replace<RecordType, TargetType, GenericType> = {
+    [K in keyof RecordType]: RecordType[K] extends TargetType
+        ? GenericType
+        : RecordType[K]
+}
+
 export namespace EdenTreaty {
     export type Create<App extends Elysia<any>> = App['meta'] extends Record<
         typeof SCHEMA,
@@ -66,7 +72,11 @@ export namespace EdenTreaty {
                                           }
                                     >
                                   : (
-                                        params: Route['body'] & {
+                                        params: Replace<
+                                            Route['body'],
+                                            Blob | Blob[],
+                                            File | FileList
+                                        > & {
                                             $query?: Record<string, string>
                                             $fetch?: RequestInit
                                         }
@@ -137,7 +147,11 @@ export namespace EdenTreaty {
                                       }
                                 >
                               : (
-                                    params: Route['body'] & {
+                                    params: Replace<
+                                        Route['body'],
+                                        Blob | Blob[],
+                                        File | FileList
+                                    > & {
                                         $query?: Record<string, string>
                                         $fetch?: RequestInit
                                     }

@@ -58,9 +58,9 @@ const app = new Elysia()
             }
         }
     )
-    .listen(8080)
+    .listen(8081)
 
-const fetch = edenFetch<typeof app>('http://localhost:8080')
+const fetch = edenFetch<typeof app>('http://localhost:8081')
 
 describe('Eden Fetch', () => {
     it('get by default', async () => {

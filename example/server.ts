@@ -6,13 +6,14 @@ const app = new Elysia()
     .use(cors())
     .get('/something/here', () => 'Elysia')
     .post('/', () => 'A')
-    // .post('/', () => 'Elysia', {
-    //     schema: {
-    //         body: t.Object({
-    //             id: t.Number()
-    //         })
-    //     }
-    // })
+    .post('/image', ({ body: { image } }) => image.size, {
+        schema: {
+            body: t.Object({
+                image: t.File()
+            })
+        }
+    })
+    .post('/', () => 'Elysia')
     .post('/name/:name', () => 1)
     .post('/a/bcd/:name/b', () => 1)
     .post('/id/here', () => 1)
@@ -147,9 +148,7 @@ const app = new Elysia()
                     throw new Error('Authorization is required')
 
                 return match({
-                    a(param) {
-
-                    },
+                    a(param) {},
                     default() {}
                 })
             }

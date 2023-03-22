@@ -1,3 +1,7 @@
+# 0.3.2 - 20 Mar 2023
+Improvement:
+- File upload support for Eden Treaty
+
 # 0.3.1 - 20 Mar 2023
 Improvement:
 - Path parameter inference

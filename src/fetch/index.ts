@@ -19,16 +19,22 @@ export const edenFetch =
         const contentType = options.headers?.['Content-Type']
 
         if (!contentType || contentType === 'application/json')
-            body = JSON.stringify(body)
+            try {
+                body = JSON.stringify(body)
+            } catch (error) {
+                //
+            }
 
         // @ts-ignore
         return fetch(server + endpoint, {
             ...options,
-            headers: {
-                'content-type': 'application/json',
-                ...options.headers
-            },
-            body
+            headers: body
+                ? {
+                      'content-type': 'application/json',
+                      ...options.headers
+                  }
+                : options.headers,
+            body: body as any
         }).then(async (res) => {
             let data
 
@@ -38,13 +44,14 @@ export const edenFetch =
                     break
 
                 default:
-                    data = await res.text().then((data) => {
-                        if (!Number.isNaN(+data)) return +data
-                        if (data === 'true') return true
-                        if (data === 'false') return false
+                    data = await res.text().then((d) => {
+                        if (!Number.isNaN(+d)) return +d
+                        if (d === 'true') return true
+                        if (d === 'false') return false
 
-                        return data
+                        return d
                     })
+                    break
             }
 
             if (res.status > 300)

@@ -7,6 +7,40 @@ import type { EdenTreaty } from './types'
 
 export type { EdenTreaty } from './types'
 
+// @ts-ignore
+const isFile = (v: any) => {
+    if (typeof FileList === 'undefined') return false
+
+    return v instanceof FileList || v instanceof File
+}
+
+// FormData is 1 level deep
+const hasFile = (obj: Record<string, any>) => {
+    for (let key in obj) {
+        if (isFile(obj[key])) return true
+        else if (
+            Array.isArray(obj[key]) &&
+            (obj[key] as unknown[]).find((x) => isFile(x))
+        )
+            return true
+    }
+
+    return false
+}
+
+// @ts-ignore
+const fileToBlob = (v: File) =>
+    new Promise<Blob>((resolve) => {
+        // @ts-ignore
+        const reader = new FileReader()
+
+        reader.onload = () => {
+            resolve(new Blob([reader.result!], { type: v.type }))
+        }
+
+        reader.readAsArrayBuffer(v)
+    })
+
 export class EdenWS<Schema extends TypedSchema<any> = TypedSchema> {
     ws: WebSocket
     url: string
@@ -77,15 +111,11 @@ export class EdenWS<Schema extends TypedSchema<any> = TypedSchema> {
                     else if (data === 'true') data = true
                     else if (data === 'fase') data = false
 
-                    // @ts-ignore
                     listener({
                         ...ws,
                         data
-                    })
-                } else {
-                    // @ts-ignore
-                    listener(ws)
-                }
+                    } as any)
+                } else listener(ws as any)
             },
             options
         )
@@ -142,50 +172,77 @@ const createProxy = (
                     )
                 )
 
-            const body =
-                $body ?? (Object.keys(bodyObj).length ? bodyObj : undefined)
-            const isObject = typeof body === 'object'
+            return (async () => {
+                let body =
+                    $body ?? (Object.keys(bodyObj).length ? bodyObj : undefined)
+                const isObject = typeof body === 'object'
+                const isFormData = isObject && hasFile(body)
 
-            return fetch(url, {
-                method,
-                body: isObject ? JSON.stringify(body) : body,
-                // ...config.fetch,
-                ...$fetch,
-                headers: body
-                    ? {
-                          'content-type': isObject
-                              ? 'application/json'
-                              : 'text/plain',
-                          //   ...config.fetch?.headers,
-                          ...$fetch?.['headers']
-                      }
-                    : undefined
-            }).then(async (res) => {
-                let data
+                if (isFormData) {
+                    const newBody = new FormData()
 
-                switch (res.headers.get('Content-Type')?.split(';')[0]) {
-                    case 'application/json':
-                        data = await res.json()
-                        break
-
-                    default:
-                        data = await res.text().then((data) => {
-                            if (!Number.isNaN(+data)) return +data
-                            if (data === 'true') return true
-                            if (data === 'false') return false
-
-                            return data
-                        })
-                }
-
-                if (res.status > 300)
-                    return {
-                        data,
-                        error: new EdenFetchError(res.status, await data)
+                    // FormData is 1 level deep
+                    for (const [key, field] of Object.entries(body)) {
+                        // @ts-ignore
+                        if (field instanceof File)
+                            newBody.append(key, await fileToBlob(field as any))
+                        // @ts-ignore
+                        else if (field instanceof FileList) {
+                            // @ts-ignore
+                            for (let i = 0; i < field.length; i++) {
+                                newBody.append(
+                                    key as any,
+                                    await fileToBlob((field as any)[i])
+                                )
+                            }
+                        } else newBody.append(key, field as string)
                     }
 
-                return { data, error: null }
-            })
+                    body = newBody
+                } else if (isObject) body = JSON.stringify(body)
+
+                return fetch(url, {
+                    method,
+                    body,
+                    // ...config.fetch,
+                    ...$fetch,
+                    headers: body
+                        ? isFormData
+                            ? $fetch?.['headers']
+                            : {
+                                  'content-type': isObject
+                                      ? 'application/json'
+                                      : 'text/plain',
+                                  ...$fetch?.['headers']
+                              }
+                        : $fetch?.['headers']
+                }).then(async (res) => {
+                    let data
+
+                    switch (res.headers.get('Content-Type')?.split(';')[0]) {
+                        case 'application/json':
+                            data = await res.json()
+                            break
+
+                        default:
+                            data = await res.text().then((data) => {
+                                if (!Number.isNaN(+data)) return +data
+                                if (data === 'true') return true
+                                if (data === 'false') return false
+
+                                return data
+                            })
+                    }
+
+                    if (res.status > 300)
+                        return {
+                            data,
+                            error: new EdenFetchError(res.status, await data)
+                        }
+
+                    return { data, error: null }
+                })
+            })()
         }
     }) as unknown as Record<string, unknown>
 
