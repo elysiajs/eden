@@ -1,3 +1,7 @@
+# 0.4.0 - 30 Mar 2023
+Improvement:
+- Add support for Elysia 0.4
+
 # 0.3.2 - 20 Mar 2023
 Improvement:
 - File upload support for Eden Treaty

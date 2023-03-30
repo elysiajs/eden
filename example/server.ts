@@ -1,5 +1,6 @@
 import { Elysia, ws, t } from 'elysia'
 import { cors } from '@elysiajs/cors'
+import '@elysiajs/fn'
 
 const app = new Elysia()
     .use(ws())
@@ -155,5 +156,9 @@ const app = new Elysia()
         })
     }))
     .listen(8080)
+
+await app.modules
+
+console.log(app.event.parse.length)
 
 export type Server = typeof app

@@ -2,12 +2,7 @@ import { edenFn } from '@elysia/eden'
 import type { Server } from '../../server'
 
 export const fn = edenFn<Server>('http://localhost:8080', {
-    fn: '/~fn',
-    fetch: {
-        headers: {
-            Authorized: something
-        }
-    }
+    fn: '/~fn'
 })
 
 // @ts-ignore

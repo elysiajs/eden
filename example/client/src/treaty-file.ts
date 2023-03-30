@@ -13,7 +13,5 @@ document.addEventListener('DOMContentLoaded', () => {
         const res = await client.image.post({
             image: id<HTMLInputElement>('file').files!
         })
-
-        console.log(res)
     })
 })

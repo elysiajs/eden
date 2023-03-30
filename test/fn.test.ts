@@ -46,6 +46,8 @@ const app = new Elysia()
     }))
     .listen(8080)
 
+await app.modules
+
 const fn = edenFn<typeof app>('http://localhost:8080')
 
 describe('Eden Fn', () => {
