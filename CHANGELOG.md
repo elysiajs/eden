@@ -1,3 +1,7 @@
+# 0.4.1 - 1 April 2023
+Improvement:
+- Sometime query isn't required
+
 # 0.4.0 - 30 Mar 2023
 Improvement:
 - Add support for Elysia 0.4

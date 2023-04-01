@@ -38,12 +38,8 @@ export namespace EdenTreaty {
                                       ? (params?: {
                                             $query?: Record<string, string>
                                         }) => EdenWS<Route>
-                                      : undefined extends Route['query']
-                                      ? (params: {
+                                      : (params: {
                                             $query: Route['query']
-                                        }) => EdenWS<Route>
-                                      : (params?: {
-                                            $query?: Record<string, string>
                                         }) => EdenWS<Route>
                                   : IsUnknown<Route['body']> extends true
                                   ? (params?: {
@@ -112,16 +108,12 @@ export namespace EdenTreaty {
                 : {
                       [Method in keyof A[Path]]: A[Path][Method] extends infer Route extends AnyTypedSchema
                           ? Method extends 'subscribe'
-                              ? IsUnknown<Route['query']> extends true
+                              ? undefined extends Route['query']
                                   ? (params?: {
                                         $query?: Record<string, string>
                                     }) => EdenWS<Route>
-                                  : undefined extends Route['query']
-                                  ? (params: {
+                                  : (params: {
                                         $query: Route['query']
-                                    }) => EdenWS<Route>
-                                  : (params?: {
-                                        $query?: Record<string, string>
                                     }) => EdenWS<Route>
                               : IsUnknown<Route['body']> extends true
                               ? (params?: {

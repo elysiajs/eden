@@ -1,4 +1,4 @@
-import { Elysia, ws, t } from 'elysia'
+import { Elysia, ws, t, SCHEMA } from 'elysia'
 import { cors } from '@elysiajs/cors'
 import '@elysiajs/fn'
 
@@ -155,10 +155,49 @@ const app = new Elysia()
             }
         })
     }))
+    .ws('/chat', {
+        open(ws) {
+            const { room, name } = ws.data.query
+
+            ws.subscribe(room).publish(room, {
+                message: `${name} has enter the room`,
+                name: 'notice',
+                time: Date.now()
+            })
+        },
+        message(ws, message) {
+            const { room, name } = ws.data.query
+
+            ws.publish(room, {
+                message,
+                name,
+                time: Date.now()
+            })
+        },
+        close(ws) {
+            const { room, name } = ws.data.query
+
+            ws.publish(room, {
+                message: `${name} has leave the room`,
+                name: 'notice',
+                time: Date.now()
+            })
+        },
+        schema: {
+            body: t.String(),
+            query: t.Object({
+                room: t.String(),
+                name: t.String()
+            }),
+            response: t.Object({
+                message: t.String(),
+                name: t.String(),
+                time: t.Number()
+            })
+        }
+    })
     .listen(8080)
 
 await app.modules
-
-console.log(app.event.parse.length)
 
 export type Server = typeof app

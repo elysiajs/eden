@@ -13,6 +13,20 @@ if (!error) console.log(data)
 
 const mirror = client.ws.mirror.subscribe()
 
+mirror.subscribe(({ data }) => {
+    mirror.send(data)
+})
+
+const chat = client.chat.subscribe({
+    $query: {
+        name: 'A',
+        room: 'C'
+    }
+})
+chat.subscribe(({ data }) => {
+    chat.send(data.message)
+})
+
 setInterval(() => {
     mirror.send('a')
 }, 200)

@@ -1,6 +1,6 @@
 {
   "name": "@elysiajs/eden",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "description": "Fully type-safe Elysia client",
   "author": {
     "name": "saltyAom",
@@ -65,11 +65,11 @@
   },
   "devDependencies": {
     "@elysiajs/cors": "^0.3.0",
-    "@elysiajs/fn": "^0.4.0-rc.0",
+    "@elysiajs/fn": "^0.4.0",
     "@sinclair/typebox": "^0.26.8",
     "@types/node": "^18.15.5",
     "bun-types": "^0.5.8",
-    "elysia": "^0.4.0-rc.0",
+    "elysia": "^0.4.3",
     "eslint": "^8.26.0",
     "rimraf": "^3.0.2",
     "typescript": "^5.0.2",
