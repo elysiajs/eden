@@ -1,5 +1,5 @@
 import { Elysia } from 'elysia'
-import { describe, expect, it, beforeAll } from 'bun:test'
+import { describe, expect, it } from 'bun:test'
 
 import { edenFn } from '../src'
 
@@ -9,7 +9,7 @@ const app = new Elysia()
     .decorate('mirrorDecorator', <T>(v: T) => v)
     .fn(({ getVersion, mirrorDecorator, store: { version } }) => ({
         ping: () => 'pong',
-        mirror: (value: any) => value,
+        mirror: async <T>(value: T) => value,
         version: () => version,
         getVersion,
         mirrorDecorator,

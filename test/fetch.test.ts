@@ -27,11 +27,9 @@ const app = new Elysia()
         '/headers',
         ({ request: { headers } }) => headers.get('x-affiliation'),
         {
-            schema: {
-                headers: t.Object({
-                    'x-affiliation': t.Literal('Arius')
-                })
-            }
+            headers: t.Object({
+                'x-affiliation': t.Literal('Arius')
+            })
         }
     )
     .get('/number', () => 1)
@@ -50,11 +48,9 @@ const app = new Elysia()
             return 'hare'
         },
         {
-            schema: {
-                response: {
-                    200: t.String(),
-                    500: t.Literal('hare')
-                }
+            response: {
+                200: t.String(),
+                500: t.Literal('hare')
             }
         }
     )

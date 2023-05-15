@@ -24,20 +24,16 @@ const app = new Elysia()
             })
     )
     .post('/mirror', ({ body }) => body, {
-        schema: {
-            body: t.Object({
-                username: t.String(),
-                password: t.String()
-            })
-        }
+        body: t.Object({
+            username: t.String(),
+            password: t.String()
+        })
     })
     .post('/deep/nested/mirror', ({ body }) => body, {
-        schema: {
-            body: t.Object({
-                username: t.String(),
-                password: t.String()
-            })
-        }
+        body: t.Object({
+            username: t.String(),
+            password: t.String()
+        })
     })
     .get('/query', ({ query }) => query)
     .get('/sign-in', ({ query }) => query)
@@ -45,9 +41,9 @@ const app = new Elysia()
     .get('/number', () => 1)
     .get('/true', () => true)
     .get('/false', () => false)
-    .listen(8080)
+    .listen(8082)
 
-const client = edenTreaty<typeof app>('http://localhost:8080')
+const client = edenTreaty<typeof app>('http://localhost:8082')
 
 describe('Eden Rest', () => {
     it('get index', async () => {

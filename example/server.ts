@@ -1,18 +1,18 @@
-import { Elysia, ws, t, SCHEMA } from 'elysia'
+import { Elysia, ws, t } from 'elysia'
 import { cors } from '@elysiajs/cors'
-import '@elysiajs/fn'
+import SuperJSON from 'superjson'
+import fn, { permission } from '@elysiajs/fn'
 
 const app = new Elysia()
     .use(ws())
     .use(cors())
     .get('/something/here', () => 'Elysia')
     .post('/', () => 'A')
-    .post('/image', ({ body: { image } }) => image.size, {
-        schema: {
-            body: t.Object({
-                image: t.File()
-            })
-        }
+    .post('/image', ({ body: { image, title } }) => title, {
+        body: t.Object({
+            image: t.File(),
+            title: t.String()
+        })
     })
     .post('/', () => 'Elysia')
     .post('/name/:name', () => 1)
@@ -54,12 +54,10 @@ const app = new Elysia()
     .get('/sign-in', () => 'ok')
     .get('/products/nendoroid/skadi', () => 1)
     .post('/products/nendoroid', ({ body }) => body, {
-        schema: {
-            body: t.Object({
-                id: t.Number(),
-                name: t.String()
-            })
-        }
+        body: t.Object({
+            id: t.Number(),
+            name: t.String()
+        })
     })
     .put(
         '/products/nendoroid/:id',
@@ -68,35 +66,31 @@ const app = new Elysia()
             id
         }),
         {
-            schema: {
-                body: t.Object({
-                    name: t.String()
+            body: t.Object({
+                name: t.String()
+            }),
+            response: {
+                200: t.Object({
+                    name: t.String(),
+                    id: t.String()
                 }),
-                response: {
-                    200: t.Object({
-                        name: t.String(),
-                        id: t.String()
-                    }),
-                    400: t.Object({
-                        error: t.String(),
-                        name: t.String(),
-                        id: t.String()
-                    }),
-                    401: t.Object({
-                        error: t.String(),
-                        name: t.String(),
-                        id: t.String()
-                    })
-                }
+                400: t.Object({
+                    error: t.String(),
+                    name: t.String(),
+                    id: t.String()
+                }),
+                401: t.Object({
+                    error: t.String(),
+                    name: t.String(),
+                    id: t.String()
+                })
             }
         }
     )
     .group('/group', (app) => app.get('/in', () => 'Hi'))
     .ws('/ws/mirror', {
-        schema: {
-            body: t.String(),
-            response: t.String()
-        },
+        body: t.String(),
+        response: t.String(),
         message(ws, message) {
             ws.send(message)
         }
@@ -105,12 +99,10 @@ const app = new Elysia()
         message(ws, message) {
             ws.send(message)
         },
-        schema: {
-            body: t.String(),
-            response: t.String()
-        }
+        body: t.String(),
+        response: t.String()
     })
-    .setModel({
+    .model({
         success: t.Object({
             success: t.Boolean(),
             data: t.String()
@@ -129,32 +121,55 @@ const app = new Elysia()
             }
         },
         {
-            schema: {
-                response: {
-                    200: 'success',
-                    400: 'fail'
-                }
+            response: {
+                200: 'success',
+                400: 'fail'
             }
         }
     )
-    .fn(({ permission }) => ({
-        mirror: async <T>(a: T) => a,
-        authorized: permission({
+    .use(async (app) => {
+        return fn({
+            app,
             value: {
-                a: (a: string) => {},
-                b: () => {}
-            },
-            check({ key, request: { headers }, match }) {
-                if (!headers.has('Authorization'))
-                    throw new Error('Authorization is required')
+                mirror: async <T>(a: T) => {
+                    return a
+                },
+                authorized: permission({
+                    value: {
+                        a: (a: string) => {},
+                        b: () => {}
+                    },
+                    check({ key, request: { headers }, match }) {
+                        if (!headers.has('Authorization'))
+                            throw new Error('Authorization is required')
 
-                return match({
-                    a(param) {},
-                    default() {}
+                        return match({
+                            a(param) {},
+                            default() {}
+                        })
+                    }
                 })
             }
         })
-    }))
+    })
+    // .fn(({ permission }) => ({
+    //     mirror: async <T>(a: T) => a,
+    //     authorized: permission({
+    //         value: {
+    //             a: (a: string) => {},
+    //             b: () => {}
+    //         },
+    //         check({ key, request: { headers }, match }) {
+    //             if (!headers.has('Authorization'))
+    //                 throw new Error('Authorization is required')
+
+    //             return match({
+    //                 a(param) {},
+    //                 default() {}
+    //             })
+    //         }
+    //     })
+    // }))
     .ws('/chat', {
         open(ws) {
             const { room, name } = ws.data.query
@@ -183,21 +198,38 @@ const app = new Elysia()
                 time: Date.now()
             })
         },
-        schema: {
-            body: t.String(),
-            query: t.Object({
-                room: t.String(),
-                name: t.String()
-            }),
-            response: t.Object({
-                message: t.String(),
-                name: t.String(),
-                time: t.Number()
-            })
-        }
+        body: t.String(),
+        query: t.Object({
+            room: t.String(),
+            name: t.String()
+        }),
+        response: t.Object({
+            message: t.String(),
+            name: t.String(),
+            time: t.Number()
+        })
     })
     .listen(8080)
 
-await app.modules
+const runFn = (
+    body: Array<{ n: string[] } | { n: string[]; p: any[] }>,
+    headers: HeadersInit = {},
+    target: Elysia<any> = app as Elysia<any>
+): Promise<unknown[]> =>
+    app
+        .handle(
+            new Request('http://localhost/~fn', {
+                method: 'POST',
+                headers: {
+                    'content-type': 'elysia/fn',
+                    ...headers
+                },
+                body: SuperJSON.stringify(body)
+            })
+        )
+        .then((x) => x.text())
+        .then((x) => SuperJSON.parse(x))
+
+runFn([{ n: ['mirror'], p: ['hi'] }]).then(console.log)
 
 export type Server = typeof app

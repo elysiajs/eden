@@ -7,10 +7,11 @@ import type { EdenTreaty } from './types'
 
 export type { EdenTreaty } from './types'
 
-// @ts-ignore
 const isFile = (v: any) => {
+    // @ts-ignore
     if (typeof FileList === 'undefined') return false
 
+    // @ts-ignore
     return v instanceof FileList || v instanceof File
 }
 

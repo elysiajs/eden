@@ -3,7 +3,7 @@ import type { Server } from '../../server'
 
 export const client = edenTreaty<Server>('http://localhost:8080')
 
-client.products.nendoroid[':id']
+const { data: skadi } = await client.products.nendoroid.skadi.get()
 
 const { data, error } = await client.products.nendoroid['1902'].put({
     name: 'Anya Forger'

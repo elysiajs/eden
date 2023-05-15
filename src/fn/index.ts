@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { Elysia } from 'elysia'
 
 import { Signal } from './utils'
@@ -10,6 +11,7 @@ const createProxy = (
     procedures: string[],
     signal: Signal
 ): Record<string, unknown> =>
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     new Proxy((..._: any[]) => {}, {
         get(target, key, value) {
             return createProxy(domain, [...procedures, key as string], signal)
@@ -49,5 +51,6 @@ export const edenFn = <App extends Elysia<any>>(
     domain: string,
     config?: EdenFn.Config
 ): EdenFn.Create<App> =>
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
     // @ts-ignore
     createProxy(domain, [], new Signal(domain, config))

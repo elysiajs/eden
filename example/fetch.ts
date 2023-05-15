@@ -26,11 +26,9 @@ const app = new Elysia()
         '/headers',
         ({ request: { headers } }) => headers.get('x-affiliation'),
         {
-            schema: {
-                headers: t.Object({
-                    'x-affiliation': t.Literal('Arius')
-                })
-            }
+            headers: t.Object({
+                'x-affiliation': t.Literal('Arius')
+            })
         }
     )
     .get('/number', () => 1)
@@ -49,11 +47,9 @@ const app = new Elysia()
             return 'hare'
         },
         {
-            schema: {
-                response: {
-                    200: t.String(),
-                    500: t.Literal('hare')
-                }
+            response: {
+                200: t.String(),
+                500: t.Literal('hare')
             }
         }
     )
@@ -61,7 +57,7 @@ const app = new Elysia()
 
 const fetch = edenFetch<typeof app>('http://localhost:8080')
 
-await fetch('/json-utf8', {})
+await fetch('/direct-error', {})
 
 const { data } = await fetch('/name/:name', {
     params: {
@@ -70,4 +66,3 @@ const { data } = await fetch('/name/:name', {
 })
 
 console.log(data)
-
