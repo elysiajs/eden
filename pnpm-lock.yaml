@@ -1,12 +1,12 @@
 lockfileVersion: 5.4
 
 specifiers:
-  '@elysiajs/cors': 0.5.0-rc.0
-  '@elysiajs/fn': 0.5.0-rc.3
+  '@elysiajs/cors': 0.5.0
+  '@elysiajs/fn': 0.5.0
   '@sinclair/typebox': ^0.26.8
   '@types/node': ^18.15.5
   bun-types: ^0.5.8
-  elysia: 0.5.0-beta.8
+  elysia: 0.5.0
   eslint: ^8.26.0
   rimraf: ^4.4.1
   superjson: ^1.12.2
@@ -18,12 +18,12 @@ dependencies:
   superjson: 1.12.2
 
 devDependencies:
-  '@elysiajs/cors': 0.5.0-rc.0_elysia@0.5.0-beta.8
-  '@elysiajs/fn': 0.5.0-rc.3_elysia@0.5.0-beta.8
+  '@elysiajs/cors': 0.5.0_elysia@0.5.0
+  '@elysiajs/fn': 0.5.0_elysia@0.5.0
   '@sinclair/typebox': 0.26.8
   '@types/node': 18.16.1
   bun-types: 0.5.8
-  elysia: 0.5.0-beta.8_rskt5gqlrhzgfuaq75rokpkibq
+  elysia: 0.5.0_gmly5pnt2blsifq5bthmxixwka
   eslint: 8.35.0
   rimraf: 4.4.1
   typescript: 5.0.4
@@ -59,23 +59,23 @@ packages:
       to-fast-properties: 2.0.0
     dev: true
 
-  /@elysiajs/cors/0.5.0-rc.0_elysia@0.5.0-beta.8:
-    resolution: {integrity: sha512-lBEzh97XndbOcHudOlMyukZx2H7JS6Dj9Dx5sE2H4Fz5QnpKui3xnDl4GI8B0yJ3nXiUSzj0TwVTkhI1F4m/Hw==}
+  /@elysiajs/cors/0.5.0_elysia@0.5.0:
+    resolution: {integrity: sha512-6RUIbBc/4Bkt5bYGqUefvzMm8dHFz6rWMYAOUZUUya0AtqCU4whSYaX/NdxXgDMaf5H4SNLtDyQMHSUqofbNSQ==}
     peerDependencies:
-      elysia: '>= 0.5.0-beta.2'
+      elysia: '>= 0.5.0'
     dependencies:
-      elysia: 0.5.0-beta.8_rskt5gqlrhzgfuaq75rokpkibq
+      elysia: 0.5.0_gmly5pnt2blsifq5bthmxixwka
     dev: true
 
-  /@elysiajs/fn/0.5.0-rc.3_elysia@0.5.0-beta.8:
-    resolution: {integrity: sha512-tSe2/S3r7WK+HchCQ7QBR/DCxt3ioCgUFq6VLIHUwyktWNRRJ6W2OZe0/vl+hWFxnzZBEX9lyiu19cqEpnv1ww==}
+  /@elysiajs/fn/0.5.0_elysia@0.5.0:
+    resolution: {integrity: sha512-3H0xBL8o3s/MSaK4MhObU6Pk7Qn6fsVXmDAW1f7m5yLNa/3yMCWBbF9F8JMp1XKUcGkax/I1O0q0JE476AjJ/Q==}
     peerDependencies:
-      elysia: '>= 0.5.0-rc.3'
+      elysia: '>= 0.5.0'
     peerDependenciesMeta:
       superjson:
         optional: true
     dependencies:
-      elysia: 0.5.0-beta.8_rskt5gqlrhzgfuaq75rokpkibq
+      elysia: 0.5.0_gmly5pnt2blsifq5bthmxixwka
       superjson: 1.12.3
     dev: true
 
@@ -629,8 +629,8 @@ packages:
       esutils: 2.0.3
     dev: true
 
-  /elysia/0.5.0-beta.8_rskt5gqlrhzgfuaq75rokpkibq:
-    resolution: {integrity: sha512-Bdy1+MyUkjsK9MOtqpcdC50omqowbnLkJl6HCKXRua92axiEOT3OBsl1AMAZguHyRcopaHETxr/KGBVE0z2OOA==}
+  /elysia/0.5.0_gmly5pnt2blsifq5bthmxixwka:
+    resolution: {integrity: sha512-tqVRTJe5oHzzpqKDIpqqFY6nwLahlK3LXSEghvPfpxl2ohX7xyL/Ax7SKjrJiqvwyj8IBmZbdbdbXrd27KY4TQ==}
     peerDependencies:
       '@elysiajs/fn': '*'
       typescript: '>= 5.0.0'
@@ -644,7 +644,7 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@elysiajs/fn': 0.5.0-rc.3_elysia@0.5.0-beta.8
+      '@elysiajs/fn': 0.5.0_elysia@0.5.0
       '@sinclair/typebox': 0.28.10
       '@types/lodash.clonedeep': 4.5.7
       fast-querystring: 1.1.1

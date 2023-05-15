@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', () => {
     id('form').addEventListener('submit', async (event) => {
         event.preventDefault()
 
+        console.log("POST")
+
         const res = await client.image.post({
             image: id<HTMLInputElement>('file').files!,
             title: "Hi"
