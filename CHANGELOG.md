@@ -1,7 +1,14 @@
-# 0.5.1 - 15 May 2023
+# 0.5.2 - 25 May 2023
+Improvement:
+- add types declaration to import map
+
 Bug fix:
-- fix(treaty): type not found
-- fix(treaty): query not infers type
+- add tsc to generate .d.ts
+
+# 0.5.1 - 25 May 2023
+Bug fix:
+- treaty: type not found
+- treaty: query not infers type
 
 # 0.5.0 - 15 May 2023
 Improvement:

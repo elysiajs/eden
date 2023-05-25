@@ -1,6 +1,6 @@
 {
   "name": "@elysiajs/eden",
-  "version": "0.5.1",
+  "version": "0.5.2",
   "description": "Fully type-safe Elysia client",
   "author": {
     "name": "saltyAom",
@@ -13,25 +13,29 @@
       "require": "./dist/index.js",
       "import": "./dist/index.mjs",
       "node": "./dist/index.js",
-      "default": "./dist/index.js"
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./treaty": {
       "require": "./dist/treaty.js",
       "import": "./dist/treaty.mjs",
       "node": "./dist/treaty.js",
-      "default": "./dist/treaty.js"
+      "default": "./dist/treaty.js",
+      "types": "./dist/treaty/index.d.ts"
     },
     "./fetch": {
       "require": "./dist/fetch.js",
       "import": "./dist/fetch.mjs",
       "node": "./dist/fetch.js",
-      "default": "./dist/fetch.js"
+      "default": "./dist/fetch.js",
+      "types": "./dist/fetch/index.d.ts"
     },
     "./fn": {
       "require": "./dist/fn.js",
       "import": "./dist/fn.mjs",
       "node": "./dist/fn.js",
-      "default": "./dist/fn.js"
+      "default": "./dist/fn.js",
+      "types": "./dist/fn/index.d.ts"
     }
   },
   "types": "./src/index.ts",
@@ -50,7 +54,7 @@
   "scripts": {
     "dev": "bun run --hot example/index.ts",
     "test": "bun wiptest",
-    "build": "vite build",
+    "build": "vite build && tsc",
     "release": "npm run build && npm run test && npm publish --access public"
   },
   "peerDependencies": {
