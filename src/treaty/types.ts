@@ -42,31 +42,57 @@ export namespace EdenTreaty {
                                             $query: Route['query']
                                         }) => EdenWS<Route>
                                   : IsUnknown<Route['body']> extends true
-                                  ? (params?: {
-                                        $query?: Record<string, string>
-                                        $fetch?: RequestInit
-                                    }) => Promise<
-                                        | {
-                                              data: Route['response']['200']
-                                              error: null
-                                          }
-                                        | {
-                                              data: null
-                                              error: MapError<
-                                                  Route['response']
-                                              > extends infer Errors
-                                                  ? IsNever<Errors> extends true
-                                                      ? EdenFetchError<
+                                  ? undefined extends Route['query']
+                                      ? (params?: {
+                                            $query?: Record<string, string>
+                                            $fetch?: RequestInit
+                                        }) => Promise<
+                                            | {
+                                                  data: Route['response']['200']
+                                                  error: null
+                                              }
+                                            | {
+                                                  data: null
+                                                  error: MapError<
+                                                      Route['response']
+                                                  > extends infer Errors
+                                                      ? IsNever<Errors> extends true
+                                                          ? EdenFetchError<
+                                                                number,
+                                                                string
+                                                            >
+                                                          : Errors
+                                                      : EdenFetchError<
                                                             number,
                                                             string
                                                         >
-                                                      : Errors
-                                                  : EdenFetchError<
-                                                        number,
-                                                        string
-                                                    >
-                                          }
-                                    >
+                                              }
+                                        >
+                                      : (params: {
+                                            $query: Route['query']
+                                            $fetch?: RequestInit
+                                        }) => Promise<
+                                            | {
+                                                  data: Route['response']['200']
+                                                  error: null
+                                              }
+                                            | {
+                                                  data: null
+                                                  error: MapError<
+                                                      Route['response']
+                                                  > extends infer Errors
+                                                      ? IsNever<Errors> extends true
+                                                          ? EdenFetchError<
+                                                                number,
+                                                                string
+                                                            >
+                                                          : Errors
+                                                      : EdenFetchError<
+                                                            number,
+                                                            string
+                                                        >
+                                              }
+                                        >
                                   : (
                                         params: Replace<
                                             Route['body'],
@@ -116,28 +142,57 @@ export namespace EdenTreaty {
                                         $query: Route['query']
                                     }) => EdenWS<Route>
                               : IsUnknown<Route['body']> extends true
-                              ? (params?: {
-                                    $query?: Record<string, string>
-                                    $fetch?: RequestInit
-                                }) => Promise<
-                                    | {
-                                          data: Route['response']['200']
-                                          error: null
-                                      }
-                                    | {
-                                          data: null
-                                          error: MapError<
-                                              Route['response']
-                                          > extends infer Errors
-                                              ? IsNever<Errors> extends true
-                                                  ? EdenFetchError<
+                              ? undefined extends Route['query']
+                                  ? (params?: {
+                                        $query?: Record<string, string>
+                                        $fetch?: RequestInit
+                                    }) => Promise<
+                                        | {
+                                              data: Route['response']['200']
+                                              error: null
+                                          }
+                                        | {
+                                              data: null
+                                              error: MapError<
+                                                  Route['response']
+                                              > extends infer Errors
+                                                  ? IsNever<Errors> extends true
+                                                      ? EdenFetchError<
+                                                            number,
+                                                            string
+                                                        >
+                                                      : Errors
+                                                  : EdenFetchError<
                                                         number,
                                                         string
                                                     >
-                                                  : Errors
-                                              : EdenFetchError<number, string>
-                                      }
-                                >
+                                          }
+                                    >
+                                  : (params: {
+                                        $query: Route['query']
+                                        $fetch?: RequestInit
+                                    }) => Promise<
+                                        | {
+                                              data: Route['response']['200']
+                                              error: null
+                                          }
+                                        | {
+                                              data: null
+                                              error: MapError<
+                                                  Route['response']
+                                              > extends infer Errors
+                                                  ? IsNever<Errors> extends true
+                                                      ? EdenFetchError<
+                                                            number,
+                                                            string
+                                                        >
+                                                      : Errors
+                                                  : EdenFetchError<
+                                                        number,
+                                                        string
+                                                    >
+                                          }
+                                    >
                               : (
                                     params: Replace<
                                         Route['body'],

@@ -7,6 +7,14 @@ const app = new Elysia()
     .use(ws())
     .use(cors())
     .get('/something/here', () => 'Elysia')
+    .post('/query', () => 'There', {
+        body: t.Object({
+            name: t.String()
+        }),
+        query: t.Object({
+            username: t.String()
+        })
+    })
     .post('/', () => 'A')
     .post('/image', ({ body: { image, title } }) => title, {
         body: t.Object({

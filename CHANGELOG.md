@@ -1,6 +1,11 @@
+# 0.5.1 - 15 May 2023
+Bug fix:
+- fix(treaty): type not found
+- fix(treaty): query not infers type
+
 # 0.5.0 - 15 May 2023
+Improvement:
 - Add support for Elysia 0.5
-- Add CommonJS support
 
 # 0.4.1 - 1 April 2023
 Improvement:
