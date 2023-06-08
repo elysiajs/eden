@@ -7,12 +7,17 @@ import type { EdenTreaty } from './types'
 
 export type { EdenTreaty } from './types'
 
+// @ts-ignore
+const isServer = typeof FileList === 'undefined'
+
 const isFile = (v: any) => {
     // @ts-ignore
-    if (typeof FileList === 'undefined') return false
-
-    // @ts-ignore
-    return v instanceof FileList || v instanceof File
+    if (isServer) {
+        return v instanceof Blob
+    } else {
+        // @ts-ignore
+        return v instanceof FileList || v instanceof File
+    }
 }
 
 // FormData is 1 level deep
@@ -31,16 +36,18 @@ const hasFile = (obj: Record<string, any>) => {
 
 // @ts-ignore
 const fileToBlob = (v: File) =>
-    new Promise<Blob>((resolve) => {
-        // @ts-ignore
-        const reader = new FileReader()
+    isServer
+        ? v
+        : new Promise<Blob>((resolve) => {
+              // @ts-ignore
+              const reader = new FileReader()
 
-        reader.onload = () => {
-            resolve(new Blob([reader.result!], { type: v.type }))
-        }
+              reader.onload = () => {
+                  resolve(new Blob([reader.result!], { type: v.type }))
+              }
 
-        reader.readAsArrayBuffer(v)
-    })
+              reader.readAsArrayBuffer(v)
+          })
 
 export class EdenWS<Schema extends TypedSchema<any> = TypedSchema> {
     ws: WebSocket
@@ -184,19 +191,26 @@ const createProxy = (
 
                     // FormData is 1 level deep
                     for (const [key, field] of Object.entries(body)) {
-                        // @ts-ignore
-                        if (field instanceof File)
-                            newBody.append(key, await fileToBlob(field as any))
-                        // @ts-ignore
-                        else if (field instanceof FileList) {
+                        if (isServer) {
+                            newBody.append(key, field as any)
+                        } else {
                             // @ts-ignore
-                            for (let i = 0; i < field.length; i++) {
+                            if (field instanceof File)
                                 newBody.append(
-                                    key as any,
-                                    await fileToBlob((field as any)[i])
+                                    key,
+                                    await fileToBlob(field as any)
                                 )
-                            }
-                        } else newBody.append(key, field as string)
+                            // @ts-ignore
+                            else if (field instanceof FileList) {
+                                // @ts-ignore
+                                for (let i = 0; i < field.length; i++) {
+                                    newBody.append(
+                                        key as any,
+                                        await fileToBlob((field as any)[i])
+                                    )
+                                }
+                            } else newBody.append(key, field as string)
+                        }
                     }
 
                     body = newBody

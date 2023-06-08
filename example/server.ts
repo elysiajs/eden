@@ -1,7 +1,7 @@
 import { Elysia, ws, t } from 'elysia'
 import { cors } from '@elysiajs/cors'
 import SuperJSON from 'superjson'
-import fn, { permission } from '@elysiajs/fn'
+// import fn from '@elysiajs/fn'
 
 const app = new Elysia()
     .use(ws())
@@ -135,49 +135,49 @@ const app = new Elysia()
             }
         }
     )
-    .use(async (app) => {
-        return fn({
-            app,
-            value: {
-                mirror: async <T>(a: T) => {
-                    return a
-                },
-                authorized: permission({
-                    value: {
-                        a: (a: string) => {},
-                        b: () => {}
-                    },
-                    check({ key, request: { headers }, match }) {
-                        if (!headers.has('Authorization'))
-                            throw new Error('Authorization is required')
-
-                        return match({
-                            a(param) {},
-                            default() {}
-                        })
-                    }
-                })
-            }
-        })
-    })
-    // .fn(({ permission }) => ({
-    //     mirror: async <T>(a: T) => a,
-    //     authorized: permission({
+    // .use(async (app) => {
+    //     return fn({
+    //         app,
     //         value: {
-    //             a: (a: string) => {},
-    //             b: () => {}
-    //         },
-    //         check({ key, request: { headers }, match }) {
-    //             if (!headers.has('Authorization'))
-    //                 throw new Error('Authorization is required')
+    //             mirror: async <T>(a: T) => {
+    //                 return a
+    //             },
+    //             authorized: permission({
+    //                 value: {
+    //                     a: (a: string) => {},
+    //                     b: () => {}
+    //                 },
+    //                 check({ key, request: { headers }, match }) {
+    //                     if (!headers.has('Authorization'))
+    //                         throw new Error('Authorization is required')
 
-    //             return match({
-    //                 a(param) {},
-    //                 default() {}
+    //                     return match({
+    //                         a(param) {},
+    //                         default() {}
+    //                     })
+    //                 }
     //             })
     //         }
     //     })
-    // }))
+    // })
+    .fn(({ permission }) => ({
+        mirror: async <T>(a: T) => a,
+        authorized: permission({
+            value: {
+                a: (a: string) => {},
+                b: () => {}
+            },
+            check({ key, request: { headers }, match }) {
+                if (!headers.has('Authorization'))
+                    throw new Error('Authorization is required')
+
+                return match({
+                    a(param) {},
+                    default() {}
+                })
+            }
+        })
+    }))
     .ws('/chat', {
         open(ws) {
             const { room, name } = ws.data.query
@@ -239,5 +239,7 @@ const runFn = (
         .then((x) => SuperJSON.parse(x))
 
 runFn([{ n: ['mirror'], p: ['hi'] }]).then(console.log)
+
+const app2 = new Elysia().get('/', () => "h")
 
 export type Server = typeof app

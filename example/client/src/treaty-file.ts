@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { edenTreaty } from '@elysia/eden'
 import type { Server } from '../../server'
 

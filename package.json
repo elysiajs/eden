@@ -1,6 +1,6 @@
 {
   "name": "@elysiajs/eden",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Fully type-safe Elysia client",
   "author": {
     "name": "saltyAom",
@@ -73,7 +73,7 @@
     "@sinclair/typebox": "^0.26.8",
     "@types/node": "^18.15.5",
     "bun-types": "^0.5.8",
-    "elysia": "0.5.0",
+    "elysia": "0.5.17",
     "eslint": "^8.26.0",
     "rimraf": "^4.4.1",
     "typescript": "^5.0.4",
