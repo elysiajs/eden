@@ -45,7 +45,7 @@ export namespace EdenFetch {
                 : { body?: unknown })
     ) => Promise<
         | {
-              data: Route['response']['200']
+              data: Awaited<Route['response']['200']>
               error: null
           }
         | {
