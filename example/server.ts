@@ -7,7 +7,7 @@ const app = new Elysia()
     .use(ws())
     .use(cors())
     .get('/something/here', () => 'Elysia')
-    .post('/query', () => 'There', {
+    .post('/query', async () => 'There', {
         body: t.Object({
             name: t.String()
         }),

@@ -1,3 +1,10 @@
+# 0.5.5 - 10 Jun 2023
+Improvement:
+- treaty: Automatic unwrap `Promise` response
+
+Bug fix:
+- treaty: query schema is missing
+
 # 0.5.4 - 9 Jun 2023
 Improvement:
 - Awaited response data

@@ -4,10 +4,15 @@ import type { Server } from './server'
 
 const eden = edenTreaty<Server>('http://localhost:8080')
 
-type A = Server['meta'][typeof SCHEMA]['/query']
-
 const { data, error } = await eden.products.nendoroid[1902].put({
+    $query: undefined,
     name: 'Anya Forger'
+})
+
+type B = Server['meta'][typeof SCHEMA]['/query']['post']
+
+const a = await eden.query.post({
+    name: 'A'
 })
 
 if (error)

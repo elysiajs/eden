@@ -99,7 +99,7 @@ export namespace EdenTreaty {
                                             Blob | Blob[],
                                             File | FileList
                                         > & {
-                                            $query?: Record<string, string>
+                                            $query?: Route['query']
                                             $fetch?: RequestInit
                                         }
                                     ) => Promise<
@@ -107,7 +107,7 @@ export namespace EdenTreaty {
                                               data: Route['response'] extends {
                                                   200: infer ReturnedType
                                               }
-                                                  ? ReturnedType
+                                                  ? Awaited<ReturnedType>
                                                   : unknown
                                               error: null
                                           }
@@ -199,7 +199,7 @@ export namespace EdenTreaty {
                                         Blob | Blob[],
                                         File | FileList
                                     > & {
-                                        $query?: Record<string, string>
+                                        $query?: Route['query']
                                         $fetch?: RequestInit
                                     }
                                 ) => Promise<
@@ -207,7 +207,7 @@ export namespace EdenTreaty {
                                           data: Route['response'] extends {
                                               200: infer ReturnedType
                                           }
-                                              ? ReturnedType
+                                              ? Awaited<ReturnedType>
                                               : unknown
                                           error: null
                                       }
