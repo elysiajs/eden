@@ -1,3 +1,11 @@
+# 0.5.4 - 9 Jun 2023
+Improvement:
+- Awaited response data
+
+# 0.5.3 - 25 May 2023
+Improvement:
+- treaty: add support for Bun file uploading
+
 # 0.5.2 - 25 May 2023
 Improvement:
 - add types declaration to import map
