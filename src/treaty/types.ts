@@ -48,7 +48,7 @@ export namespace EdenTreaty {
                                             $fetch?: RequestInit
                                         }) => Promise<
                                             | {
-                                                  data: Route['response']['200']
+                                                  data: Awaited<Route['response']['200']>
                                                   error: null
                                               }
                                             | {
@@ -73,7 +73,7 @@ export namespace EdenTreaty {
                                             $fetch?: RequestInit
                                         }) => Promise<
                                             | {
-                                                  data: Route['response']['200']
+                                                  data: Awaited<Route['response']['200']>
                                                   error: null
                                               }
                                             | {
@@ -148,7 +148,7 @@ export namespace EdenTreaty {
                                         $fetch?: RequestInit
                                     }) => Promise<
                                         | {
-                                              data: Route['response']['200']
+                                              data: Awaited<Route['response']['200']>
                                               error: null
                                           }
                                         | {
@@ -173,7 +173,7 @@ export namespace EdenTreaty {
                                         $fetch?: RequestInit
                                     }) => Promise<
                                         | {
-                                              data: Route['response']['200']
+                                              data: Awaited<Route['response']['200']>
                                               error: null
                                           }
                                         | {
