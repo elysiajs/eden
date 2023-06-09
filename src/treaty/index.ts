@@ -151,7 +151,7 @@ export class EdenWS<Schema extends TypedSchema<any> = TypedSchema> {
 const createProxy = (
     domain: string,
     path: string = '',
-    config: {}
+    config: EdenTreaty.Config
 ): Record<string, unknown> =>
     new Proxy(() => {}, {
         get(target, key, value) {
@@ -216,7 +216,7 @@ const createProxy = (
                     body = newBody
                 } else if (isObject) body = JSON.stringify(body)
 
-                return fetch(url, {
+                return (config.fetcher ?? fetch)(url, {
                     method,
                     body,
                     // ...config.fetch,
@@ -263,7 +263,11 @@ const createProxy = (
 
 export const edenTreaty = <App extends Elysia<any>>(
     domain: string,
-    config: {} = {}
+    config: {
+        fetcher?: typeof fetch
+    } = {
+        fetcher: fetch
+    }
 ): EdenTreaty.Create<App> =>
     new Proxy(
         {},

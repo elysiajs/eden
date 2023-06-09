@@ -1,3 +1,7 @@
+# 0.5.6 - 10 Jun 2023
+Improvement:
+- treaty: Add custom fetch implementation for treaty
+
 # 0.5.5 - 10 Jun 2023
 Improvement:
 - treaty: Automatic unwrap `Promise` response

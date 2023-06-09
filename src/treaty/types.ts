@@ -18,7 +18,9 @@ export namespace EdenTreaty {
         ? EdenTreaty.Sign<Schema>
         : 'Please install Elysia before using Eden'
 
-    export interface Config {}
+    export interface Config {
+        fetcher?: typeof fetch
+    }
 
     export type Sign<A> = {
         [Path in keyof A as Path extends `/${infer Prefix}/${infer _}`
@@ -48,7 +50,9 @@ export namespace EdenTreaty {
                                             $fetch?: RequestInit
                                         }) => Promise<
                                             | {
-                                                  data: Awaited<Route['response']['200']>
+                                                  data: Awaited<
+                                                      Route['response']['200']
+                                                  >
                                                   error: null
                                               }
                                             | {
@@ -73,7 +77,9 @@ export namespace EdenTreaty {
                                             $fetch?: RequestInit
                                         }) => Promise<
                                             | {
-                                                  data: Awaited<Route['response']['200']>
+                                                  data: Awaited<
+                                                      Route['response']['200']
+                                                  >
                                                   error: null
                                               }
                                             | {
@@ -148,7 +154,9 @@ export namespace EdenTreaty {
                                         $fetch?: RequestInit
                                     }) => Promise<
                                         | {
-                                              data: Awaited<Route['response']['200']>
+                                              data: Awaited<
+                                                  Route['response']['200']
+                                              >
                                               error: null
                                           }
                                         | {
@@ -173,7 +181,9 @@ export namespace EdenTreaty {
                                         $fetch?: RequestInit
                                     }) => Promise<
                                         | {
-                                              data: Awaited<Route['response']['200']>
+                                              data: Awaited<
+                                                  Route['response']['200']
+                                              >
                                               error: null
                                           }
                                         | {
