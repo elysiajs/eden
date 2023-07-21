@@ -52,6 +52,7 @@ export class Signal {
 
                 const { serialize, deserialize } = await this.sJson
 
+                const fetch = this.config?.fetcher || globalThis.fetch
                 const results = await fetch(
                     `${this.url}${this.config.fn ?? '/~fn'}`,
                     {
