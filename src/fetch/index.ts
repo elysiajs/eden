@@ -25,6 +25,8 @@ export const edenFetch =
                 //
             }
 
+        const fetch = config?.fetcher || globalThis.fetch
+
         // @ts-ignore
         return fetch(server + endpoint, {
             ...options,
