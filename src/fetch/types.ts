@@ -9,7 +9,9 @@ export namespace EdenFetch {
         ? EdenFetch.Fn<Schema>
         : 'Please install Elysia before using Eden'
 
-    export interface Config {}
+    export interface Config {
+        fetcher?: typeof globalThis.fetch
+    }
 
     export type Fn<Schema extends Record<string, any>> = <
         Endpoint extends keyof Schema,

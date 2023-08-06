@@ -24,6 +24,7 @@ export namespace EdenFn {
     export interface Config {
         fn?: string
         fetch?: Omit<RequestInit, 'body'>
+        fetcher?: typeof globalThis.fetch
     }
 }
 
