@@ -117,14 +117,12 @@ export namespace EdenTreaty {
                                         params: infer Params
                                     ) => infer Response
                                   ? {
-                                        $params: {}
-                                        $headers: {}
-                                        $query: {}
+                                        $params: undefined
+                                        $headers: undefined
+                                        $query: undefined
                                     } extends Params
-                                      ? (Route['handler'] | never) &
-                                            ((params: Params) => Response) 
-                                      : (Route['handler'] | never) &
-                                            ((params?: Params) => Response)
+                                      ? (params?: Params) => Response
+                                      : (params: Params) => Response
                                   : never
                               : never
                       }

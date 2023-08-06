@@ -1,3 +1,7 @@
+# 0.6.0 - 6 Aug 2023
+Feature:
+- add support for Elysia 0.6
+
 # 0.5.6 - 10 Jun 2023
 Improvement:
 - treaty: Add custom fetch implementation for treaty
