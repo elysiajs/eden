@@ -1,11 +1,3 @@
-import type {
-    Elysia,
-    SCHEMA,
-    IsPathParameter,
-    EXPOSED,
-    AnyTypedSchema
-} from 'elysia'
-
 import type { EdenFetchError } from './utils'
 
 // https://stackoverflow.com/a/39495173
@@ -32,11 +24,6 @@ export type MapError<T extends Record<number, unknown>> = [
           [K in A]: EdenFetchError<K, T[K]>
       }[A]
     : false
-
-// https://twitter.com/mattpocockuk/status/1622730173446557697?s=20
-type Prettify<T> = {
-    [K in keyof T]: T[K]
-} & {}
 
 export type UnionToIntersect<U> = (
     U extends unknown ? (arg: U) => 0 : never

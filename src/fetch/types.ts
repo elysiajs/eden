@@ -1,12 +1,11 @@
-import type { Elysia, SCHEMA } from 'elysia'
+import type { Elysia } from 'elysia'
 import type { EdenFetchError } from '../utils'
-import type { MapError, IsUnknown, IsNever, AnyTypedRoute } from '../types'
+import type { MapError, IsUnknown, IsNever } from '../types'
 
 export namespace EdenFetch {
-    export type Create<App extends Elysia<any>> = App['meta'] extends Record<
-        typeof SCHEMA,
-        infer Schema extends Record<string, any>
-    >
+    export type Create<App extends Elysia<any>> = App['meta'] extends {
+        schema: infer Schema extends Record<string, any>
+    }
         ? EdenFetch.Fn<Schema>
         : 'Please install Elysia before using Eden'
 

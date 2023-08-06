@@ -1,10 +1,9 @@
-import type { Elysia, EXPOSED } from 'elysia'
+import type { Elysia } from 'elysia'
 
 export namespace EdenFn {
-    export type Create<App extends Elysia<any>> = App['meta'] extends Record<
-        typeof EXPOSED,
-        infer Schema extends Record<string, any>
-    >
+    export type Create<App extends Elysia<any>> = App['meta'] extends {
+        exposed: infer Schema extends Record<string, any>
+    }
         ? EdenFn.Compose<Schema>
         : 'Please install Elysia before using Eden'
 
@@ -16,7 +15,7 @@ export namespace EdenFn {
     }
 
     export type Fn<T> = T extends {
-        [EXPOSED]: any
+        exposed: any
         value: infer Value
     }
         ? Asynctify<Value>

@@ -22,7 +22,7 @@ const isFile = (v: any) => {
 
 // FormData is 1 level deep
 const hasFile = (obj: Record<string, any>) => {
-    for (let key in obj) {
+    for (const key in obj) {
         if (isFile(obj[key])) return true
         else if (
             Array.isArray(obj[key]) &&
@@ -114,7 +114,9 @@ export class EdenWS<Schema extends TypedSchema<any> = TypedSchema> {
                     if (start === 47 || start === 123)
                         try {
                             data = JSON.parse(data)
-                        } catch {}
+                        } catch {
+                            // Not Empty
+                        }
                     else if (!Number.isNaN(+data)) data = +data
                     else if (data === 'true') data = true
                     else if (data === 'fase') data = false
@@ -150,9 +152,10 @@ export class EdenWS<Schema extends TypedSchema<any> = TypedSchema> {
 
 const createProxy = (
     domain: string,
-    path: string = '',
+    path = '',
     config: EdenTreaty.Config
 ): Record<string, unknown> =>
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
     new Proxy(() => {}, {
         get(target, key, value) {
             return createProxy(domain, `${path}/${key.toString()}`, config)
@@ -180,7 +183,7 @@ const createProxy = (
                     )
                 )
 
-            return (async () => {
+            const execute = async () => {
                 let body =
                     $body ?? (Object.keys(bodyObj).length ? bodyObj : undefined)
                 const isObject = typeof body === 'object'
@@ -216,56 +219,72 @@ const createProxy = (
                     body = newBody
                 } else if (isObject) body = JSON.stringify(body)
 
-                return (config.fetcher ?? fetch)(url, {
+                const $headers = {
+                    ...config.$fetch?.headers,
+                    ...$fetch?.headers
+                }
+
+                const response = await (config.fetcher ?? fetch)(url, {
                     method,
                     body,
-                    // ...config.fetch,
+                    ...config.$fetch,
                     ...$fetch,
                     headers: body
                         ? isFormData
-                            ? $fetch?.['headers']
+                            ? $headers
                             : {
                                   'content-type': isObject
                                       ? 'application/json'
                                       : 'text/plain',
-                                  ...$fetch?.['headers']
+                                  ...$headers
                               }
-                        : $fetch?.['headers']
-                }).then(async (res) => {
-                    let data
+                        : $headers
+                })
 
-                    switch (res.headers.get('Content-Type')?.split(';')[0]) {
-                        case 'application/json':
-                            data = await res.json()
-                            break
+                let data
 
-                        default:
-                            data = await res.text().then((data) => {
-                                if (!Number.isNaN(+data)) return +data
-                                if (data === 'true') return true
-                                if (data === 'false') return false
+                switch (response.headers.get('Content-Type')?.split(';')[0]) {
+                    case 'application/json':
+                        data = await response.json()
+                        break
 
-                                return data
-                            })
+                    default:
+                        data = await response.text().then((data) => {
+                            if (!Number.isNaN(+data)) return +data
+                            if (data === 'true') return true
+                            if (data === 'false') return false
+
+                            return data
+                        })
+                }
+
+                if (response.status > 300)
+                    return {
+                        data,
+                        error: new EdenFetchError(response.status, await data),
+                        status: response.status,
+                        raw: response,
+                        headers: response.headers,
+                        retry: execute
                     }
 
-                    if (res.status > 300)
-                        return {
-                            data,
-                            error: new EdenFetchError(res.status, await data)
-                        }
+                return {
+                    data,
+                    status: response.status,
+                    raw: response,
+                    headers: response.headers,
+                    error: null,
+                    retry: execute
+                }
+            }
 
-                    return { data, error: null }
-                })
-            })()
+            return execute()
         }
     }) as unknown as Record<string, unknown>
 
 export const edenTreaty = <App extends Elysia<any>>(
     domain: string,
-    config: {
-        fetcher?: typeof fetch
-    } = {
+    config: EdenTreaty.Config = {
         fetcher: fetch
     }
 ): EdenTreaty.Create<App> =>

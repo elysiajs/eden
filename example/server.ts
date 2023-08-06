@@ -27,40 +27,45 @@ const app = new Elysia()
     .post('/a/bcd/:name/b', () => 1)
     .post('/id/here', () => 1)
     .post('/id/here/a', () => 1)
-    // .get(
-    //     '/error',
-    //     ({ set }) => {
-    //         set.status = 400
+    .get(
+        '/error',
+        ({ set }) => {
+            set.status = 400
 
-    //         return {
-    //             error: true,
-    //             message: 'Something'
-    //         }
-    //     },
-    //     {
-    //         schema: {
-    //             response: {
-    //                 200: t.Object({
-    //                     myName: t.String()
-    //                 }),
-    //                 400: t.Object({
-    //                     error: t.Boolean(),
-    //                     message: t.String()
-    //                 })
-    //             }
-    //         }
-    //     }
-    // )
-    // .post('/mirror', ({ body }) => body, {
-    //     schema: {
-    //         body: t.Object({
-    //             username: t.String(),
-    //             password: t.String()
-    //         })
-    //     }
-    // })
+            return {
+                error: true,
+                message: 'Something'
+            }
+        },
+        {
+            response: {
+                200: t.Object({
+                    myName: t.String()
+                }),
+                400: t.Object({
+                    error: t.Boolean(),
+                    message: t.String()
+                })
+            }
+        }
+    )
+    .post('/mirror', ({ body }) => body, {
+        body: t.Object({
+            username: t.String(),
+            password: t.String()
+        })
+    })
     .get('/sign-in', () => 'ok')
-    .get('/products/nendoroid/skadi', () => 1)
+    .get('/products/nendoroid/skadi', () => 1, {
+        query: t.Object({
+            username: t.String()
+        })
+    })
+    .post('/products/nendoroid/skadi', () => 1, {
+        body: t.Object({
+            username: t.String()
+        })
+    })
     .post('/products/nendoroid', ({ body }) => body, {
         body: t.Object({
             id: t.Number(),
@@ -160,24 +165,24 @@ const app = new Elysia()
     //         }
     //     })
     // })
-    .fn(({ permission }) => ({
-        mirror: async <T>(a: T) => a,
-        authorized: permission({
-            value: {
-                a: (a: string) => {},
-                b: () => {}
-            },
-            check({ key, request: { headers }, match }) {
-                if (!headers.has('Authorization'))
-                    throw new Error('Authorization is required')
+    // .fn(({ permission }) => ({
+    //     mirror: async <T>(a: T) => a,
+    //     authorized: permission({
+    //         value: {
+    //             a: (a: string) => {},
+    //             b: () => {}
+    //         },
+    //         check({ key, request: { headers }, match }) {
+    //             if (!headers.has('Authorization'))
+    //                 throw new Error('Authorization is required')
 
-                return match({
-                    a(param) {},
-                    default() {}
-                })
-            }
-        })
-    }))
+    //             return match({
+    //                 a(param) {},
+    //                 default() {}
+    //             })
+    //         }
+    //     })
+    // }))
     .ws('/chat', {
         open(ws) {
             const { room, name } = ws.data.query
@@ -237,9 +242,5 @@ const runFn = (
         )
         .then((x) => x.text())
         .then((x) => SuperJSON.parse(x))
-
-runFn([{ n: ['mirror'], p: ['hi'] }]).then(console.log)
-
-const app2 = new Elysia().get('/', () => "h")
 
 export type Server = typeof app
