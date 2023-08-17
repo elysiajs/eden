@@ -5,7 +5,7 @@ import type { EdenFetch } from './types'
 export type { EdenFetch } from './types'
 
 export const edenFetch =
-    <App extends Elysia<any>>(
+    <App extends Elysia<any, any>>(
         server: string,
         config?: EdenFetch.Config
     ): EdenFetch.Create<App> =>

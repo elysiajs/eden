@@ -47,7 +47,7 @@ const createProxy = (
         }
     }) as any
 
-export const edenFn = <App extends Elysia<any>>(
+export const edenFn = <App extends Elysia<any, any>>(
     domain: string,
     config?: EdenFn.Config
 ): EdenFn.Create<App> =>

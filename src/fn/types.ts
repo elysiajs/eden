@@ -1,7 +1,7 @@
 import type { Elysia } from 'elysia'
 
 export namespace EdenFn {
-    export type Create<App extends Elysia<any>> = App['meta'] extends {
+    export type Create<App extends Elysia<any, any>> = App['meta'] extends {
         exposed: infer Schema extends Record<string, any>
     }
         ? EdenFn.Compose<Schema>

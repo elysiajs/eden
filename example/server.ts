@@ -227,7 +227,7 @@ const app = new Elysia()
 const runFn = (
     body: Array<{ n: string[] } | { n: string[]; p: any[] }>,
     headers: HeadersInit = {},
-    target: Elysia<any> = app as Elysia<any>
+    target: Elysia<any, any> = app as Elysia<any, any>
 ): Promise<unknown[]> =>
     app
         .handle(

@@ -3,7 +3,7 @@ import type { EdenFetchError } from '../utils'
 import type { MapError, IsUnknown, IsNever } from '../types'
 
 export namespace EdenFetch {
-    export type Create<App extends Elysia<any>> = App['meta'] extends {
+    export type Create<App extends Elysia<any, any>> = App['meta'] extends {
         schema: infer Schema extends Record<string, any>
     }
         ? EdenFetch.Fn<Schema>

@@ -14,7 +14,7 @@ type Replace<RecordType, TargetType, GenericType> = {
 type Files = File | FileList
 
 export namespace EdenTreaty {
-    export type Create<App extends Elysia<any>> = App['meta'] extends {
+    export type Create<App extends Elysia<any, any>> = App['meta'] extends {
         schema: infer Schema extends Record<string, any>
     }
         ? EdenTreaty.Sign<Schema>

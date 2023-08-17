@@ -1,3 +1,7 @@
+# 0.6.1 - 17 Aug 2023
+Feature:
+- add support for Elysia 0.6.7
+
 # 0.6.0 - 6 Aug 2023
 Feature:
 - add support for Elysia 0.6
