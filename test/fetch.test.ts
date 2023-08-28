@@ -54,6 +54,19 @@ const app = new Elysia()
             }
         }
     )
+    .get(
+        '/with-query',
+        ({ query }) => {
+            return {
+                query
+            }
+        },
+        {
+            query: t.Object({
+                q: t.String()
+            })
+        }
+    )
     .listen(8081)
 
 const fetch = edenFetch<typeof app>('http://localhost:8081')
@@ -100,7 +113,8 @@ describe('Eden Fetch', () => {
             method: 'POST',
             headers: {
                 'x-affiliation': 'Arius'
-            }
+            },
+            query: {}
         })
 
         expect(data).toEqual('Arius')
@@ -142,5 +156,14 @@ describe('Eden Fetch', () => {
                 case 500:
                     expect(error.value).toEqual('hare')
             }
+    })
+
+    it('send query', async () => {
+        const { data, error } = await fetch('/with-query', {
+            query: {
+                q: 'search'
+            }
+        })
+        expect(data?.query.q).toBe('search')
     })
 })

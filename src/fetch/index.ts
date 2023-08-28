@@ -26,6 +26,9 @@ export const edenFetch =
             }
 
         const fetch = config?.fetcher || globalThis.fetch
+        const queryStr = query
+            ? `?${new URLSearchParams(query).toString()}`
+            : ''
 
         // @ts-ignore
         const execute = () => fetch(server + endpoint, {
