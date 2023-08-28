@@ -34,6 +34,13 @@ export namespace EdenFetch {
                 : {
                       params: Route['params']
                   }) &
+            (IsNever<keyof Route['query']> extends true
+                ? {
+                      query?: Record<never, string>
+                  }
+                : {
+                      query: Route['query']
+                  }) &
             (undefined extends Route['headers']
                 ? {
                       headers?: Record<string, string>

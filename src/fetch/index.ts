@@ -10,7 +10,7 @@ export const edenFetch =
         config?: EdenFetch.Config
     ): EdenFetch.Create<App> =>
     // @ts-ignore
-    async (endpoint: string, { params, body, ...options } = {}) => {
+    async (endpoint: string, { params, body, query, ...options } = {}) => {
         if (params)
             Object.entries(params).forEach(([key, value]) => {
                 endpoint = endpoint.replace(`:${key}`, value)
@@ -26,9 +26,12 @@ export const edenFetch =
             }
 
         const fetch = config?.fetcher || globalThis.fetch
+        const queryStr = query
+            ? `?${new URLSearchParams(query).toString()}`
+            : ''
 
         // @ts-ignore
-        return fetch(server + endpoint, {
+        return fetch(server + endpoint + queryStr, {
             ...options,
             headers: body
                 ? {
