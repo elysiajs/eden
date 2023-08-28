@@ -1,4 +1,4 @@
-import type { EdenFetchError } from './utils'
+import type { EdenFetchError } from './errors'
 
 // https://stackoverflow.com/a/39495173
 type Range<F extends number, T extends number> = Exclude<

@@ -1,6 +1,6 @@
 import type { Elysia } from 'elysia'
 
-import { EdenFetchError } from '../utils'
+import { EdenFetchError } from '../errors'
 import type { EdenFetch } from './types'
 export type { EdenFetch } from './types'
 
@@ -10,10 +10,10 @@ export const edenFetch =
         config?: EdenFetch.Config
     ): EdenFetch.Create<App> =>
     // @ts-ignore
-    async (endpoint: string, { params, body, query, ...options } = {}) => {
+    (endpoint: string, { params, body, ...options } = {}) => {
         if (params)
             Object.entries(params).forEach(([key, value]) => {
-                endpoint = endpoint.replace(`:${key}`, value)
+                endpoint = endpoint.replace(`:${key}`, value as string)
             })
 
         const contentType = options.headers?.['Content-Type']
@@ -31,7 +31,7 @@ export const edenFetch =
             : ''
 
         // @ts-ignore
-        return fetch(server + endpoint + queryStr, {
+        const execute = () => fetch(server + endpoint, {
             ...options,
             headers: body
                 ? {
@@ -62,9 +62,20 @@ export const edenFetch =
             if (res.status > 300)
                 return {
                     data: null,
+                    status: res.status,
+                    headers: res.headers,
+                    retry: execute,
                     error: new EdenFetchError(res.status, data)
                 }
 
-            return { data, error: null }
+            return {
+                data,
+                error: null,
+                status: res.status,
+                headers: res.headers,
+                retry: execute
+            }
         })
+
+        return execute()
     }

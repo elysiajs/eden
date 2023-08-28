@@ -1,6 +1,6 @@
 import type { Elysia, TypedSchema } from 'elysia'
 
-import { EdenFetchError } from '../utils'
+import { EdenFetchError } from '../errors'
 
 import { composePath } from './utils'
 import type { EdenTreaty } from './types'
@@ -22,6 +22,8 @@ const isFile = (v: any) => {
 
 // FormData is 1 level deep
 const hasFile = (obj: Record<string, any>) => {
+    if (!obj) return false
+
     for (const key in obj) {
         if (isFile(obj[key])) return true
         else if (
@@ -155,7 +157,6 @@ const createProxy = (
     path = '',
     config: EdenTreaty.Config
 ): Record<string, unknown> =>
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
     new Proxy(() => {}, {
         get(target, key, value) {
             return createProxy(domain, `${path}/${key.toString()}`, config)
@@ -164,12 +165,17 @@ const createProxy = (
             target,
             _,
             [
-                { $query, $fetch, $body, ...bodyObj } = {
+                { $query, $fetch, $headers, ...bodyObj } = {
                     $fetch: undefined,
-                    $query: undefined,
-                    $body: undefined
+                    $headers: undefined,
+                    $query: undefined
                 }
-            ]: EdenTreaty.CallOption[] = [{}]
+            ]: {
+                [x: string]: any
+                $fetch?: RequestInit
+                $headers?: HeadersInit
+                $query?: Record<string, string>
+            }[] = [{}]
         ) {
             const i = path.lastIndexOf('/'),
                 method = path.slice(i + 1),
@@ -184,44 +190,54 @@ const createProxy = (
                 )
 
             const execute = async () => {
-                let body =
-                    $body ?? (Object.keys(bodyObj).length ? bodyObj : undefined)
-                const isObject = typeof body === 'object'
-                const isFormData = isObject && hasFile(body)
+                let body: any
 
-                if (isFormData) {
-                    const newBody = new FormData()
-
-                    // FormData is 1 level deep
-                    for (const [key, field] of Object.entries(body)) {
-                        if (isServer) {
-                            newBody.append(key, field as any)
-                        } else {
-                            // @ts-ignore
-                            if (field instanceof File)
-                                newBody.append(
-                                    key,
-                                    await fileToBlob(field as any)
-                                )
-                            // @ts-ignore
-                            else if (field instanceof FileList) {
-                                // @ts-ignore
-                                for (let i = 0; i < field.length; i++) {
-                                    newBody.append(
-                                        key as any,
-                                        await fileToBlob((field as any)[i])
-                                    )
-                                }
-                            } else newBody.append(key, field as string)
-                        }
-                    }
-
-                    body = newBody
-                } else if (isObject) body = JSON.stringify(body)
-
-                const $headers = {
+                const headers = {
                     ...config.$fetch?.headers,
-                    ...$fetch?.headers
+                    ...$fetch?.headers,
+                    ...$headers
+                } as Record<string, string>
+
+                if (method !== 'GET' && method !== 'HEAD') {
+                    body = Object.keys(bodyObj).length ? bodyObj : undefined
+                    const isObject = typeof body === 'object'
+                    const isFormData = isObject && hasFile(body)
+
+                    if (isFormData) {
+                        const newBody = new FormData()
+
+                        // FormData is 1 level deep
+                        for (const [key, field] of Object.entries(body)) {
+                            if (isServer) {
+                                newBody.append(key, field as any)
+                            } else {
+                                // @ts-ignore
+                                if (field instanceof File)
+                                    newBody.append(
+                                        key,
+                                        await fileToBlob(field as any)
+                                    )
+                                // @ts-ignore
+                                else if (field instanceof FileList) {
+                                    // @ts-ignore
+                                    for (let i = 0; i < field.length; i++) {
+                                        newBody.append(
+                                            key as any,
+                                            await fileToBlob((field as any)[i])
+                                        )
+                                    }
+                                } else newBody.append(key, field as string)
+                            }
+                        }
+
+                        body = newBody
+                    } else {
+                        headers['content-type'] = isObject
+                            ? 'application/json'
+                            : 'text/plain'
+
+                        if (isObject) body = JSON.stringify(body)
+                    }
                 }
 
                 const response = await (config.fetcher ?? fetch)(url, {
@@ -229,16 +245,7 @@ const createProxy = (
                     body,
                     ...config.$fetch,
                     ...$fetch,
-                    headers: body
-                        ? isFormData
-                            ? $headers
-                            : {
-                                  'content-type': isObject
-                                      ? 'application/json'
-                                      : 'text/plain',
-                                  ...$headers
-                              }
-                        : $headers
+                    headers
                 })
 
                 let data
@@ -265,16 +272,14 @@ const createProxy = (
                         status: response.status,
                         raw: response,
                         headers: response.headers,
-                        retry: execute
                     }
 
                 return {
                     data,
                     status: response.status,
-                    raw: response,
+                    response: response,
                     headers: response.headers,
-                    error: null,
-                    retry: execute
+                    error: null as null
                 }
             }
 
