@@ -79,5 +79,11 @@
   },
   "dependencies": {
     "superjson": "^1.12.2"
+  },
+  "prettier": {
+    "semi": false,
+    "tabWidth": 4,
+    "singleQuote": true,
+    "trailingComma": "none"
   }
 }
