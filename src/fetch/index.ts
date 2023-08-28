@@ -10,7 +10,7 @@ export const edenFetch =
         config?: EdenFetch.Config
     ): EdenFetch.Create<App> =>
     // @ts-ignore
-    (endpoint: string, { params, body, ...options } = {}) => {
+    (endpoint: string, { query, params, body, ...options } = {}) => {
         if (params)
             Object.entries(params).forEach(([key, value]) => {
                 endpoint = endpoint.replace(`:${key}`, value as string)

@@ -139,7 +139,9 @@ describe('Eden Fetch', () => {
     })
 
     it('handle throw error', async () => {
-        const { data, error } = await fetch('/throw-error', {})
+        const { data, error } = await fetch('/throw-error', {
+            "method": "GET"
+        })
 
         expect(error instanceof Error).toEqual(true)
 
@@ -161,7 +163,7 @@ describe('Eden Fetch', () => {
     it('send query', async () => {
         const { data, error } = await fetch('/with-query', {
             query: {
-                q: 'search'
+                q: 'A'
             }
         })
         expect(data?.query.q).toBe('search')
