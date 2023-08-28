@@ -1,5 +1,5 @@
 import type { Elysia } from 'elysia'
-import type { EdenFetchError } from '../utils'
+import type { EdenFetchError } from '../errors'
 import type { MapError, IsUnknown, IsNever } from '../types'
 
 type Prettify<T> = {
