@@ -1,3 +1,7 @@
+# 0.6.4 - 28 Aug 2023
+Change:
+- Use tsup to bundle
+
 # 0.6.3 - 28 Aug 2023
 Feature:
 - add query to Eden Fetch thanks to [#10](https://github.com/elysiajs/eden/pull/10)
