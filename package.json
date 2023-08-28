@@ -54,7 +54,7 @@
   "scripts": {
     "dev": "bun run --hot example/index.ts",
     "test": "bun wiptest",
-    "build": "vite build && tsc",
+    "build": "tsup",
     "release": "npm run build && npm run test && npm publish --access public"
   },
   "peerDependencies": {
@@ -71,11 +71,11 @@
     "@sinclair/typebox": "^0.26.8",
     "@types/node": "^18.15.5",
     "elysia": "0.6.10",
+    "esbuild": "^0.19.2",
     "eslint": "^8.26.0",
     "rimraf": "^4.4.1",
-    "typescript": "^5.0.4",
-    "vite": "^4.4.9",
-    "vite-plugin-dts": "^2.3.0"
+    "tsup": "^7.2.0",
+    "typescript": "^5.0.4"
   },
   "dependencies": {
     "superjson": "^1.12.2"
