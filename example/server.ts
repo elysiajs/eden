@@ -15,6 +15,14 @@ const app = new Elysia()
             username: t.String()
         })
     })
+    .put('/query', async () => 'There', {
+        body: t.Object({
+            namea: t.String()
+        }),
+        query: t.Object({
+            username: t.String()
+        })
+    })
     .post('/', () => 'A')
     .post('/image', ({ body: { image, title } }) => title, {
         body: t.Object({

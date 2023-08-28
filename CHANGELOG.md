@@ -1,3 +1,16 @@
+# 0.6.2 - 26 Aug 2023
+Feature:
+- add the `$fetch` parameters to Eden Treaty
+- add the following to response:
+    - status - indicating status code
+    - raw - Response
+    - headers - Response's headers
+
+Improvement:
+- rewrite Eden type to New Eden
+    - LoC reduced by ~35%
+    - Faster type inference ~26%
+
 # 0.6.1 - 17 Aug 2023
 Feature:
 - add support for Elysia 0.6.7

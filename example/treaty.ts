@@ -3,15 +3,13 @@ import type { Server } from './server'
 
 const eden = edenTreaty<Server>('http://localhost:8080')
 
-const { data, error } = await eden.products.nendoroid[1902].put({
-    $query: undefined,
-    name: 'Anya Forger'
+const { data, error } = await eden.products.nendoroid[1931].put({
+    name: 'A'
 })
-
-type B = Server['meta']['schema']['/query']['post']
 
 const a = await eden.query.post({
     name: 'A',
+    $fetch: {},
     $query: {
         username: 'A'
     }
