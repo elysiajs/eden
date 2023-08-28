@@ -31,7 +31,7 @@ export const edenFetch =
             : ''
 
         // @ts-ignore
-        const execute = () => fetch(server + endpoint, {
+        const execute = () => fetch(server + endpoint + queryStr, {
             ...options,
             headers: body
                 ? {

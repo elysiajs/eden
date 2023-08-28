@@ -166,6 +166,6 @@ describe('Eden Fetch', () => {
                 q: 'A'
             }
         })
-        expect(data?.query.q).toBe('search')
+        expect(data?.query.q).toBe('A')
     })
 })
