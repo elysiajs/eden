@@ -19,17 +19,17 @@ export namespace EdenFetch {
 
     export type Fn<Schema extends Record<string, any>> = <
         Endpoint extends keyof Schema,
-        Method extends Extract<keyof Schema[Endpoint], string>,
-        Route extends Schema[Endpoint][Method]
+        Method extends Uppercase<Extract<keyof Schema[Endpoint], string>>,
+        Route extends Schema[Endpoint][Lowercase<Method>]
     >(
         endpoint: Endpoint,
         options: Omit<RequestInit, 'body' | 'method' | 'headers'> &
-            ('get' extends Method
+            ('GET' extends Method
                 ? {
-                      method?: Uppercase<Method>
+                      method?: Method
                   }
                 : {
-                      method: Uppercase<Method>
+                      method: Method
                   }) &
             (IsNever<keyof Route['params']> extends true
                 ? {
