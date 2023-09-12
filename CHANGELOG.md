@@ -1,3 +1,8 @@
+# 0.6.5 - 12 Sep 2023
+Bug fix:
+- [#15](https://github.com/elysiajs/eden/pull/15) fetch: method inference on route with different methods
+- [#17](https://github.com/elysiajs/eden/issues/17) treaty:  api.get() maps to request GET /ge instead of /
+
 # 0.6.4 - 28 Aug 2023
 Change:
 - Use tsup to bundle

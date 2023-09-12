@@ -1,5 +1,6 @@
 {
   "compilerOptions": {
+    "strict": true,
     "lib": ["ESNext", "dom"],
     "outDir": "./dist",
     "sourceMap": true,
@@ -8,7 +9,8 @@
     "target": "es2022",
     "moduleResolution": "node",
     "jsx": "react",
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["bun-types"]
   },
   "include": ["./src/**/*"]
 }

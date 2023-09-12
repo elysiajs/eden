@@ -1,6 +1,6 @@
-import { defineConfig } from 'tsup';
-import { resolve } from 'path';
-import {exec} from 'child_process'
+import { defineConfig } from 'tsup'
+import { resolve } from 'path'
+import { exec } from 'child_process'
 
 export default defineConfig({
     entry: {
@@ -9,12 +9,13 @@ export default defineConfig({
         fetch: resolve(__dirname, 'src/fetch/index.ts'),
         fn: resolve(__dirname, 'src/fn/index.ts')
     },
-    format: ['cjs', 'esm'],
+    format: ['cjs', 'esm', 'iife'],
+    globalName: 'Eden',
     minify: true,
     external: ['elysia', 'superjson'],
     async onSuccess() {
         exec('tsc --emitDeclarationOnly --declaration', {
-            cwd: resolve(__dirname, 'dist'),
+            cwd: resolve(__dirname, 'dist')
         })
     }
 })

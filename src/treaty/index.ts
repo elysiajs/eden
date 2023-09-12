@@ -179,7 +179,9 @@ const createProxy = (
         ) {
             const i = path.lastIndexOf('/'),
                 method = path.slice(i + 1),
-                url = composePath(domain, path.slice(0, i), $query)
+                url = composePath(domain, i === -1 ? '/' : path.slice(0, i), $query)
+
+            const fetcher = config.fetcher ?? fetch
 
             if (method === 'subscribe')
                 return new EdenWS(
@@ -240,7 +242,7 @@ const createProxy = (
                     }
                 }
 
-                const response = await (config.fetcher ?? fetch)(url, {
+                const response = await fetcher(url, {
                     method,
                     body,
                     ...config.$fetch,

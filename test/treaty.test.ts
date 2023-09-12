@@ -47,13 +47,13 @@ const client = edenTreaty<typeof app>('http://localhost:8082')
 
 describe('Eden Rest', () => {
     it('get index', async () => {
-        const { data } = await client.index.get()
+        const { data } = await client.get()
 
         expect(data).toBe('hi')
     })
 
     it('post index', async () => {
-        const { data } = await client.index.get()
+        const { data } = await client.get()
 
         expect(data).toBe('hi')
     })
