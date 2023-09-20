@@ -6,8 +6,7 @@ export default defineConfig({
     entry: {
         index: resolve(__dirname, 'src/index.ts'),
         treaty: resolve(__dirname, 'src/treaty/index.ts'),
-        fetch: resolve(__dirname, 'src/fetch/index.ts'),
-        fn: resolve(__dirname, 'src/fn/index.ts')
+        fetch: resolve(__dirname, 'src/fetch/index.ts')
     },
     format: ['cjs', 'esm', 'iife'],
     globalName: 'Eden',

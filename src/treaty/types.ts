@@ -9,6 +9,7 @@ import type {
 } from '../types'
 import type { EdenFetchError } from '../errors'
 
+// @ts-ignore
 type Files = File | FileList
 
 type Replace<RecordType, TargetType, GenericType> = {
@@ -35,18 +36,19 @@ type Prettify<T> = {
 
 type AnySchema = {
     body: unknown
-    headers: Record<string, any> | undefined
-    query: Record<string, any> | undefined
-    params: Record<string, any> | undefined
+    headers: unknown
+    query: unknown
+    params: unknown
     response: any
 }
 
 export namespace EdenTreaty {
-    export type Create<App extends Elysia<any, any>> = App['meta'] extends {
-        schema: infer Schema extends Record<string, any>
-    }
-        ? UnionToIntersect<Sign<Schema>>
-        : 'Please install Elysia before using Eden'
+    export type Create<App extends Elysia<any, any, any, any, any, any>> =
+        App extends {
+            schema: infer Schema extends Record<string, any>
+        }
+            ? UnionToIntersect<Sign<Schema>>
+            : 'Please install Elysia before using Eden'
 
     export interface Config {
         /**

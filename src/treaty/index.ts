@@ -1,4 +1,4 @@
-import type { Elysia, TypedSchema } from 'elysia'
+import type { Elysia, InputSchema } from 'elysia'
 
 import { EdenFetchError } from '../errors'
 
@@ -51,7 +51,7 @@ const fileToBlob = (v: File) =>
               reader.readAsArrayBuffer(v)
           })
 
-export class EdenWS<Schema extends TypedSchema<any> = TypedSchema> {
+export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
     ws: WebSocket
     url: string
 

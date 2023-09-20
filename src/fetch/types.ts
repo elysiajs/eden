@@ -7,11 +7,12 @@ type Prettify<T> = {
 } & {}
 
 export namespace EdenFetch {
-    export type Create<App extends Elysia<any, any>> = App['meta'] extends {
-        schema: infer Schema extends Record<string, any>
-    }
-        ? EdenFetch.Fn<Schema>
-        : 'Please install Elysia before using Eden'
+    export type Create<App extends Elysia<any, any, any, any, any, any>> =
+        App extends {
+            schema: infer Schema extends Record<string, any>
+        }
+            ? EdenFetch.Fn<Schema>
+            : 'Please install Elysia before using Eden'
 
     export interface Config {
         fetcher?: typeof globalThis.fetch

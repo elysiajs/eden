@@ -1,10 +1,7 @@
-import { Elysia, ws, t } from 'elysia'
+import { Elysia, t } from 'elysia'
 import { cors } from '@elysiajs/cors'
-import SuperJSON from 'superjson'
-// import fn from '@elysiajs/fn'
 
 const app = new Elysia()
-    .use(ws())
     .use(cors())
     .get('/something/here', () => 'Elysia')
     .post('/query', async () => 'There', {
@@ -148,49 +145,6 @@ const app = new Elysia()
             }
         }
     )
-    // .use(async (app) => {
-    //     return fn({
-    //         app,
-    //         value: {
-    //             mirror: async <T>(a: T) => {
-    //                 return a
-    //             },
-    //             authorized: permission({
-    //                 value: {
-    //                     a: (a: string) => {},
-    //                     b: () => {}
-    //                 },
-    //                 check({ key, request: { headers }, match }) {
-    //                     if (!headers.has('Authorization'))
-    //                         throw new Error('Authorization is required')
-
-    //                     return match({
-    //                         a(param) {},
-    //                         default() {}
-    //                     })
-    //                 }
-    //             })
-    //         }
-    //     })
-    // })
-    // .fn(({ permission }) => ({
-    //     mirror: async <T>(a: T) => a,
-    //     authorized: permission({
-    //         value: {
-    //             a: (a: string) => {},
-    //             b: () => {}
-    //         },
-    //         check({ key, request: { headers }, match }) {
-    //             if (!headers.has('Authorization'))
-    //                 throw new Error('Authorization is required')
-
-    //             return match({
-    //                 a(param) {},
-    //                 default() {}
-    //             })
-    //         }
-    //     })
-    // }))
     .ws('/chat', {
         open(ws) {
             const { room, name } = ws.data.query
@@ -231,24 +185,5 @@ const app = new Elysia()
         })
     })
     .listen(8080)
-
-const runFn = (
-    body: Array<{ n: string[] } | { n: string[]; p: any[] }>,
-    headers: HeadersInit = {},
-    target: Elysia<any, any> = app as Elysia<any, any>
-): Promise<unknown[]> =>
-    app
-        .handle(
-            new Request('http://localhost/~fn', {
-                method: 'POST',
-                headers: {
-                    'content-type': 'elysia/fn',
-                    ...headers
-                },
-                body: SuperJSON.stringify(body)
-            })
-        )
-        .then((x) => x.text())
-        .then((x) => SuperJSON.parse(x))
 
 export type Server = typeof app

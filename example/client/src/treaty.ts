@@ -38,12 +38,3 @@ const data = await client.products.nendoroid.skadi.post({
 // setInterval(() => {
 //     mirror.send('a')
 // }, 200)
-
-const aa = () => {}
-type A = typeof aa
-
-type B = A
-
-export const a = {} as {
-    a: B
-}
