@@ -3,6 +3,7 @@ import { cors } from '@elysiajs/cors'
 
 const app = new Elysia()
     .use(cors())
+    .error("A", Error)
     .get('/something/here', () => 'Elysia')
     .post('/query', async () => 'There', {
         body: t.Object({

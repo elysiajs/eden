@@ -1,3 +1,7 @@
+# 0.7.1 - 21 Sep 2023
+Bug fix:
+- Type panic when `Definitions` is provided
+
 # 0.7.0 - 20 Sep 2023
 Improvement:
 - Update to Elysia 0.7.0

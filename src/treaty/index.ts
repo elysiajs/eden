@@ -179,7 +179,11 @@ const createProxy = (
         ) {
             const i = path.lastIndexOf('/'),
                 method = path.slice(i + 1),
-                url = composePath(domain, i === -1 ? '/' : path.slice(0, i), $query)
+                url = composePath(
+                    domain,
+                    i === -1 ? '/' : path.slice(0, i),
+                    $query
+                )
 
             const fetcher = config.fetcher ?? fetch
 
@@ -273,7 +277,7 @@ const createProxy = (
                         error: new EdenFetchError(response.status, await data),
                         status: response.status,
                         raw: response,
-                        headers: response.headers,
+                        headers: response.headers
                     }
 
                 return {
@@ -289,7 +293,7 @@ const createProxy = (
         }
     }) as unknown as Record<string, unknown>
 
-export const edenTreaty = <App extends Elysia<any, any>>(
+export const edenTreaty = <App extends Elysia<any, any, any, any, any, any>>(
     domain: string,
     config: EdenTreaty.Config = {
         fetcher: fetch
