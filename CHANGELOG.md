@@ -1,3 +1,10 @@
+# 0.7.0 - 20 Sep 2023
+Improvement:
+- Update to Elysia 0.7.0
+
+Change:
+- remove Elysia Fn
+
 # 0.6.5 - 12 Sep 2023
 Bug fix:
 - [#15](https://github.com/elysiajs/eden/pull/15) fetch: method inference on route with different methods
