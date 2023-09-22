@@ -1,6 +1,8 @@
 import { defineConfig } from 'tsup'
 import { resolve } from 'path'
-import { exec } from 'child_process'
+import { execSync } from 'child_process'
+
+import { copyFile } from 'fs/promises'
 
 export default defineConfig({
     entry: {
@@ -11,9 +13,10 @@ export default defineConfig({
     format: ['cjs', 'esm', 'iife'],
     globalName: 'Eden',
     minify: true,
-    external: ['elysia', 'superjson'],
+    external: ['elysia'],
+    dts: true,
     async onSuccess() {
-        exec('tsc --emitDeclarationOnly --declaration', {
+        execSync('tsc --emitDeclarationOnly --declaration', {
             cwd: resolve(__dirname, 'dist')
         })
     }

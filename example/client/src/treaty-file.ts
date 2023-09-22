@@ -1,6 +1,7 @@
-// @ts-nocheck
+/// <reference lib="dom" />
+/// <reference lib="dom.iterable" />
 import { edenTreaty } from '@elysia/eden'
-import type { Server } from '../../server'
+import type { Server } from '../../server.js'
 
 export const client = edenTreaty<Server>('http://localhost:8080')
 

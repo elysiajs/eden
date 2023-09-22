@@ -1,3 +1,4 @@
+/// <reference lib="dom" />
 import type { Elysia } from 'elysia'
 import type { EdenWS } from './index'
 import type {
@@ -9,7 +10,6 @@ import type {
 } from '../types'
 import type { EdenFetchError } from '../errors'
 
-// @ts-ignore
 type Files = File | FileList
 
 type Replace<RecordType, TargetType, GenericType> = {
@@ -61,7 +61,7 @@ export namespace EdenTreaty {
     export type Sign<
         Schema extends Record<string, Record<string, unknown>>,
         // @ts-ignore
-        Paths extends (string | number)[] = Split<keyof Schema>,
+        Paths extends (string | number)[] = Split<keyof Schema & string>,
         Carry extends string = ''
     > = Paths extends [
         infer Prefix extends string | number,

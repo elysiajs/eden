@@ -1,10 +1,16 @@
+# 0.7.2 - 22 Sep 2023
+Bug fix:
+- resolve 'FileList' type
+- using rimraf to clear previous build
+- fix edenTreaty type is undefined when using moduleResolution: bundler
+
 # 0.7.1 - 21 Sep 2023
 Bug fix:
-- Type panic when `Definitions` is provided
+- type panic when `Definitions` is provided
 
 # 0.7.0 - 20 Sep 2023
 Improvement:
-- Update to Elysia 0.7.0
+- update to Elysia 0.7.0
 
 Change:
 - remove Elysia Fn
@@ -16,7 +22,7 @@ Bug fix:
 
 # 0.6.4 - 28 Aug 2023
 Change:
-- Use tsup to bundle
+- use tsup to bundle
 
 # 0.6.3 - 28 Aug 2023
 Feature:

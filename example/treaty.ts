@@ -7,13 +7,7 @@ const { data, error } = await eden.products.nendoroid[1931].put({
     name: 'A'
 })
 
-const a = await eden.query.post({
-    name: 'A',
-    $fetch: {},
-    $query: {
-        username: 'A'
-    }
-})
+const a = eden['union-type'].get()
 
 if (error)
     switch (error.status) {
