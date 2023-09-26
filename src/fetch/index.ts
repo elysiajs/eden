@@ -33,6 +33,7 @@ export const edenFetch =
         // @ts-ignore
         const execute = () => fetch(server + endpoint + queryStr, {
             ...options,
+            method: options.method?.toUpperCase() || 'GET',
             headers: body
                 ? {
                       'content-type': 'application/json',

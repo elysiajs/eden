@@ -178,7 +178,7 @@ const createProxy = (
             }[] = [{}]
         ) {
             const i = path.lastIndexOf('/'),
-                method = path.slice(i + 1),
+                method = path.slice(i + 1).toUpperCase(),
                 url = composePath(
                     domain,
                     i === -1 ? '/' : path.slice(0, i),
@@ -187,7 +187,7 @@ const createProxy = (
 
             const fetcher = config.fetcher ?? fetch
 
-            if (method === 'subscribe')
+            if (method === 'SUBSCRIBE')
                 return new EdenWS(
                     url.replace(
                         /^([^]+):\/\//,
