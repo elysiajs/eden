@@ -1,7 +1,9 @@
 import { Elysia, t } from 'elysia'
 import { edenTreaty } from '../src'
 
-import { beforeAll, describe, expect, it } from 'bun:test'
+import { beforeEach, describe, expect, it, spyOn, mock } from 'bun:test'
+
+const fetchSpy = spyOn(global, 'fetch')
 
 const utf8Json = { hello: 'world' }
 
@@ -41,9 +43,14 @@ const app = new Elysia()
     .get('/number', () => 1)
     .get('/true', () => true)
     .get('/false', () => false)
+    .patch('/update', () => 1)
     .listen(8082)
 
 const client = edenTreaty<typeof app>('http://localhost:8082')
+
+beforeEach(() => {
+    fetchSpy.mockClear()
+})
 
 describe('Eden Rest', () => {
     it('get index', async () => {
@@ -111,5 +118,16 @@ describe('Eden Rest', () => {
         const { data } = await client.prefix.prefixed.get()
 
         expect(data).toBe('hi')
+    })
+
+    // ? Test for request method
+    it('should always send uppercase as final request method', async () => {
+        const { data } = await client.update.patch()
+
+        expect(data).toBe(1)
+        expect(
+            (fetchSpy.mock.calls[0]! as unknown as [unknown, RequestInit])[1]
+                .method
+        ).toBe('PATCH')
     })
 })
