@@ -165,16 +165,18 @@ const createProxy = (
             target,
             _,
             [
-                { $query, $fetch, $headers, ...bodyObj } = {
+                { $query, $fetch, $headers, $transform, ...bodyObj } = {
                     $fetch: undefined,
                     $headers: undefined,
-                    $query: undefined
+                    $query: undefined,
+                    $transform: undefined
                 }
             ]: {
                 [x: string]: any
                 $fetch?: RequestInit
                 $headers?: HeadersInit
                 $query?: Record<string, string>
+                $transform?: EdenTreaty.Transform
             }[] = [{}]
         ) {
             const i = path.lastIndexOf('/'),
@@ -186,6 +188,22 @@ const createProxy = (
                 )
 
             const fetcher = config.fetcher ?? fetch
+            let transforms = config.transform
+                ? Array.isArray(config.transform)
+                    ? config.transform
+                    : [config.transform]
+                : undefined
+
+            const $transforms = $transform
+                ? Array.isArray($transform)
+                    ? $transform
+                    : [$transform]
+                : undefined
+
+            if ($transforms) {
+                if (transforms) transforms = $transforms.concat(transforms)
+                else transforms = $transforms as any
+            }
 
             if (method === 'SUBSCRIBE')
                 return new EdenWS(
@@ -271,21 +289,31 @@ const createProxy = (
                         })
                 }
 
-                if (response.status > 300)
-                    return {
-                        data,
-                        error: new EdenFetchError(response.status, await data),
-                        status: response.status,
-                        raw: response,
-                        headers: response.headers
+                const error =
+                    response.status >= 300 || response.status < 200
+                        ? new EdenFetchError(response.status, data)
+                        : null
+
+                if (transforms)
+                    for (const transform of transforms) {
+                        let temp = transform({
+                            data,
+                            status: response.status,
+                            headers: response.headers,
+                            response,
+                            error
+                        })
+                        if (temp instanceof Promise) temp = await temp
+
+                        if (temp !== undefined && temp !== null) data = temp
                     }
 
                 return {
                     data,
-                    status: response.status,
+                    error,
                     response: response,
-                    headers: response.headers,
-                    error: null as null
+                    status: response.status,
+                    headers: response.headers
                 }
             }
 

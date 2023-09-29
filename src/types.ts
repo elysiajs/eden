@@ -26,10 +26,16 @@ export type MapError<T extends Record<number, unknown>> = [
     : false
 
 export type UnionToIntersect<U> = (
-    U extends unknown ? (arg: U) => 0 : never
-) extends (arg: infer I) => 0
+    U extends any ? (arg: U) => any : never
+) extends (arg: infer I) => void
     ? I
     : never
+
+export type UnionToTuple<T> = UnionToIntersect<
+    T extends any ? (t: T) => T : never
+> extends (_: any) => infer W
+    ? [...UnionToTuple<Exclude<T, W>>, W]
+    : []
 
 export type IsAny<T> = 0 extends 1 & T ? true : false
 

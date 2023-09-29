@@ -42,6 +42,8 @@ type AnySchema = {
     response: any
 }
 
+type MaybeArray<T> = T | T[]
+
 export namespace EdenTreaty {
     export type Create<App extends Elysia<any, any, any, any, any, any>> =
         App extends {
@@ -50,17 +52,39 @@ export namespace EdenTreaty {
             ? UnionToIntersect<Sign<Schema>>
             : 'Please install Elysia before using Eden'
 
+    type SplitKeys<T> = T extends [infer First, ...infer Rest]
+        ? [First, Rest]
+        : T extends [infer First, ...infer Rest][number]
+        ? [First, Rest]
+        : never
+
+    type UnwrapPromise<T> = T extends Promise<infer A> ? A : T
+
+    export type Transform<T = unknown> = MaybeArray<
+        (
+            response: unknown extends T
+                ? {
+                      data: any
+                      error: any
+                      response: Response
+                      status: number
+                      headers: Headers
+                  }
+                : UnwrapPromise<T>
+        ) => UnwrapPromise<T> | void
+    >
+
     export interface Config {
         /**
          * Default options to pass to fetch
          */
         $fetch?: RequestInit
         fetcher?: typeof fetch
+        transform?: Transform
     }
 
     export type Sign<
         Schema extends Record<string, Record<string, unknown>>,
-        // @ts-ignore
         Paths extends (string | number)[] = Split<keyof Schema & string>,
         Carry extends string = ''
     > = Paths extends [
@@ -134,8 +158,20 @@ export namespace EdenTreaty {
                             $headers: undefined
                             $query: undefined
                         } extends Params
-                          ? (params?: Prettify<Params>) => Response
-                          : (params: Prettify<Params>) => Response
+                          ? (
+                                params?: Prettify<
+                                    Params & {
+                                        $transform?: EdenTreaty.Transform<Response>
+                                    }
+                                >
+                            ) => Response
+                          : (
+                                params: Prettify<
+                                    Params & {
+                                        $transform?: EdenTreaty.Transform<Response>
+                                    }
+                                >
+                            ) => Response
                       : never
                   : never
           }

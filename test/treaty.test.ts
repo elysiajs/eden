@@ -106,6 +106,120 @@ describe('Eden Rest', () => {
         expect(data).toEqual(utf8Json)
     })
 
+    it('Handle single inline transform', async () => {
+        let thrown = false
+
+        try {
+            const { data } = await client.mirror.post({
+                username: 'saltyaom',
+                password: '12345678',
+                $transform: ({ data }) => {
+                    if (data?.password === '12345678') throw new Error('a')
+                }
+            })
+        } catch {
+            thrown = true
+        }
+
+        expect(thrown).toBe(true)
+    })
+
+    it('Handle multiple inline transform', async () => {
+        let thrown = false
+
+        try {
+            const { data } = await client.mirror.post({
+                username: 'saltyaom',
+                password: '12345678',
+                $transform: [
+                    () => {},
+                    ({ data }) => {
+                        if (data?.password === '12345678') throw new Error('a')
+                    }
+                ]
+            })
+        } catch {
+            thrown = true
+        }
+
+        expect(thrown).toBe(true)
+    })
+
+    it('Handle global transform', async () => {
+        let thrown = false
+
+        const client = edenTreaty<typeof app>('http://localhost:8082', {
+            transform: ({ data }) => {
+                if (data?.password === '12345678') throw new Error('a')
+            }
+        })
+
+        try {
+            const { data } = await client.mirror.post({
+                username: 'saltyaom',
+                password: '12345678'
+            })
+        } catch {
+            thrown = true
+        }
+
+        expect(thrown).toBe(true)
+    })
+
+    it('Handle multiple global transform', async () => {
+        let thrown = false
+
+        const client = edenTreaty<typeof app>('http://localhost:8082', {
+            transform: [
+                () => {},
+                ({ data }) => {
+                    if (data?.password === '12345678') throw new Error('a')
+                }
+            ]
+        })
+
+        try {
+            const { data } = await client.mirror.post({
+                username: 'saltyaom',
+                password: '12345678'
+            })
+        } catch {
+            thrown = true
+        }
+
+        expect(thrown).toBe(true)
+    })
+
+    it('Merge inline and global transforms', async () => {
+        let thrown = false
+
+        const client = edenTreaty<typeof app>('http://localhost:8082', {
+            transform: [
+                () => {},
+                ({ data }) => {
+                    if (data?.password === '1234567') throw new Error('a')
+                }
+            ]
+        })
+
+        try {
+            const { data } = await client.mirror.post({
+                username: 'saltyaom',
+                password: '12345678',
+                $transform: [
+                    () => {},
+                    ({ data }) => {
+                        if (data?.password === '12345678') throw new Error('a')
+                    }
+                ]
+            })
+        } catch {
+            thrown = true
+        }
+
+        expect(thrown).toBe(true)
+    })
+
     // ? Test for type inference
     it('handle group and guard', async () => {
         const { data } = await client.v2.data.get()

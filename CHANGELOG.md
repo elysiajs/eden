@@ -1,3 +1,11 @@
+# 0.7.4 - 29 Sep 2023
+Feature:
+- [#16](https://github.com/elysiajs/eden/issues/16) add transform
+
+# 0.7.3 - 27 Sep 2023
+Bug fix:
+- using uppercase method name because of Cloudflare proxy
+
 # 0.7.2 - 22 Sep 2023
 Bug fix:
 - resolve 'FileList' type
