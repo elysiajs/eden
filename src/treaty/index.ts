@@ -250,6 +250,17 @@ const createProxy = (
                                             await fileToBlob((field as any)[i])
                                         )
                                     }
+                                } else if (Array.isArray(field)) {
+                                    for (let i = 0; i < field.length; i++) {
+                                        const value = (field as any)[i]
+
+                                        newBody.append(
+                                            key as any,
+                                            value instanceof File
+                                                ? fileToBlob(value)
+                                                : value
+                                        )
+                                    }
                                 } else newBody.append(key, field as string)
                             }
                         }

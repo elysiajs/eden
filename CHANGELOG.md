@@ -1,3 +1,7 @@
+# 0.7.5 - 23 Oct 2023
+Bug fix:
+- treaty: handle `File[]`
+
 # 0.7.4 - 29 Sep 2023
 Feature:
 - [#16](https://github.com/elysiajs/eden/issues/16) add transform
