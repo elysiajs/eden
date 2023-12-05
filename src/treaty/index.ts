@@ -165,6 +165,7 @@ const createProxy = (
         get(target, key, value) {
             return createProxy(domain, `${path}/${key.toString()}`, config)
         },
+        // @ts-ignore
         apply(
             target,
             _,
