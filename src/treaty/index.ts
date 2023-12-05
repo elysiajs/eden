@@ -37,15 +37,19 @@ const hasFile = (obj: Record<string, any>) => {
 }
 
 // @ts-ignore
-const fileToBlob = (v: File) =>
+const createNewFile = (v: File) =>
     isServer
         ? v
-        : new Promise<Blob>((resolve) => {
+        : new Promise<File>((resolve) => {
               // @ts-ignore
               const reader = new FileReader()
 
               reader.onload = () => {
-                  resolve(new Blob([reader.result!], { type: v.type }))
+                  const file = new File([reader.result!], v.name, {
+                      lastModified: v.lastModified,
+                      type: v.type
+                  })
+                  resolve(file)
               }
 
               reader.readAsArrayBuffer(v)
@@ -239,7 +243,7 @@ const createProxy = (
                                 if (field instanceof File)
                                     newBody.append(
                                         key,
-                                        await fileToBlob(field as any)
+                                        await createNewFile(field as any)
                                     )
                                 // @ts-ignore
                                 else if (field instanceof FileList) {
@@ -247,7 +251,7 @@ const createProxy = (
                                     for (let i = 0; i < field.length; i++) {
                                         newBody.append(
                                             key as any,
-                                            await fileToBlob((field as any)[i])
+                                            await createNewFile((field as any)[i])
                                         )
                                     }
                                 } else if (Array.isArray(field)) {
