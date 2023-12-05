@@ -44,6 +44,12 @@ const app = new Elysia()
     .get('/true', () => true)
     .get('/false', () => false)
     .patch('/update', () => 1)
+    .post('/array', ({ body }) => body, {
+        body: t.Array(t.String())
+    })
+    .post('/string', ({ body }) => body, {
+        body: t.String()
+    })
     .listen(8082)
 
 const client = edenTreaty<typeof app>('http://localhost:8082')
@@ -104,6 +110,18 @@ describe('Eden Rest', () => {
     it('parse json with extra parameters', async () => {
         const { data } = await client['json-utf8'].get()
         expect(data).toEqual(utf8Json)
+    })
+
+    it('send array', async () => {
+        const { data } = await client.array.post(['a', 'b', 'c'])
+
+        expect(data).toEqual(['a', 'b', 'c'])
+    })
+
+    it('send string', async () => {
+        const { data } = await client.string.post('hello')
+
+        expect(data).toEqual('hello')
     })
 
     it('Handle single inline transform', async () => {

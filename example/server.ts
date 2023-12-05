@@ -4,6 +4,9 @@ import { cors } from '@elysiajs/cors'
 const app = new Elysia()
     .use(cors())
     .get('/something/here', () => 'Elysia')
+    .post('/array', ({ body }) => body, {
+        body: t.String()
+    })
     .post('/query', async () => 'There', {
         body: t.Object({
             name: t.String()

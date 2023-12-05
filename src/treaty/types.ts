@@ -25,10 +25,10 @@ type Split<S extends string> = S extends `${infer Head}/${infer Tail}`
             : Split<Tail>
         : [Head, ...Split<Tail>]
     : S extends `/`
-    ? []
-    : S extends `${infer Head}/`
-    ? [Head]
-    : [S]
+      ? []
+      : S extends `${infer Head}/`
+        ? [Head]
+        : [S]
 
 type Prettify<T> = {
     [K in keyof T]: T[K]
@@ -55,8 +55,8 @@ export namespace EdenTreaty {
     type SplitKeys<T> = T extends [infer First, ...infer Rest]
         ? [First, Rest]
         : T extends [infer First, ...infer Rest][number]
-        ? [First, Rest]
-        : never
+          ? [First, Rest]
+          : never
 
     type UnwrapPromise<T> = T extends Promise<infer A> ? A : T
 
@@ -97,85 +97,101 @@ export namespace EdenTreaty {
                   : Prefix]: Sign<Schema, Rest, `${Carry}/${Key}`>
           }
         : Schema[Carry extends '' ? '/' : Carry] extends infer Routes
-        ? {
-              [Method in keyof Routes]: Routes[Method] extends infer Route extends AnySchema
-                  ? Method extends 'subscribe'
-                      ? undefined extends Route['query']
-                          ? (params?: {
-                                $query?: Record<string, string>
-                            }) => EdenWS<Route>
-                          : (params: {
-                                $query: Route['query']
-                            }) => EdenWS<Route>
-                      : ((
-                            params: {
-                                $fetch?: RequestInit
-                            } & (IsUnknown<Route['body']> extends false
-                                ? Replace<Route['body'], Blob | Blob[], Files>
-                                : {}) &
-                                (undefined extends Route['query']
-                                    ? {
-                                          $query?: Record<string, string>
+          ? {
+                [Method in keyof Routes]: Routes[Method] extends infer Route extends
+                    AnySchema
+                    ? Method extends 'subscribe'
+                        ? undefined extends Route['query']
+                            ? (params?: {
+                                  $query?: Record<string, string>
+                              }) => EdenWS<Route>
+                            : (params: {
+                                  $query: Route['query']
+                              }) => EdenWS<Route>
+                        : ((
+                                params: {
+                                    $fetch?: RequestInit
+                                } & (IsUnknown<Route['body']> extends false
+                                    ? Replace<
+                                          Route['body'],
+                                          Blob | Blob[],
+                                          Files
+                                      >
+                                    : {}) &
+                                    (undefined extends Route['query']
+                                        ? {
+                                              $query?: Record<string, string>
+                                          }
+                                        : {
+                                              $query: Route['query']
+                                          }) &
+                                    (undefined extends Route['headers']
+                                        ? {
+                                              $headers?: Record<string, unknown>
+                                          }
+                                        : {
+                                              $headers: Route['headers']
+                                          })
+                            ) => Promise<
+                                (
+                                    | {
+                                          data: Route['response'] extends {
+                                              200: infer ReturnedType
+                                          }
+                                              ? Awaited<ReturnedType>
+                                              : unknown
+                                          error: null
                                       }
-                                    : {
-                                          $query: Route['query']
-                                      }) &
-                                (undefined extends Route['headers']
-                                    ? {
-                                          $headers?: Record<string, unknown>
+                                    | {
+                                          data: null
+                                          error: MapError<
+                                              Route['response']
+                                          > extends infer Errors
+                                              ? IsNever<Errors> extends true
+                                                  ? EdenFetchError<
+                                                        number,
+                                                        string
+                                                    >
+                                                  : Errors
+                                              : EdenFetchError<number, string>
                                       }
-                                    : {
-                                          $headers: Route['headers']
-                                      })
-                        ) => Promise<
-                            (
-                                | {
-                                      data: Route['response'] extends {
-                                          200: infer ReturnedType
-                                      }
-                                          ? Awaited<ReturnedType>
-                                          : unknown
-                                      error: null
-                                  }
-                                | {
-                                      data: null
-                                      error: MapError<
-                                          Route['response']
-                                      > extends infer Errors
-                                          ? IsNever<Errors> extends true
-                                              ? EdenFetchError<number, string>
-                                              : Errors
-                                          : EdenFetchError<number, string>
-                                  }
-                            ) & {
-                                status: number
-                                response: Response
-                                headers: Record<string, string>
-                            }
-                        >) extends (params: infer Params) => infer Response
-                      ? {
-                            $params: undefined
-                            $headers: undefined
-                            $query: undefined
-                        } extends Params
-                          ? (
-                                params?: Prettify<
-                                    Params & {
-                                        $transform?: EdenTreaty.Transform<Response>
+                                ) & {
+                                    status: number
+                                    response: Response
+                                    headers: Record<string, string>
+                                }
+                            >) extends (params: infer Params) => infer Response
+                          ? {
+                                $params: undefined
+                                $headers: undefined
+                                $query: undefined
+                            } extends Params
+                              ? (
+                                    params?: Params,
+                                    options?: {
+                                        fetch?: RequestInit
+                                        transform?: EdenTreaty.Transform<Response>
+                                        // @ts-ignore
+                                        query?: Params['query']
+                                        // @ts-ignore
+                                        headers?: Params['headers']
                                     }
-                                >
-                            ) => Response
-                          : (
-                                params: Prettify<
-                                    Params & {
-                                        $transform?: EdenTreaty.Transform<Response>
+                                ) => Response
+                              : (
+                                    params: Params,
+                                    options?: {
+                                        fetch?: RequestInit
+                                        transform?: EdenTreaty.Transform<Response>
+                                        // @ts-ignore
+                                        query?: Params['query']
+                                        // @ts-ignore
+                                        headers?: Params['headers']
                                     }
-                                >
-                            ) => Response
-                      : never
-                  : never
-          }
-        : {}
+                                ) => Response
+                          : never
+                    : never
+            }
+          : {}
 
     export interface OnMessage<Data = unknown> extends MessageEvent {
         data: Data

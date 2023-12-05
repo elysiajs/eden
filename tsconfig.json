@@ -1,16 +1,15 @@
 {
-  "compilerOptions": {
-    "strict": true,
-    "lib": ["ESNext", "dom"],
-    "outDir": "./dist",
-    "sourceMap": true,
-    "noImplicitAny": true,
-    "module": "ES2022",
-    "target": "es2022",
-    "moduleResolution": "node",
-    "jsx": "react",
-    "skipLibCheck": true,
-    "types": ["bun-types"]
-  },
-  "include": ["./src/**/*"]
+    "compilerOptions": {
+        "strict": true,
+        "lib": ["ESNext", "dom"],
+        "outDir": "./dist",
+        "sourceMap": true,
+        "noImplicitAny": true,
+        "module": "ES2022",
+        "target": "es2022",
+        "moduleResolution": "node",
+        "jsx": "react",
+        "skipLibCheck": true
+    },
+    "include": ["./src/**/*"]
 }

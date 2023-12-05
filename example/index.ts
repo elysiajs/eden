@@ -11,6 +11,4 @@ Bun.spawn(['npm', 'run', 'dev'], {
     cwd: join(import.meta.dir, 'client')
 })
 
-console.log(
-    'If things work properly, see http://localhost:5173'
-)
+console.log('If things work properly, see http://localhost:5173')

@@ -168,27 +168,38 @@ const createProxy = (
         apply(
             target,
             _,
-            [
-                { $query, $fetch, $headers, $transform, ...bodyObj } = {
-                    $fetch: undefined,
-                    $headers: undefined,
-                    $query: undefined,
-                    $transform: undefined
+            [initialBody, options = {}]: [
+                {
+                    [x: string]: any
+                    $fetch?: RequestInit
+                    $headers?: HeadersInit
+                    $query?: Record<string, string>
+                },
+                {
+                    fetch?: RequestInit
+                    transform?: EdenTreaty.Transform
+                    headers?: Record<string, string>
+                    query?: Record<string, string | number>
                 }
-            ]: {
-                [x: string]: any
-                $fetch?: RequestInit
-                $headers?: HeadersInit
-                $query?: Record<string, string>
-                $transform?: EdenTreaty.Transform
-            }[] = [{}]
+            ] = [{}, {}]
         ) {
+            let bodyObj: any =
+                initialBody !== undefined &&
+                (typeof initialBody !== 'object' || Array.isArray(initialBody))
+                    ? initialBody
+                    : undefined
+
+            const { $query, $fetch, $headers, $transform, ...restBody } =
+                initialBody ?? {}
+
+            bodyObj ??= restBody
+
             const i = path.lastIndexOf('/'),
                 method = path.slice(i + 1).toUpperCase(),
                 url = composePath(
                     domain,
                     i === -1 ? '/' : path.slice(0, i),
-                    $query
+                    Object.assign(options.query ?? {}, $query)
                 )
 
             const fetcher = config.fetcher ?? fetch
@@ -223,12 +234,19 @@ const createProxy = (
                 const headers = {
                     ...config.$fetch?.headers,
                     ...$fetch?.headers,
+                    ...options.headers,
                     ...$headers
                 } as Record<string, string>
 
                 if (method !== 'GET' && method !== 'HEAD') {
-                    body = Object.keys(bodyObj).length ? bodyObj : undefined
-                    const isObject = typeof body === 'object'
+                    body = Object.keys(bodyObj).length
+                        ? bodyObj
+                        : Array.isArray(bodyObj)
+                          ? bodyObj
+                          : undefined
+
+                    const isObject =
+                        typeof body === 'object' || Array.isArray(bodyObj)
                     const isFormData = isObject && hasFile(body)
 
                     if (isFormData) {
@@ -251,7 +269,9 @@ const createProxy = (
                                     for (let i = 0; i < field.length; i++) {
                                         newBody.append(
                                             key as any,
-                                            await createNewFile((field as any)[i])
+                                            await createNewFile(
+                                                (field as any)[i]
+                                            )
                                         )
                                     }
                                 } else if (Array.isArray(field)) {
@@ -261,7 +281,7 @@ const createProxy = (
                                         newBody.append(
                                             key as any,
                                             value instanceof File
-                                                ? fileToBlob(value)
+                                                ? createNewFile(value)
                                                 : value
                                         )
                                     }
@@ -275,7 +295,7 @@ const createProxy = (
                             ? 'application/json'
                             : 'text/plain'
 
-                        if (isObject) body = JSON.stringify(body)
+                        body = isObject ? JSON.stringify(body) : bodyObj
                     }
                 }
 
@@ -283,6 +303,7 @@ const createProxy = (
                     method,
                     body,
                     ...config.$fetch,
+                    ...options.fetch,
                     ...$fetch,
                     headers
                 })

@@ -1,3 +1,12 @@
+# 0.7.6 - 6 Dec 2023
+Feature:
+- treaty: add 2nd optional parameter for sending query, header and fetch
+
+Bug fix:
+- treaty: send array and primitive value [#33](https://github.com/elysiajs/eden/issues/33)
+- treaty: fix filename in FormData [#26](https://github.com/elysiajs/eden/pull/26)
+- remove 'bun-types' from treaty
+
 # 0.7.5 - 23 Oct 2023
 Bug fix:
 - treaty: handle `File[]`

@@ -1,7 +1,9 @@
 import { edenTreaty, EdenTreaty } from '../../../src/treaty'
 import type { Server } from '../../server'
 
-export const client = edenTreaty<Server>('http://localhost:8080')
+export const client = edenTreaty<Server>('http://localhost:8080', {
+    fetcher: (url, options) => customFetcher(url, options)
+})
 
 // const data2 = await client.products.nendoroid.skadi.get({
 //     $query: {
