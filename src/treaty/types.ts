@@ -119,6 +119,7 @@ export namespace EdenTreaty {
                         : ((
                                 params: {
                                     $fetch?: RequestInit
+                                    getRaw?: boolean
                                 } & (IsUnknown<Route['body']> extends false
                                     ? Replace<
                                           Route['body'],
