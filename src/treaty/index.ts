@@ -125,7 +125,7 @@ export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
                         }
                     else if (!Number.isNaN(+data)) data = +data
                     else if (data === 'true') data = true
-                    else if (data === 'fase') data = false
+                    else if (data === 'false') data = false
 
                     listener({
                         ...ws,
