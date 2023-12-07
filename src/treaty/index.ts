@@ -282,7 +282,7 @@ const createProxy = (
                                         newBody.append(
                                             key as any,
                                             value instanceof File
-                                                ? createNewFile(value)
+                                                ? await createNewFile(value)
                                                 : value
                                         )
                                     }
