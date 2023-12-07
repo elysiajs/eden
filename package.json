@@ -1,75 +1,78 @@
 {
-    "name": "@elysiajs/eden",
-    "version": "0.7.6",
-    "description": "Fully type-safe Elysia client",
-    "author": {
-        "name": "saltyAom",
-        "url": "https://github.com/SaltyAom",
-        "email": "saltyaom@gmail.com"
+  "name": "@elysiajs/eden",
+  "version": "0.7.6",
+  "description": "Fully type-safe Elysia client",
+  "author": {
+    "name": "saltyAom",
+    "url": "https://github.com/SaltyAom",
+    "email": "saltyaom@gmail.com"
+  },
+  "main": "./dist/index.js",
+  "exports": {
+    ".": {
+      "require": "./dist/index.js",
+      "import": "./dist/index.mjs",
+      "node": "./dist/index.js",
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
-    "main": "./dist/index.js",
-    "exports": {
-        ".": {
-            "require": "./dist/index.js",
-            "import": "./dist/index.mjs",
-            "node": "./dist/index.js",
-            "default": "./dist/index.js",
-            "types": "./dist/index.d.ts"
-        },
-        "./treaty": {
-            "require": "./dist/treaty.js",
-            "import": "./dist/treaty.mjs",
-            "node": "./dist/treaty.js",
-            "default": "./dist/treaty.js",
-            "types": "./dist/treaty/index.d.ts"
-        },
-        "./fetch": {
-            "require": "./dist/fetch.js",
-            "import": "./dist/fetch.mjs",
-            "node": "./dist/fetch.js",
-            "default": "./dist/fetch.js",
-            "types": "./dist/fetch/index.d.ts"
-        }
+    "./treaty": {
+      "require": "./dist/treaty.js",
+      "import": "./dist/treaty.mjs",
+      "node": "./dist/treaty.js",
+      "default": "./dist/treaty.js",
+      "types": "./dist/treaty/index.d.ts"
     },
-    "types": "./src/index.ts",
-    "keywords": ["elysia", "eden", "connector"],
-    "homepage": "https://github.com/elysiajs/eden",
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/elysiajs/eden"
-    },
-    "bugs": "https://github.com/elysiajs/eden/issues",
-    "license": "MIT",
-    "scripts": {
-        "dev": "bun run --watch example/index.ts",
-        "test": "bun test",
-        "build": "rimraf dist && tsup",
-        "release": "npm run build && npm run test && npm publish --access public"
-    },
-    "peerDependencies": {
-        "elysia": ">= 0.7.0"
-    },
-    "peerDependenciesMeta": {
-        "@sinclair/typebox": {
-            "optional": true
-        }
-    },
-    "devDependencies": {
-        "@elysiajs/cors": "0.7.0",
-        "@sinclair/typebox": "^0.31.6",
-        "@types/node": "^18.15.5",
-        "bun-types": "^1.0.1",
-        "elysia": "^0.7.15",
-        "esbuild": "^0.19.3",
-        "eslint": "^8.26.0",
-        "rimraf": "^4.4.1",
-        "tsup": "^7.2.0",
-        "typescript": "^5.2.2"
-    },
-    "prettier": {
-        "semi": false,
-        "tabWidth": 4,
-        "singleQuote": true,
-        "trailingComma": "none"
+    "./fetch": {
+      "require": "./dist/fetch.js",
+      "import": "./dist/fetch.mjs",
+      "node": "./dist/fetch.js",
+      "default": "./dist/fetch.js",
+      "types": "./dist/fetch/index.d.ts"
     }
+  },
+  "types": "./src/index.ts",
+  "keywords": ["elysia", "eden", "connector"],
+  "homepage": "https://github.com/elysiajs/eden",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elysiajs/eden"
+  },
+  "bugs": "https://github.com/elysiajs/eden/issues",
+  "license": "MIT",
+  "scripts": {
+    "dev": "bun run --watch example/index.ts",
+    "test": "bun test",
+    "build": "rimraf dist && tsup",
+    "release": "npm run build && npm run test && npm publish --access public"
+  },
+  "peerDependencies": {
+    "elysia": ">= 0.7.0"
+  },
+  "peerDependenciesMeta": {
+    "@sinclair/typebox": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@elysiajs/cors": "0.7.0",
+    "@sinclair/typebox": "^0.31.6",
+    "@types/node": "^18.15.5",
+    "bun-types": "^1.0.1",
+    "elysia": "^0.7.15",
+    "esbuild": "^0.19.3",
+    "eslint": "^8.26.0",
+    "rimraf": "^4.4.1",
+    "tsup": "^7.2.0",
+    "typescript": "^5.2.2"
+  },
+  "prettier": {
+    "semi": false,
+    "tabWidth": 4,
+    "singleQuote": true,
+    "trailingComma": "none"
+  },
+  "dependencies": {
+    "superjson": "^2.2.1"
+  }
 }
