@@ -26,7 +26,7 @@ const app = new Elysia()
     .post('/', () => 'A')
     .post('/image', ({ body: { image, title } }) => title, {
         body: t.Object({
-            image: t.File(),
+            image: t.Files(),
             title: t.String()
         })
     })

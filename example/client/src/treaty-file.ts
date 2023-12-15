@@ -14,8 +14,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
         console.log("POST")
 
-        const res = await client.image.post({
+        // FileList upload example
+        let res = await client.image.post({
             image: id<HTMLInputElement>('file').files!,
+            title: "Hi"
+        })
+
+        // FileArray upload example
+        res = await client.image.post({
+            image: Array.from(id<HTMLInputElement>('file').files!),
             title: "Hi"
         })
     })
