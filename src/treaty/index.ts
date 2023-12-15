@@ -125,7 +125,7 @@ export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
                         }
                     else if (!Number.isNaN(+data)) data = +data
                     else if (data === 'true') data = true
-                    else if (data === 'fase') data = false
+                    else if (data === 'false') data = false
 
                     listener({
                         ...ws,
@@ -175,6 +175,7 @@ const createProxy = (
                     $fetch?: RequestInit
                     $headers?: HeadersInit
                     $query?: Record<string, string>
+                    getRaw?: boolean
                 },
                 {
                     fetch?: RequestInit
@@ -190,7 +191,7 @@ const createProxy = (
                     ? initialBody
                     : undefined
 
-            const { $query, $fetch, $headers, $transform, ...restBody } =
+            const { $query, $fetch, $headers, $transform, getRaw, ...restBody } =
                 initialBody ?? {}
 
             bodyObj ??= restBody
@@ -229,7 +230,7 @@ const createProxy = (
                     )
                 )
 
-            const execute = async () => {
+            const execute = async <T extends EdenTreaty.ExecuteOptions>(modifiers: T): Promise<EdenTreaty.ExecuteReturnType<T>> => {
                 let body: any
 
                 const headers = {
@@ -311,6 +312,7 @@ const createProxy = (
 
                 let data
 
+                if (modifiers.getRaw) return response as any
                 switch (response.headers.get('Content-Type')?.split(';')[0]) {
                     case 'application/json':
                         data = await response.json()
@@ -351,10 +353,10 @@ const createProxy = (
                     response: response,
                     status: response.status,
                     headers: response.headers
-                }
+                } as any
             }
 
-            return execute()
+            return execute({ getRaw })
         }
     }) as unknown as Record<string, unknown>
 

@@ -83,6 +83,14 @@ export namespace EdenTreaty {
         transform?: Transform
     }
 
+    export type DetailedResponse = {
+      data: any
+      error: any
+      response: Response
+      status: number
+      headers: Headers
+    };
+
     export type Sign<
         Schema extends Record<string, Record<string, unknown>>,
         Paths extends (string | number)[] = Split<keyof Schema & string>,
@@ -111,6 +119,7 @@ export namespace EdenTreaty {
                         : ((
                                 params: {
                                     $fetch?: RequestInit
+                                    getRaw?: boolean
                                 } & (IsUnknown<Route['body']> extends false
                                     ? Replace<
                                           Route['body'],
@@ -197,6 +206,11 @@ export namespace EdenTreaty {
         data: Data
         rawData: MessageEvent['data']
     }
+
+    export type ExecuteOptions = {
+      getRaw?: boolean
+    };
+    export type ExecuteReturnType<T extends ExecuteOptions> = T['getRaw'] extends true ? Response : DetailedResponse;
 
     export type WSEvent<
         K extends keyof WebSocketEventMap,
