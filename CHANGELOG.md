@@ -1,3 +1,8 @@
+# 0.7.7 - 15 Dec 2023
+Bug fix:
+- treaty: [#36](https://github.com/elysiajs/eden/pull/36) FileArray send [ object Promise ] instead binary
+- treaty: [#34](https://github.com/elysiajs/eden/pull/34) Add a way to get the unresolved Response for corner case support
+
 # 0.7.6 - 6 Dec 2023
 Feature:
 - treaty: add 2nd optional parameter for sending query, header and fetch
