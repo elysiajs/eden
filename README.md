@@ -1,5 +1,5 @@
 # @elysiajs/eden
-Fully type-safe Elysia client refers to the [documentation](https://elysiajs.com/plugins/eden/overview)
+Fully type-safe Elysia client refers to the [documentation](https://elysiajs.com/eden/overview)
 
 ## Installation
 ```bash
