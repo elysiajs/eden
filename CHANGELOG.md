@@ -1,3 +1,7 @@
+# 0.8.0 - 23 Dec 2023
+Feature:
+- Support Elysia 0.8
+
 # 0.7.7 - 15 Dec 2023
 Bug fix:
 - treaty: [#36](https://github.com/elysiajs/eden/pull/36) FileArray send [ object Promise ] instead binary
