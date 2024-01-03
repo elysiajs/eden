@@ -32,7 +32,7 @@ export namespace EdenFetch {
                 : {
                       method: Method
                   }) &
-            (IsNever<keyof Route['params']> extends true
+            (IsNever<Route['params']> extends true
                 ? {
                       params?: Record<never, string>
                   }
