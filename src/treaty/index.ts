@@ -2,7 +2,7 @@ import type { Elysia, InputSchema } from 'elysia'
 
 import { EdenFetchError } from '../errors'
 
-import { composePath } from './utils'
+import { composePath, isNumericString } from './utils'
 import type { EdenTreaty } from './types'
 
 export type { EdenTreaty } from './types'
@@ -123,7 +123,7 @@ export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
                         } catch {
                             // Not Empty
                         }
-                    else if (!Number.isNaN(+data)) data = +data
+                    else if (isNumericString(data)) data = +data
                     else if (data === 'true') data = true
                     else if (data === 'false') data = false
 
@@ -328,7 +328,7 @@ const createProxy = (
 
                     default:
                         data = await response.text().then((data) => {
-                            if (!Number.isNaN(+data)) return +data
+                            if (!isNumericString(data)) return +data
                             if (data === 'true') return true
                             if (data === 'false') return false
 

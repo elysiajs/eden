@@ -1,3 +1,8 @@
+# 0.8.1 - 8 Jan 2024
+Bug fix:
+- [#41](https://github.com/elysiajs/eden/pull/41) params now optional for paramless routes in edenFetch
+- [#39](https://github.com/elysiajs/eden/pull/39) transform entire object returned by execute
+
 # 0.8.0 - 23 Dec 2023
 Feature:
 - Support Elysia 0.8
