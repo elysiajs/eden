@@ -328,7 +328,7 @@ const createProxy = (
 
                     default:
                         data = await response.text().then((data) => {
-                            if (!isNumericString(data)) return +data
+                            if (isNumericString(data)) return +data
                             if (data === 'true') return true
                             if (data === 'false') return false
 
