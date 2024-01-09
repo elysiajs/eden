@@ -90,7 +90,7 @@ export namespace EdenTreaty {
         response: Response
         status: number
         headers: Headers
-    };
+    }
 
     export type Sign<
         Schema extends Record<string, Record<string, unknown>>,
@@ -107,8 +107,7 @@ export namespace EdenTreaty {
           }
         : Schema[Carry extends '' ? '/' : Carry] extends infer Routes
         ? {
-              [Method in keyof Routes]: Routes[Method] extends infer Route extends
-                    AnySchema
+              [Method in keyof Routes]: Routes[Method] extends infer Route extends AnySchema
                   ? Method extends 'subscribe'
                       ? undefined extends Route['query']
                           ? (params?: {
@@ -122,11 +121,7 @@ export namespace EdenTreaty {
                                 $fetch?: RequestInit
                                 getRaw?: boolean
                             } & (IsUnknown<Route['body']> extends false
-                                ? Replace<
-                                          Route['body'],
-                                          Blob | Blob[],
-                                          Files
-                                      >
+                                ? Replace<Route['body'], Blob | Blob[], Files>
                                 : {}) &
                                 (undefined extends Route['query']
                                     ? {
@@ -158,10 +153,7 @@ export namespace EdenTreaty {
                                           Route['response']
                                       > extends infer Errors
                                           ? IsNever<Errors> extends true
-                                              ? EdenFetchError<
-                                                        number,
-                                                        string
-                                                    >
+                                              ? EdenFetchError<number, string>
                                               : Errors
                                           : EdenFetchError<number, string>
                                   }
@@ -210,8 +202,9 @@ export namespace EdenTreaty {
 
     export type ExecuteOptions = {
         getRaw?: boolean
-    };
-    export type ExecuteReturnType<T extends ExecuteOptions> = T['getRaw'] extends true ? Response : DetailedResponse;
+    }
+    export type ExecuteReturnType<T extends ExecuteOptions> =
+        T['getRaw'] extends true ? Response : DetailedResponse
 
     export type WSEvent<
         K extends keyof WebSocketEventMap,
