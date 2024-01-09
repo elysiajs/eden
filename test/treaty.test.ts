@@ -1,4 +1,5 @@
 import { Elysia, t } from 'elysia'
+import { cookie } from '@elysiajs/cookie'
 import { edenTreaty } from '../src'
 
 import { beforeEach, describe, expect, it, spyOn, mock } from 'bun:test'
@@ -13,6 +14,7 @@ const prefix =
         app.get(`${prefix}/prefixed`, () => 'hi')
 
 const app = new Elysia()
+    .use(cookie)
     .get('/', () => 'hi')
     .use(prefix('/prefix'))
     .post('/', () => 'hi')
@@ -50,6 +52,17 @@ const app = new Elysia()
     .post('/string', ({ body }) => body, {
         body: t.String()
     })
+    .group('/cookie', (app) =>
+        app
+            .get('/set-cookie', ({ setCookie }) => {
+                setCookie('testCookie', 'hello world')
+                return 'hi'
+            })
+            .get('/get-cookie', ({ cookie: { testCookie } }) => {
+                console.log('here')
+                return testCookie ?? 'no cookie'
+            })
+    )
     .listen(8082)
 
 const client = edenTreaty<typeof app>('http://localhost:8082')
@@ -261,5 +274,17 @@ describe('Eden Rest', () => {
             (fetchSpy.mock.calls[0]! as unknown as [unknown, RequestInit])[1]
                 .method
         ).toBe('PATCH')
+    })
+
+    it('supports cookies with `persistCookies` option', async () => {
+        const client = edenTreaty<typeof app>('http://localhost:8082', {
+            persistCookies: true
+        })
+        const { data } = await client.cookie['get-cookie'].get()
+        expect(data).toBe('no cookie')
+        await client.cookie['set-cookie'].get()
+
+        const { data: afterSetCookie } = await client.cookie['get-cookie'].get()
+        expect(afterSetCookie).toBe('hello world')
     })
 })

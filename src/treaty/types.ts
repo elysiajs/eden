@@ -81,6 +81,7 @@ export namespace EdenTreaty {
         $fetch?: RequestInit
         fetcher?: typeof fetch
         transform?: Transform
+        persistCookies?: boolean
     }
 
     export type DetailedResponse = {

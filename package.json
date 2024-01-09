@@ -59,9 +59,11 @@
         }
     },
     "devDependencies": {
+        "@elysiajs/cookie": "^0.8.0",
         "@elysiajs/cors": "0.7.0",
         "@sinclair/typebox": "^0.31.6",
         "@types/node": "^18.15.5",
+        "@types/tough-cookie": "^4.0.5",
         "bun-types": "^1.0.1",
         "elysia": "0.8.0",
         "esbuild": "^0.19.3",
@@ -77,6 +79,7 @@
         "trailingComma": "none"
     },
     "dependencies": {
-        "superjson": "^2.2.1"
+        "superjson": "^2.2.1",
+        "tough-cookie": "^4.1.3"
     }
 }

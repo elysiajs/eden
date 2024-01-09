@@ -7,6 +7,9 @@ import type { EdenTreaty } from './types'
 
 export type { EdenTreaty } from './types'
 
+import { CookieJar } from 'tough-cookie'
+import { addCookiesToJar } from './cookies'
+
 // @ts-ignore
 const isServer = typeof FileList === 'undefined'
 
@@ -159,11 +162,17 @@ export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
 const createProxy = (
     domain: string,
     path = '',
-    config: EdenTreaty.Config
+    config: EdenTreaty.Config,
+    cookieJar: CookieJar
 ): Record<string, unknown> =>
     new Proxy(() => {}, {
         get(target, key, value) {
-            return createProxy(domain, `${path}/${key.toString()}`, config)
+            return createProxy(
+                domain,
+                `${path}/${key.toString()}`,
+                config,
+                cookieJar
+            )
         },
         // @ts-ignore
         apply(
@@ -245,7 +254,10 @@ const createProxy = (
                     ...config.$fetch?.headers,
                     ...$fetch?.headers,
                     ...options.headers,
-                    ...$headers
+                    ...$headers,
+                    ...(config.persistCookies
+                        ? { Cookie: cookieJar.getCookieStringSync(url) }
+                        : {})
                 } as Record<string, string>
 
                 if (method !== 'GET' && method !== 'HEAD') {
@@ -318,6 +330,14 @@ const createProxy = (
                     headers
                 })
 
+                if (config.persistCookies) {
+                    addCookiesToJar(
+                        cookieJar,
+                        response.headers.getSetCookie(),
+                        url
+                    )
+                }
+
                 let data
 
                 if (modifiers.getRaw) return response as any
@@ -369,12 +389,15 @@ export const edenTreaty = <App extends Elysia<any, any, any, any, any, any>>(
     config: EdenTreaty.Config = {
         fetcher: fetch
     }
-): EdenTreaty.Create<App> =>
-    new Proxy(
+): EdenTreaty.Create<App> => {
+    const jar = new CookieJar()
+
+    return new Proxy(
         {},
         {
             get(target, key) {
-                return createProxy(domain, key as string, config)
+                return createProxy(domain, key as string, config, jar)
             }
         }
     ) as any
+}
