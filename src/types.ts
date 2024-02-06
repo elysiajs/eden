@@ -48,11 +48,25 @@ export type IsUnknown<T> = IsAny<T> extends true
     : false
 
 export type AnyTypedRoute = {
-    body: unknown
-    headers: Record<string, any> | undefined
-    query: Record<string, any> | undefined
-    params: Record<string, any> | undefined
-    response: Record<string, unknown> & {
-        '200': unknown
-    }
+    body?: unknown
+    headers?: unknown
+    query?: unknown
+    params?: unknown
+    response: Record<number, unknown>
 }
+
+export type Prettify<T> = {
+    [K in keyof T]: T[K]
+} & {}
+
+export type TreatyToPath<T, Path extends string = ''> = UnionToIntersect<
+    T extends Record<string, unknown>
+        ? {
+              [K in keyof T]: T[K] extends AnyTypedRoute
+                  ? { [path in Path]: { [method in K]: T[K] } }
+                  : unknown extends T[K]
+                  ? { [path in Path]: { [method in K]: T[K] } }
+                  : TreatyToPath<T[K], `${Path}/${K & string}`>
+          }[keyof T]
+        : {}
+>

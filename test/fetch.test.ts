@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { Elysia, t } from 'elysia'
 import { edenFetch } from '../src'
 

@@ -57,7 +57,13 @@ const app = new Elysia()
 
 const fetch = edenFetch<typeof app>('http://localhost:8080')
 
-await fetch('/direct-error', {})
+const a = await fetch('/headers', {
+    method: 'POST',
+    headers: {
+        'x-affiliation': 'Arius'
+    },
+    query: {}
+})
 
 const { data } = await fetch('/name/:name', {
     params: {
