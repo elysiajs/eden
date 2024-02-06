@@ -1,12 +1,7 @@
 /// <reference lib="dom" />
 import { Elysia } from 'elysia'
 import type { EdenWS } from './index'
-import type {
-    IsUnknown,
-    IsNever,
-    MapError,
-    Prettify
-} from '../types'
+import type { IsUnknown, IsNever, MapError, Prettify } from '../types'
 import type { EdenFetchError } from '../errors'
 
 type Files = File | FileList
@@ -36,7 +31,7 @@ export namespace EdenTreaty {
                 headers: infer Headers
                 query: infer Query
                 params: unknown
-                response: unknown
+                response: infer Response
             }
         }
             ? {
@@ -97,7 +92,7 @@ export namespace EdenTreaty {
                                                     >
                                                   : Errors
                                               : EdenFetchError<number, string>
-                                          : Record<number, Error>
+                                          : EdenFetchError<number, unknown>
                                   }
                             ) & {
                                 status: number
