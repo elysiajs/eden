@@ -1,5 +1,6 @@
 import { Elysia, t } from 'elysia'
 import { treaty } from '../src'
+import { EdenFetchError } from '../src/errors'
 
 const app = new Elysia().post('/prefix/:id', ({ body }) => body, {
     body: t.Object({
@@ -36,4 +37,6 @@ const { data, error: err } = await api.prefix({ id: '1' }).post({
     username: 'a'
 })
 
-console.log(data)
+const a = new EdenFetchError(418, "A")
+
+console.log(a.value)
