@@ -9,7 +9,7 @@ import type {
 } from '../types'
 
 export namespace EdenFetch {
-    export type Create<App extends Elysia<any, any, any, any, any, any>> =
+    export type Create<App extends Elysia<any, any, any, any, any, any, any, any>> =
         App extends {
             _routes: infer Schema extends Record<string, unknown>
         }

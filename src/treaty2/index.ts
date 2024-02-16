@@ -1,6 +1,6 @@
 /* eslint-disable prefer-const */
 import type { Elysia } from 'elysia'
-import type { EdenTreaty2 } from './types'
+import type { Treaty } from './types'
 
 import { isNumericString } from '../treaty/utils'
 import { EdenFetchError } from '../errors'
@@ -59,7 +59,7 @@ const createNewFile = (v: File) =>
 
 const createProxy = (
     domain: string,
-    config: EdenTreaty2.Config,
+    config: Treaty.Config,
     paths: string[] = [],
     elysia?: Elysia<any, any, any, any, any, any>
 ): any =>
@@ -288,8 +288,8 @@ const createProxy = (
 
 export const treaty = <const App extends Elysia<any, any, any, any, any, any>>(
     domain: string | App,
-    config: EdenTreaty2.Config = {}
-): EdenTreaty2.Create<App> => {
+    config: Treaty.Config = {}
+): Treaty.Create<App> => {
     if (typeof domain === 'string') {
         if (!domain.includes('://'))
             domain =
@@ -312,4 +312,4 @@ export const treaty = <const App extends Elysia<any, any, any, any, any, any>>(
     return createProxy('http://e.ly', config, [], domain)
 }
 
-export type { EdenTreaty2 }
+export type { Treaty }

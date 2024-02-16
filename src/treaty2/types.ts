@@ -1,5 +1,6 @@
 /// <reference lib="dom" />
 import type { Elysia } from 'elysia'
+import { EdenWS } from './ws'
 import type { Prettify } from '../types'
 
 type Files = File | FileList
@@ -19,12 +20,12 @@ type ReplaceBlobWithFiles<in out RecordType extends Record<string, unknown>> = {
 type MaybeArray<T> = T | T[]
 type MaybePromise<T> = T | Promise<T>
 
-export namespace EdenTreaty2 {
+export namespace Treaty {
     interface TreatyParam {
         fetch?: RequestInit
     }
 
-    export type Create<App extends Elysia<any, any, any, any, any, any>> =
+    export type Create<App extends Elysia<any, any, any, any, any, any, any, any>> =
         App extends {
             _routes: infer Schema extends Record<string, any>
         }
@@ -32,16 +33,23 @@ export namespace EdenTreaty2 {
             : 'Please install Elysia before using Eden'
 
     export type Sign<in out Route extends Record<string, any>> = {
-        [K in keyof Route as K extends ''
+        [K in keyof Route as K extends '/' | ''
             ? 'index'
             : K extends `:${string}`
             ? never
-            : K]: Route[K] extends {
-            body: infer Body
-            headers: infer Headers
-            query: infer Query
-            response: infer Response extends Record<number, unknown>
-        }
+            : K]: K extends 'subscribe' // ? Websocket route
+            ? undefined extends Route['subscribe']['query']
+                ? (params?: { query?: Record<string, string> }) => EdenWS<Route['subscribe']>
+                : (params: {
+                      query: Route['subscribe']['query']
+                  }) => EdenWS<Route['subscribe']>
+            : Route[K] extends {
+                  body: infer Body
+                  headers: infer Headers
+                  params: any
+                  query: infer Query
+                  response: infer Response extends Record<number, unknown>
+              }
             ? (undefined extends Headers
                   ? { headers?: Record<string, unknown> }
                   : {
@@ -70,7 +78,7 @@ export namespace EdenTreaty2 {
                       ) => Promise<TreatyResponse<Response>>
                 : never
             : keyof Route[K] extends `:${infer Param}`
-            ? (params: { [param in Param]: string }) => Prettify<
+            ? (params: Record<Param, string>) => Prettify<
                   Prettify<Sign<Route[K]>> & Sign<Route[K][`:${Param}`]>
               >
             : Prettify<Sign<Route[K]>>

@@ -2,7 +2,7 @@ import type { InputSchema } from 'elysia'
 import type { EdenTreaty2 } from './types'
 import { isNumericString } from '../treaty/utils'
 
-export class EdenWS<Schema extends InputSchema<any> = {}> {
+export class EdenWS<in out Schema extends InputSchema<any> = {}> {
     ws: WebSocket
 
     constructor(public url: string) {

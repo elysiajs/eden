@@ -28,6 +28,8 @@ const a = await treaty.prefix[1].post({
     username: 'a'
 })
 
+a.error
+
 type A = {
     a: string
     b: string
