@@ -256,7 +256,8 @@ const createProxy = (
                         : undefined
 
                     const isObject =
-                        typeof body === 'object' || Array.isArray(bodyObj)
+                        body &&
+                        (typeof body === 'object' || Array.isArray(bodyObj))
                     const isFormData = isObject && hasFile(body)
 
                     if (isFormData) {
@@ -301,11 +302,13 @@ const createProxy = (
 
                         body = newBody
                     } else {
-                        headers['content-type'] = isObject
-                            ? 'application/json'
-                            : 'text/plain'
+                        if (body !== null && body !== undefined) {
+                            headers['content-type'] = isObject
+                                ? 'application/json'
+                                : 'text/plain'
 
-                        body = isObject ? JSON.stringify(body) : bodyObj
+                            body = isObject ? JSON.stringify(body) : bodyObj
+                        }
                     }
                 }
 

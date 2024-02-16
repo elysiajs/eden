@@ -25,12 +25,13 @@ export namespace Treaty {
         fetch?: RequestInit
     }
 
-    export type Create<App extends Elysia<any, any, any, any, any, any, any, any>> =
-        App extends {
-            _routes: infer Schema extends Record<string, any>
-        }
-            ? Prettify<Sign<Schema>>
-            : 'Please install Elysia before using Eden'
+    export type Create<
+        App extends Elysia<any, any, any, any, any, any, any, any>
+    > = App extends {
+        _routes: infer Schema extends Record<string, any>
+    }
+        ? Prettify<Sign<Schema>>
+        : 'Please install Elysia before using Eden'
 
     export type Sign<in out Route extends Record<string, any>> = {
         [K in keyof Route as K extends '/' | ''
@@ -39,7 +40,9 @@ export namespace Treaty {
             ? never
             : K]: K extends 'subscribe' // ? Websocket route
             ? undefined extends Route['subscribe']['query']
-                ? (params?: { query?: Record<string, string> }) => EdenWS<Route['subscribe']>
+                ? (params?: {
+                      query?: Record<string, string>
+                  }) => EdenWS<Route['subscribe']>
                 : (params: {
                       query: Route['subscribe']['query']
                   }) => EdenWS<Route['subscribe']>
@@ -60,16 +63,24 @@ export namespace Treaty {
                       : { query: Query }) extends infer Param
                 ? {} extends Param
                     ? undefined extends Body
-                        ? (
-                              body?: Body,
-                              options?: Prettify<Param & TreatyParam>
-                          ) => Promise<TreatyResponse<Response>>
+                        ? K extends 'get' | 'head'
+                            ? (
+                                  options?: Prettify<Param & TreatyParam>
+                              ) => Promise<TreatyResponse<Response>>
+                            : (
+                                  body?: Body,
+                                  options?: Prettify<Param & TreatyParam>
+                              ) => Promise<TreatyResponse<Response>>
                         : (
                               body: Body extends Record<string, unknown>
                                   ? ReplaceBlobWithFiles<Body>
                                   : Body,
                               options?: Prettify<Param & TreatyParam>
                           ) => Promise<TreatyResponse<Response>>
+                    : K extends 'get' | 'head'
+                    ? (
+                          options: Prettify<Param & TreatyParam>
+                      ) => Promise<TreatyResponse<Response>>
                     : (
                           body: Body extends Record<string, unknown>
                               ? ReplaceBlobWithFiles<Body>
@@ -78,7 +89,9 @@ export namespace Treaty {
                       ) => Promise<TreatyResponse<Response>>
                 : never
             : keyof Route[K] extends `:${infer Param}`
-            ? (params: Record<Param, string>) => Prettify<
+            ? (
+                  params: Record<Param, string>
+              ) => Prettify<
                   Prettify<Sign<Route[K]>> & Sign<Route[K][`:${Param}`]>
               >
             : Prettify<Sign<Route[K]>>
@@ -92,10 +105,10 @@ export namespace Treaty {
                   (
                       path: string,
                       options: RequestInit
-                  ) => RequestInit['headers'] | void
+                  ) => MaybePromise<RequestInit['headers'] | void>
               >
         onRequest?: MaybeArray<
-            (path: string, options: FetchRequestInit) => MaybePromise<unknown>
+            (path: string, options: FetchRequestInit) => MaybePromise<FetchRequestInit | void>
         >
         onResponse?: MaybeArray<(response: Response) => MaybePromise<unknown>>
     }
@@ -107,12 +120,8 @@ export namespace Treaty {
           }
         | {
               data: null
-              error: 200 extends keyof Response
-                  ? {
-                        status: unknown
-                        value: unknown
-                    }
-                  : // @ts-expect-error
+              error: Response extends { 200: unknown }
+                  ? // @ts-expect-error
                     {
                         [Status in keyof Response as Status extends 200
                             ? never
@@ -121,6 +130,10 @@ export namespace Treaty {
                             value: Response[Status]
                         }
                     }[Exclude<keyof Response, 200>]
+                  : {
+                        status: unknown
+                        value: unknown
+                    }
           }
 
     export interface OnMessage<Data = unknown> extends MessageEvent {

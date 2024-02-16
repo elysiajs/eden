@@ -2,7 +2,7 @@
 import type { Elysia } from 'elysia'
 import type { Treaty } from './types'
 
-import { isNumericString } from '../treaty/utils'
+import { composePath, isNumericString } from '../treaty/utils'
 import { EdenFetchError } from '../errors'
 import { EdenWS } from './ws'
 
@@ -65,9 +65,14 @@ const createProxy = (
 ): any =>
     new Proxy(() => {}, {
         get(_, param: string): any {
-            return createProxy(domain, config, [...paths, param], elysia)
+            return createProxy(
+                domain,
+                config,
+                param === 'index' ? paths : [...paths, param],
+                elysia
+            )
         },
-        apply(_, __, [body, options]) {
+        apply(_, __, [body, options = {}]) {
             if (
                 !body ||
                 options ||
@@ -96,22 +101,55 @@ const createProxy = (
                         ...conf
                     } = config
 
-                    if (
-                        typeof headers === 'function' &&
-                        !(headers instanceof Headers)
-                    )
-                        headers = headers(path, options) ?? undefined
-                    else if (
-                        Array.isArray(headers) &&
-                        headers.every((x) => typeof x === 'function')
-                    )
-                        for (const value of headers as Function[])
-                            headers = value(path, options) ?? undefined
-                    else if (headers instanceof Headers) {
-                        headers = {}
+                    const isGetOrHead = method === 'get' || method === 'head'
 
-                        for (const [key, value] of Object.entries(headers))
+                    headers = {
+                        ...(typeof headers === 'object' && !Array.isArray(headers) ? headers : {}),
+                        ...(isGetOrHead ? body?.headers : options?.headers)
+                    }
+
+                    const query = isGetOrHead
+                        ? (body as Record<string, string>)?.query
+                        : options?.query
+
+                    let q = ''
+                    if (query)
+                        for (const [key, value] of Object.entries(query))
+                            q += (q ? '&' : '?') + `${key}=${value}`
+
+                    if (
+                        typeof config.headers === 'function' &&
+                        !(headers instanceof Headers)
+                    ) {
+                        const temp = await config.headers(path, options)
+
+                        if (temp) {
+                            // @ts-expect-error
+                            headers = {
+                                ...headers,
+                                ...temp
+                            }
+                        }
+                    } else if (
+                        Array.isArray(config.headers) &&
+                        config.headers.every((x) => typeof x === 'function')
+                    )
+                        for (const value of config.headers as Function[]) {
+                            const temp = await value(path, options)
+
+                            if (temp)
+                                headers = {
+                                    ...headers,
+                                    ...temp
+                                }
+                        }
+                    else if (headers instanceof Headers) {
+                        if (!headers) headers = {}
+
+                        for (const [key, value] of Object.entries(headers)) {
+                            // @ts-expect-error
                             headers[key] = value
+                        }
                     }
 
                     let contentType: string =
@@ -185,9 +223,10 @@ const createProxy = (
                             }
 
                             body = formData
-                        } else contentType = 'text/plain'
+                        } else if (body !== undefined && body !== null)
+                            contentType = 'text/plain'
 
-                    const fetchInit = {
+                    let fetchInit = {
                         method,
                         body,
                         ...conf,
@@ -197,6 +236,8 @@ const createProxy = (
                         }
                     } satisfies FetchRequestInit
 
+                    if (isGetOrHead) delete fetchInit.body
+
                     if (onRequest) {
                         if (!Array.isArray(onRequest)) onRequest = [onRequest]
 
@@ -204,13 +245,22 @@ const createProxy = (
                             const temp = await value(path, fetchInit)
 
                             if (typeof temp === 'object')
-                                Object.assign(fetchInit, temp)
+                                fetchInit = {
+                                    ...fetchInit,
+                                    ...temp,
+                                    headers: {
+                                        ...fetchInit.headers,
+                                        ...temp.headers
+                                    }
+                                }
                         }
                     }
 
+                    const url = domain + path + q
+
                     const response = await (elysia?.handle(
-                        new Request(domain + path, fetchInit)
-                    ) ?? fetcher!(domain + path, fetchInit))
+                        new Request(url, fetchInit)
+                    ) ?? fetcher!(url, fetchInit))
 
                     let data
                     let error
@@ -226,41 +276,38 @@ const createProxy = (
                                 if (data !== undefined) break
                             } catch (err) {
                                 if (err instanceof EdenFetchError) error = err
-                                else error = new EdenFetchError(500, err)
+                                else error = new EdenFetchError(422, err)
 
                                 break
                             }
                     }
 
                     if (data === undefined) {
-                        if (response.status >= 300 || response.status < 200)
-                            new EdenFetchError(response.status, data)
-                        else
-                            switch (
-                                response.headers
-                                    .get('Content-Type')
-                                    ?.split(';')[0]
-                            ) {
-                                case 'application/json':
-                                    data = await response.json()
-                                    break
+                        switch (
+                            response.headers.get('Content-Type')?.split(';')[0]
+                        ) {
+                            case 'application/json':
+                                data = await response.json()
+                                break
 
-                                case 'application/octet-stream':
-                                    data = await response.arrayBuffer()
-                                    break
+                            case 'application/octet-stream':
+                                data = await response.arrayBuffer()
+                                break
 
-                                default:
-                                    data = await response
-                                        .text()
-                                        .then((data) => {
-                                            if (isNumericString(data))
-                                                return +data
-                                            if (data === 'true') return true
-                                            if (data === 'false') return false
+                            default:
+                                data = await response.text().then((data) => {
+                                    if (isNumericString(data)) return +data
+                                    if (data === 'true') return true
+                                    if (data === 'false') return false
 
-                                            return data
-                                        })
-                            }
+                                    return data
+                                })
+                        }
+
+                        if (response.status >= 300 || response.status < 200) {
+                            error = new EdenFetchError(response.status, data)
+                            data = undefined
+                        }
                     }
 
                     const result = {
