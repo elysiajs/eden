@@ -344,7 +344,7 @@ describe('Treaty2', () => {
     it('accept headers configuration array', async () => {
         const client = treaty(app, {
             headers: [
-                async (path) => {
+                (path) => {
                     if (path === '/headers-custom')
                         return {
                             'x-custom': 'custom'
