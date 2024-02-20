@@ -5,6 +5,7 @@ import type { Treaty } from './types'
 import { composePath, isNumericString } from '../treaty/utils'
 import { EdenFetchError } from '../errors'
 import { EdenWS } from './ws'
+import { subscribe } from 'diagnostics_channel'
 
 const method = [
     'get',
@@ -17,6 +18,8 @@ const method = [
     'connect',
     'subscribe'
 ] as const
+
+const locals = ['localhost', '127.0.0.1', '0.0.0.0']
 
 const isServer = typeof FileList === 'undefined'
 
@@ -83,16 +86,6 @@ const createProxy = (
                     const method = paths.pop()
                     const path = '/' + paths.join('/')
 
-                    if (method === 'subscribe')
-                        return new EdenWS(
-                            domain.replace(
-                                /^([^]+):\/\//,
-                                domain.startsWith('https://')
-                                    ? 'wss://'
-                                    : 'ws://'
-                            ) + path
-                        )
-
                     let {
                         fetcher = fetch,
                         headers,
@@ -101,10 +94,16 @@ const createProxy = (
                         ...conf
                     } = config
 
-                    const isGetOrHead = method === 'get' || method === 'head'
+                    const isGetOrHead =
+                        method === 'get' ||
+                        method === 'head' ||
+                        method === 'subscribe'
 
                     headers = {
-                        ...(typeof headers === 'object' && !Array.isArray(headers) ? headers : {}),
+                        ...(typeof headers === 'object' &&
+                        !Array.isArray(headers)
+                            ? headers
+                            : {}),
                         ...(isGetOrHead ? body?.headers : options?.headers)
                     }
 
@@ -150,6 +149,26 @@ const createProxy = (
                             // @ts-expect-error
                             headers[key] = value
                         }
+                    }
+
+                    if (method === 'subscribe') {
+                        const url =
+                            domain.replace(
+                                /^([^]+):\/\//,
+                                domain.startsWith('https://')
+                                    ? 'wss://'
+                                    : domain.startsWith('http://')
+                                    ? 'ws://'
+                                    : locals.find((v) =>
+                                          (domain as string).includes(v)
+                                      )
+                                    ? 'ws://'
+                                    : 'wss://'
+                            ) +
+                            path +
+                            q
+
+                        return new EdenWS(url)
                     }
 
                     let contentType: string =
@@ -340,9 +359,7 @@ export const treaty = <const App extends Elysia<any, any, any, any, any, any>>(
     if (typeof domain === 'string') {
         if (!domain.includes('://'))
             domain =
-                (['localhost', '127.0.0.1', '0.0.0.0'].find((v) =>
-                    (domain as string).includes(v)
-                )
+                (locals.find((v) => (domain as string).includes(v))
                     ? 'http://'
                     : 'https://') + domain
 
