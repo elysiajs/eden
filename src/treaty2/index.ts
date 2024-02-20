@@ -81,96 +81,95 @@ const createProxy = (
                 options ||
                 (typeof body === 'object' && Object.keys(body).length !== 1) ||
                 method.includes(paths.at(-1) as any)
-            )
-                return (async () => {
-                    const method = paths.pop()
-                    const path = '/' + paths.join('/')
+            ) {
+                const method = paths.pop()
+                const path = '/' + paths.join('/')
 
-                    let {
-                        fetcher = fetch,
-                        headers,
-                        onRequest,
-                        onResponse,
-                        ...conf
-                    } = config
+                let {
+                    fetcher = fetch,
+                    headers,
+                    onRequest,
+                    onResponse,
+                    ...conf
+                } = config
 
-                    const isGetOrHead =
-                        method === 'get' ||
-                        method === 'head' ||
-                        method === 'subscribe'
+                const isGetOrHead =
+                    method === 'get' ||
+                    method === 'head' ||
+                    method === 'subscribe'
 
-                    headers = {
-                        ...(typeof headers === 'object' &&
-                        !Array.isArray(headers)
-                            ? headers
-                            : {}),
-                        ...(isGetOrHead ? body?.headers : options?.headers)
+                headers = {
+                    ...(typeof headers === 'object' && !Array.isArray(headers)
+                        ? headers
+                        : {}),
+                    ...(isGetOrHead ? body?.headers : options?.headers)
+                }
+
+                const query = isGetOrHead
+                    ? (body as Record<string, string>)?.query
+                    : options?.query
+
+                let q = ''
+                if (query)
+                    for (const [key, value] of Object.entries(query))
+                        q += (q ? '&' : '?') + `${key}=${value}`
+
+                if (
+                    typeof config.headers === 'function' &&
+                    !(headers instanceof Headers)
+                ) {
+                    const temp = await config.headers(path, options)
+
+                    if (temp) {
+                        // @ts-expect-error
+                        headers = {
+                            ...headers,
+                            ...temp
+                        }
                     }
+                } else if (
+                    Array.isArray(config.headers) &&
+                    config.headers.every((x) => typeof x === 'function')
+                )
+                    for (const value of config.headers as Function[]) {
+                        const temp = await value(path, options)
 
-                    const query = isGetOrHead
-                        ? (body as Record<string, string>)?.query
-                        : options?.query
-
-                    let q = ''
-                    if (query)
-                        for (const [key, value] of Object.entries(query))
-                            q += (q ? '&' : '?') + `${key}=${value}`
-
-                    if (
-                        typeof config.headers === 'function' &&
-                        !(headers instanceof Headers)
-                    ) {
-                        const temp = await config.headers(path, options)
-
-                        if (temp) {
-                            // @ts-expect-error
+                        if (temp)
                             headers = {
                                 ...headers,
                                 ...temp
                             }
-                        }
-                    } else if (
-                        Array.isArray(config.headers) &&
-                        config.headers.every((x) => typeof x === 'function')
-                    )
-                        for (const value of config.headers as Function[]) {
-                            const temp = await value(path, options)
-
-                            if (temp)
-                                headers = {
-                                    ...headers,
-                                    ...temp
-                                }
-                        }
-                    else if (headers instanceof Headers) {
-                        if (!headers) headers = {}
-
-                        for (const [key, value] of Object.entries(headers)) {
-                            // @ts-expect-error
-                            headers[key] = value
-                        }
                     }
+                else if (headers instanceof Headers) {
+                    if (!headers) headers = {}
 
-                    if (method === 'subscribe') {
-                        const url =
-                            domain.replace(
-                                /^([^]+):\/\//,
-                                domain.startsWith('https://')
-                                    ? 'wss://'
-                                    : domain.startsWith('http://')
-                                    ? 'ws://'
-                                    : locals.find((v) =>
-                                          (domain as string).includes(v)
-                                      )
-                                    ? 'ws://'
-                                    : 'wss://'
-                            ) +
-                            path +
-                            q
-
-                        return new EdenWS(url)
+                    for (const [key, value] of Object.entries(headers)) {
+                        // @ts-expect-error
+                        headers[key] = value
                     }
+                }
 
+                if (method === 'subscribe') {
+                    const url =
+                        domain.replace(
+                            /^([^]+):\/\//,
+                            domain.startsWith('https://')
+                                ? 'wss://'
+                                : domain.startsWith('http://')
+                                ? 'ws://'
+                                : locals.find((v) =>
+                                      (domain as string).includes(v)
+                                  )
+                                ? 'ws://'
+                                : 'wss://'
+                        ) +
+                        path +
+                        q
+
+                    return new EdenWS(url)
+                }
+
+                return (async () => {
                     let contentType: string =
                         (headers instanceof Headers
                             ? headers.get('content-type')
@@ -339,6 +338,7 @@ const createProxy = (
 
                     return result
                 })()
+            }
 
             if (typeof body === 'object')
                 return createProxy(
