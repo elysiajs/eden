@@ -105,10 +105,13 @@ export namespace Treaty {
                   (
                       path: string,
                       options: RequestInit
-                  ) => MaybePromise<RequestInit['headers'] | void>
+                  ) => RequestInit['headers'] | void
               >
         onRequest?: MaybeArray<
-            (path: string, options: FetchRequestInit) => MaybePromise<FetchRequestInit | void>
+            (
+                path: string,
+                options: FetchRequestInit
+            ) => MaybePromise<FetchRequestInit | void>
         >
         onResponse?: MaybeArray<(response: Response) => MaybePromise<unknown>>
     }

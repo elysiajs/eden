@@ -118,7 +118,7 @@ const createProxy = (
                     typeof config.headers === 'function' &&
                     !(headers instanceof Headers)
                 ) {
-                    const temp = await config.headers(path, options)
+                    const temp = config.headers(path, options)
 
                     if (temp) {
                         // @ts-expect-error
@@ -132,7 +132,7 @@ const createProxy = (
                     config.headers.every((x) => typeof x === 'function')
                 )
                     for (const value of config.headers as Function[]) {
-                        const temp = await value(path, options)
+                        const temp = value(path, options)
 
                         if (temp)
                             headers = {
