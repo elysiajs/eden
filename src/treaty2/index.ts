@@ -90,7 +90,7 @@ const createProxy = (
                     headers,
                     onRequest,
                     onResponse,
-                    ...conf
+                    fetch: conf
                 } = config
 
                 const isGetOrHead =

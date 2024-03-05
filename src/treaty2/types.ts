@@ -39,13 +39,20 @@ export namespace Treaty {
             : K extends `:${string}`
             ? never
             : K]: K extends 'subscribe' // ? Websocket route
-            ? undefined extends Route['subscribe']['query']
-                ? (params?: {
-                      query?: Record<string, string>
-                  }) => EdenWS<Route['subscribe']>
-                : (params: {
-                      query: Route['subscribe']['query']
-                  }) => EdenWS<Route['subscribe']>
+            ? (undefined extends Route['subscribe']['headers']
+                  ? { headers?: Record<string, unknown> }
+                  : {
+                        headers: Route['subscribe']['headers']
+                    }) &
+                  (undefined extends Route['subscribe']['query']
+                      ? { query?: Record<string, unknown> }
+                      : {
+                            query: Route['subscribe']['query']
+                        }) extends infer Param
+                ? {} extends Param
+                    ? (options?: Param) => EdenWS<Route['subscribe']>
+                    : (options?: Param) => EdenWS<Route['subscribe']>
+                : never
             : Route[K] extends {
                   body: infer Body
                   headers: infer Headers
@@ -97,7 +104,8 @@ export namespace Treaty {
             : Prettify<Sign<Route[K]>>
     }
 
-    export interface Config extends Omit<RequestInit, 'headers'> {
+    export interface Config {
+        fetch?: Omit<RequestInit, 'headers' | 'method'>
         fetcher?: typeof fetch
         headers?:
             | RequestInit['headers']
@@ -116,27 +124,33 @@ export namespace Treaty {
         onResponse?: MaybeArray<(response: Response) => MaybePromise<unknown>>
     }
 
-    type TreatyResponse<Response extends Record<number, unknown>> =
+    type TreatyResponse<Res extends Record<number, unknown>> =
         | {
-              data: Response[200]
+              data: Res[200]
               error: null
+              response: Response
+              status: number
+              headers: FetchRequestInit['headers']
           }
         | {
               data: null
-              error: Response extends { 200: unknown }
+              error: Res extends { 200: unknown }
                   ? // @ts-expect-error
                     {
-                        [Status in keyof Response as Status extends 200
+                        [Status in keyof Res as Status extends 200
                             ? never
                             : Status]: {
                             status: Status
-                            value: Response[Status]
+                            value: Res[Status]
                         }
                     }[Exclude<keyof Response, 200>]
                   : {
                         status: unknown
                         value: unknown
                     }
+              response: Response
+              status: number
+              headers: FetchRequestInit['headers']
           }
 
     export interface OnMessage<Data = unknown> extends MessageEvent {

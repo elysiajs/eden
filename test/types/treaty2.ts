@@ -146,10 +146,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
         | {
               data: 'a'
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -175,10 +181,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
         | {
               data: 'a'
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -204,10 +216,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
         | {
               data: 1
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -233,10 +251,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
         | {
               data: boolean
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -262,10 +286,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
         | {
               data: string[]
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -290,10 +320,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
         | {
               data: unknown
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -318,10 +354,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
         | {
               data: string
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -352,10 +394,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
                   password: string
               }
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -382,10 +430,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
                   username: string
               }
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -414,10 +468,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
                   alias: 'Kristen'
               }
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -446,10 +506,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
                   alias: 'Kristen'
               }
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -478,10 +544,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
                   alias: 'Kristen'
               }
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -507,18 +579,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
         | {
               data: void
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error:
-                  | {
-                        status: 418
-                        value: 'Kirifuji Nagisa'
-                    }
-                  | {
-                        status: 420
-                        value: 'Snoop Dogg'
-                    }
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -547,10 +617,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
                   alias: 'Kristen'
               }
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -579,10 +655,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
                   alias: 'Kristen'
               }
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -614,10 +696,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
                   alias: 'Kristen'
               }
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -649,10 +737,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
                   alias: 'Kristen'
               }
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
@@ -687,10 +781,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
                   alias: 'Kristen'
               }
               error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
         | {
               data: null
-              error: never
+              error: unknown
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
           }
     >()
 }
