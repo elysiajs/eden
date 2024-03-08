@@ -117,6 +117,12 @@ const app = new Elysia()
             })
         }
     )
+    .get('/async', async ({ error }) => {
+        if (Math.random() > 0.5) return error(418, 'Nagisa')
+        if (Math.random() > 0.5) return error(401, 'Himari')
+
+        return 'Hifumi'
+    })
 
 const api = treaty(app)
 type api = typeof api
@@ -152,7 +158,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -187,7 +196,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -222,7 +234,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -257,7 +272,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -292,7 +310,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -326,7 +347,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -360,7 +384,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -400,7 +427,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -436,7 +466,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -474,7 +507,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -512,7 +548,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -550,7 +589,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -585,7 +627,15 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error:
+                  | {
+                        status: 418
+                        value: 'Kirifuji Nagisa'
+                    }
+                  | {
+                        status: 420
+                        value: 'Snoop Dogg'
+                    }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -623,7 +673,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -661,7 +714,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -702,7 +758,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -743,7 +802,10 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -787,7 +849,53 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: unknown
+              error: {
+                  status: unknown
+                  value: unknown
+              }
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
+          }
+    >()
+}
+
+// ? Should handle async
+{
+    type Route = api['async']['get']
+
+    expectTypeOf<Route>().parameter(0).toEqualTypeOf<
+        | {
+              headers?: Record<string, unknown> | undefined
+              query?: Record<string, unknown> | undefined
+              fetch?: RequestInit | undefined
+          }
+        | undefined
+    >()
+
+    expectTypeOf<Route>().parameter(1).toBeUndefined()
+
+    type Res = Result<Route>
+
+    expectTypeOf<Res>().toEqualTypeOf<
+        | {
+              data: 'Hifumi'
+              error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
+          }
+        | {
+              data: null
+              error:
+                  | {
+                        status: 401
+                        value: 'Himari'
+                    }
+                  | {
+                        status: 418
+                        value: 'Nagisa'
+                    }
               response: Response
               status: number
               headers: HeadersInit | undefined

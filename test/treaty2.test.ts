@@ -89,6 +89,11 @@ const app = new Elysia()
             })
         }
     )
+    .post('/date', ({ body: { date } }) => date, {
+        body: t.Object({
+            date: t.Date()
+        })
+    })
 
 const client = treaty(app)
 
@@ -370,5 +375,11 @@ describe('Treaty2', () => {
                 'x-custom': 'custom'
             }
         })
+    })
+
+    it('send date', async () => {
+        const { data, error } = await client.date.post({ date: new Date() })
+
+        expect(data).toBeInstanceOf(Date)
     })
 })

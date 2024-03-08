@@ -318,6 +318,12 @@ const createProxy = (
                                     if (data === 'true') return true
                                     if (data === 'false') return false
 
+                                    if(!data) return data
+
+                                    const date = new Date(data)
+                                    if (!Number.isNaN(date.getTime()))
+                                        return date
+
                                     return data
                                 })
                         }

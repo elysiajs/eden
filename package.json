@@ -1,6 +1,6 @@
 {
   "name": "@elysiajs/eden",
-  "version": "1.0.0-rc.1",
+  "version": "1.0.0-rc.2",
   "description": "Fully type-safe Elysia client",
   "author": {
     "name": "saltyAom",
@@ -48,7 +48,7 @@
   "scripts": {
     "dev": "bun run --watch example/index.ts",
     "test": "bun test && bun test:types",
-		"test:types": "tsc --project tsconfig.test.json",
+    "test:types": "tsc --project tsconfig.test.json",
     "build": "rimraf dist && tsup",
     "release": "npm run build && npm run test && npm publish --access public"
   },
@@ -59,7 +59,7 @@
     "@elysiajs/cors": "0.7.0",
     "@types/bun": "^1.0.3",
     "@types/node": "^18.15.5",
-    "elysia": "1.0.0-rc.0",
+    "elysia": "1.0.0-rc.10",
     "esbuild": "^0.19.3",
     "eslint": "^8.26.0",
     "expect-type": "^0.17.3",

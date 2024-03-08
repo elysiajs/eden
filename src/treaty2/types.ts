@@ -124,7 +124,13 @@ export namespace Treaty {
         onResponse?: MaybeArray<(response: Response) => MaybePromise<unknown>>
     }
 
-    type TreatyResponse<Res extends Record<number, unknown>> =
+    type UnwrapAwaited<T extends Record<number, unknown>> = {
+        [K in keyof T]: Awaited<T[K]>
+    }
+
+    type TreatyResponse<
+        Res extends Record<number, unknown>,
+    > =
         | {
               data: Res[200]
               error: null
@@ -134,20 +140,17 @@ export namespace Treaty {
           }
         | {
               data: null
-              error: Res extends { 200: unknown }
-                  ? // @ts-expect-error
-                    {
-                        [Status in keyof Res as Status extends 200
-                            ? never
-                            : Status]: {
-                            status: Status
-                            value: Res[Status]
-                        }
-                    }[Exclude<keyof Response, 200>]
-                  : {
+              error: Exclude<keyof Res, 200> extends never
+                  ? {
                         status: unknown
                         value: unknown
                     }
+                  : {
+                        [Status in keyof Res]: {
+                            status: Status
+                            value: Res[Status]
+                        }
+                    }[Exclude<keyof Res, 200>]
               response: Response
               status: number
               headers: FetchRequestInit['headers']
