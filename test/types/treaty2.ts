@@ -2,6 +2,12 @@ import { Elysia, t } from 'elysia'
 import { treaty } from '../../src'
 import { expectTypeOf } from 'expect-type'
 
+const plugin = new Elysia({ prefix: '/level' })
+    .get('/', '2')
+    .get('/level', '2')
+    .get('/:id', ({ params: { id } }) => id)
+    .get('/:id/ok', ({ params: { id } }) => id)
+
 const app = new Elysia()
     .get('/', 'a')
     .post('/', 'a')
@@ -123,6 +129,7 @@ const app = new Elysia()
 
         return 'Hifumi'
     })
+    .use(plugin)
 
 const api = treaty(app)
 type api = typeof api
@@ -901,4 +908,129 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
               headers: HeadersInit | undefined
           }
     >()
+}
+
+// ? Handle param with nested path
+{
+    type SubModule = api['level']
+
+    expectTypeOf<SubModule>().toEqualTypeOf<
+        ((params: { id: string | number }) => {
+            get: (
+                options?:
+                    | {
+                          headers?: Record<string, unknown> | undefined
+                          query?: Record<string, unknown> | undefined
+                          fetch?: RequestInit | undefined
+                      }
+                    | undefined
+            ) => Promise<
+                | {
+                      data: string
+                      error: null
+                      response: Response
+                      status: number
+                      headers: HeadersInit | undefined
+                  }
+                | {
+                      data: null
+                      error: {
+                          status: unknown
+                          value: unknown
+                      }
+                      response: Response
+                      status: number
+                      headers: HeadersInit | undefined
+                  }
+            >
+            ok: {
+                get: (
+                    options?:
+                        | {
+                              headers?: Record<string, unknown> | undefined
+                              query?: Record<string, unknown> | undefined
+                              fetch?: RequestInit | undefined
+                          }
+                        | undefined
+                ) => Promise<
+                    | {
+                          data: string
+                          error: null
+                          response: Response
+                          status: number
+                          headers: HeadersInit | undefined
+                      }
+                    | {
+                          data: null
+                          error: {
+                              status: unknown
+                              value: unknown
+                          }
+                          response: Response
+                          status: number
+                          headers: HeadersInit | undefined
+                      }
+                >
+            }
+        }) & {
+            index: {
+                get: (
+                    options?:
+                        | {
+                              headers?: Record<string, unknown> | undefined
+                              query?: Record<string, unknown> | undefined
+                              fetch?: RequestInit | undefined
+                          }
+                        | undefined
+                ) => Promise<
+                    | {
+                          data: '2'
+                          error: null
+                          response: Response
+                          status: number
+                          headers: HeadersInit | undefined
+                      }
+                    | {
+                          data: null
+                          error: {
+                              status: unknown
+                              value: unknown
+                          }
+                          response: Response
+                          status: number
+                          headers: HeadersInit | undefined
+                      }
+                >
+            }
+            level: {
+                get: (
+                    options?:
+                        | {
+                              headers?: Record<string, unknown> | undefined
+                              query?: Record<string, unknown> | undefined
+                              fetch?: RequestInit | undefined
+                          }
+                        | undefined
+                ) => Promise<
+                    | {
+                          data: '2'
+                          error: null
+                          response: Response
+                          status: number
+                          headers: HeadersInit | undefined
+                      }
+                    | {
+                          data: null
+                          error: {
+                              status: unknown
+                              value: unknown
+                          }
+                          response: Response
+                          status: number
+                          headers: HeadersInit | undefined
+                      }
+                >
+            }
+        }
+    >
 }

@@ -1,7 +1,7 @@
 /// <reference lib="dom" />
 import type { Elysia } from 'elysia'
 import { EdenWS } from './ws'
-import type { Prettify } from '../types'
+import type { IsNever, Prettify } from '../types'
 
 type Files = File | FileList
 
@@ -34,9 +34,7 @@ export namespace Treaty {
         : 'Please install Elysia before using Eden'
 
     export type Sign<in out Route extends Record<string, any>> = {
-        [K in keyof Route as K extends '/' | ''
-            ? 'index'
-            : K extends `:${string}`
+        [K in keyof Route as K extends `:${string}`
             ? never
             : K]: K extends 'subscribe' // ? Websocket route
             ? (undefined extends Route['subscribe']['headers']
@@ -95,13 +93,20 @@ export namespace Treaty {
                           options: Prettify<Param & TreatyParam>
                       ) => Promise<TreatyResponse<Response>>
                 : never
-            : keyof Route[K] extends `:${infer Param}`
-            ? (
-                  params: Record<Param, string>
-              ) => Prettify<
-                  Prettify<Sign<Route[K]>> & Sign<Route[K][`:${Param}`]>
-              >
-            : Prettify<Sign<Route[K]>>
+            : Extract<
+                  keyof Route[K],
+                  `:${string}`
+              > extends infer Path extends string
+            ? IsNever<Path> extends true
+                ? Prettify<Sign<Route[K]>>
+                : // ! DO NOT USE PRETTIFY ON THIS LINE, OTHERWISE FUNCTION CALLING WILL BE OMITTED
+                  ((params: {
+                      [param in Path extends `:${infer Param}`
+                          ? Param
+                          : never]: string | number
+                  }) => Prettify<Sign<Route[K][Path]>>) &
+                      Prettify<Sign<Route[K]>>
+            : never
     }
 
     export interface Config {
@@ -128,9 +133,7 @@ export namespace Treaty {
         [K in keyof T]: Awaited<T[K]>
     }
 
-    type TreatyResponse<
-        Res extends Record<number, unknown>,
-    > =
+    type TreatyResponse<Res extends Record<number, unknown>> =
         | {
               data: Res[200]
               error: null

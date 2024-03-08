@@ -1,21 +1,22 @@
 import { Elysia, t } from 'elysia'
 import { treaty } from '../src'
 
-const app = new Elysia()
-    .get('/hello', ({ headers, error }) => {
-        if (Math.random()) return error(418, 'a')
-        if (Math.random()) return error(420, 'b')
+export const app = new Elysia({ prefix: '/level' })
+    .get('/a', '2')
+    .get('/:id', ({ params: { id } }) => id)
+    .get('/:id/a', ({ params: { id } }) => id)
 
-        return "A"
-    })
-    .listen(3000)
+type Res = typeof app._routes
 
 const api = treaty<typeof app>('localhost:3000')
 
-type Res = typeof app._routes.hello.get.response
-type B = Exclude<keyof Res, 200> extends number ? true : false
+type A = {
+    a: 'a'
+    // ':b': 'b'
+}
 
-const a = await api.hello.get()
+type C = Extract<keyof A, `:${string}`> extends string ? true : false
 
-a.data
-a.error
+type B = Extract<keyof A, `:${string}`> extends infer Path extends string
+    ? Path
+    : never
