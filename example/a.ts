@@ -1,11 +1,17 @@
 import { Elysia, t } from 'elysia'
 import { treaty } from '../src'
+import { cors } from '../../cors/src'
 
-const testRouter = new Elysia()
-    .group('/test/:testId', (app) => app.get('/test', () => 'hi'))
-    .listen(3005)
+const app = new Elysia()
+    .use((app) => {
+        // @ts-ignore
+        app.use(cors({}))
 
-const testTreaty = treaty<typeof testRouter>('http://localhost:3005')
+        return app
+    })
+    .get('/activitiy/:page/:size', ({ params }) => params)
+    .listen(3000)
 
-console.log(await testTreaty.test({ testId: '1' }).test.get())
-// Error: undefined is not an object (evaluating 'testTreaty.test({ testId: "1" }).test.get')
+const api = treaty(app)
+
+console.log(await api.activitiy({ page: 1 })({ size: 10 }).get())

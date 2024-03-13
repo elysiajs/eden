@@ -93,21 +93,23 @@ export namespace Treaty {
                           options: Prettify<Param & TreatyParam>
                       ) => Promise<TreatyResponse<Response>>
                 : never
-            : Extract<
-                  keyof Route[K],
-                  `:${string}`
-              > extends infer Path extends string
-            ? IsNever<Path> extends true
-                ? Prettify<Sign<Route[K]>>
-                : // ! DO NOT USE PRETTIFY ON THIS LINE, OTHERWISE FUNCTION CALLING WILL BE OMITTED
-                  ((params: {
-                      [param in Path extends `:${infer Param}`
-                          ? Param
-                          : never]: string | number
-                  }) => Prettify<Sign<Route[K][Path]>>) &
-                      Prettify<Sign<Route[K]>>
-            : never
+            : CreateParams<Route[K]>
     }
+
+    type CreateParams<Route extends Record<string, any>> = Extract<
+        keyof Route,
+        `:${string}`
+    > extends infer Path extends string
+        ? IsNever<Path> extends true
+            ? Prettify<Sign<Route>>
+            : // ! DO NOT USE PRETTIFY ON THIS LINE, OTHERWISE FUNCTION CALLING WILL BE OMITTED
+              ((params: {
+                  [param in Path extends `:${infer Param}` ? Param : never]:
+                      | string
+                      | number
+              }) => Prettify<Sign<Route[Path]>> & CreateParams<Route[Path]>) &
+                  Prettify<Sign<Route>>
+        : never
 
     export interface Config {
         fetch?: Omit<RequestInit, 'headers' | 'method'>
