@@ -1,3 +1,10 @@
+# 1.0.0 - 
+Feature:
+- treaty2
+
+Bug fix:
+- treaty1: fix [object Object] when body is empty
+
 # 0.8.1 - 8 Jan 2024
 Bug fix:
 - [#41](https://github.com/elysiajs/eden/pull/41) params now optional for paramless routes in edenFetch

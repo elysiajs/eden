@@ -16,6 +16,7 @@ const app = new Elysia()
     .get('/', () => 'hi')
     .use(prefix('/prefix'))
     .post('/', () => 'hi')
+    .delete('/empty', ({ body }) => ({ body: body ?? null }))
     .get(
         '/json-utf8',
         () =>
@@ -58,15 +59,15 @@ beforeEach(() => {
     fetchSpy.mockClear()
 })
 
-describe('Eden Rest', () => {
+describe('Eden Treaty', () => {
     it('get index', async () => {
-        const { data } = await client.get()
+        const { data } = await client.index.get()
 
         expect(data).toBe('hi')
     })
 
     it('post index', async () => {
-        const { data } = await client.get()
+        const { data } = await client.index.get()
 
         expect(data).toBe('hi')
     })
@@ -109,6 +110,7 @@ describe('Eden Rest', () => {
 
     it('parse json with extra parameters', async () => {
         const { data } = await client['json-utf8'].get()
+        // @ts-ignore
         expect(data).toEqual(utf8Json)
     })
 
@@ -261,5 +263,11 @@ describe('Eden Rest', () => {
             (fetchSpy.mock.calls[0]! as unknown as [unknown, RequestInit])[1]
                 .method
         ).toBe('PATCH')
+    })
+
+    it('send empty body', async () => {
+        const { data } = await client.empty.delete()
+
+        expect(data).toEqual({ body: null })
     })
 })

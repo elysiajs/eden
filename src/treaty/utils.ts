@@ -15,4 +15,4 @@ export const composePath = (
 }
 
 export const isNumericString = (message: string) =>
-	!Number.isNaN(parseInt(message))
+    message.trim().length !== 0 && !Number.isNaN(Number(message))
