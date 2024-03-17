@@ -1,13 +1,7 @@
 /// <reference lib="dom" />
 import type { Elysia } from 'elysia'
 import type { EdenWS } from './index'
-import type {
-    IsUnknown,
-    IsNever,
-    IsAny,
-    UnionToIntersect,
-    MapError
-} from '../types'
+import type { IsUnknown, IsNever, UnionToIntersect, MapError } from '../types'
 import type { EdenFetchError } from '../errors'
 
 type Files = File | FileList
