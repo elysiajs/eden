@@ -1,5 +1,3 @@
-import type { serialize, deserialize } from 'superjson'
-
 export class EdenFetchError<
     Status extends number = number,
     Value = unknown
