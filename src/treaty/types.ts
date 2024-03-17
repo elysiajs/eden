@@ -24,10 +24,6 @@ type Split<S extends string> = S extends `${infer Head}/${infer Tail}`
         ? [Head]
         : [S]
 
-type Prettify<T> = {
-    [K in keyof T]: T[K]
-} & {}
-
 type AnySchema = {
     body: unknown
     headers: unknown
@@ -45,12 +41,6 @@ export namespace EdenTreaty {
         }
             ? UnionToIntersect<Sign<Schema>>
             : 'Please install Elysia before using Eden'
-
-    type SplitKeys<T> = T extends [infer First, ...infer Rest]
-        ? [First, Rest]
-        : T extends [infer First, ...infer Rest][number]
-          ? [First, Rest]
-          : never
 
     type UnwrapPromise<T> = T extends Promise<infer A> ? A : T
 
