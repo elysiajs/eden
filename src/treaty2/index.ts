@@ -358,7 +358,7 @@ const createProxy = (
         }
     }) as any
 
-export const treaty = <const App extends Elysia<any, any, any, any, any, any>>(
+export const treaty = <const App extends Elysia<any, any, any, any, any, any, any, any>>(
     domain: string | App,
     config: Treaty.Config = {}
 ): Treaty.Create<App> => {
