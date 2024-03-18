@@ -1,3 +1,7 @@
+# 1.0.2 - 18 Mar 2024
+Feature:
+- support for elysia 1.0.2
+
 # 1.0.0 - 16 Mar 2024 
 Feature:
 - treaty2
