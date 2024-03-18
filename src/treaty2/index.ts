@@ -23,6 +23,13 @@ const locals = ['localhost', '127.0.0.1', '0.0.0.0']
 
 const isServer = typeof FileList === 'undefined'
 
+const isISO8601 =
+    /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))/
+const isFormalDate =
+    /(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat)\s(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s\d{2}\s\d{4}\s\d{2}:\d{2}:\d{2}\sGMT(?:\+|-)\d{4}\s\([^)]+\)/
+const isShortenDate =
+    /^(?:(?:(?:(?:0?[1-9]|[12][0-9]|3[01])[/\s-](?:0?[1-9]|1[0-2])[/\s-](?:19|20)\d{2})|(?:(?:19|20)\d{2}[/\s-](?:0?[1-9]|1[0-2])[/\s-](?:0?[1-9]|[12][0-9]|3[01]))))(?:\s(?:1[012]|0?[1-9]):[0-5][0-9](?::[0-5][0-9])?(?:\s[AP]M)?)?$/
+
 const isFile = (v: any) => {
     if (isServer) return v instanceof Blob
 
@@ -318,11 +325,20 @@ const createProxy = (
                                     if (data === 'true') return true
                                     if (data === 'false') return false
 
-                                    if(!data) return data
+                                    if (!data) return data
 
-                                    const date = new Date(data)
-                                    if (!Number.isNaN(date.getTime()))
-                                        return date
+                                    // Remove quote from stringified date
+                                    const temp = data.replace(/"/g, '')
+
+                                    if (
+                                        isISO8601.test(temp) ||
+                                        isFormalDate.test(temp) ||
+                                        isShortenDate.test(temp)
+                                    ) {
+                                        const date = new Date(temp)
+                                        if (!Number.isNaN(date.getTime()))
+                                            return date
+                                    }
 
                                     return data
                                 })
@@ -358,7 +374,9 @@ const createProxy = (
         }
     }) as any
 
-export const treaty = <const App extends Elysia<any, any, any, any, any, any, any, any>>(
+export const treaty = <
+    const App extends Elysia<any, any, any, any, any, any, any, any>
+>(
     domain: string | App,
     config: Treaty.Config = {}
 ): Treaty.Create<App> => {
