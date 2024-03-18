@@ -1,3 +1,7 @@
+# 1.0.4 - 18 Mar 2024
+Bug fix:
+- Using regex for date pattern matching
+
 # 1.0.2 - 18 Mar 2024
 Feature:
 - support for elysia 1.0.2
