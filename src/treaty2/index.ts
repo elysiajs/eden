@@ -252,7 +252,7 @@ const createProxy = (
                             contentType = 'text/plain'
 
                     let fetchInit = {
-                        method,
+                        method: method?.toUpperCase(),
                         body,
                         ...conf,
                         headers: {
