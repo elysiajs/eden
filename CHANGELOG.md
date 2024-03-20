@@ -1,3 +1,7 @@
+# 1.0.5 - 20 Mar 2024
+Change:
+- treaty2: use null as default data value instead of undefined
+
 # 1.0.4 - 18 Mar 2024
 Bug fix:
 - Using regex for date pattern matching

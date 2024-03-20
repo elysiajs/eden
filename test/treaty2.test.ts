@@ -224,7 +224,7 @@ describe('Treaty2', () => {
                     break
             }
 
-        expect(data).toBeUndefined()
+        expect(data).toBeNull()
         expect(value).toEqual('Kirifuji Nagisa')
     })
 

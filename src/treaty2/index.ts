@@ -287,7 +287,7 @@ const createProxy = (
                         new Request(url, fetchInit)
                     ) ?? fetcher!(url, fetchInit))
 
-                    let data
+                    let data = null
                     let error
 
                     if (onResponse) {
@@ -298,7 +298,7 @@ const createProxy = (
                             try {
                                 data = await value(response.clone())
 
-                                if (data !== undefined) break
+                                if (data !== undefined && data !== null) break
                             } catch (err) {
                                 if (err instanceof EdenFetchError) error = err
                                 else error = new EdenFetchError(422, err)
@@ -307,7 +307,7 @@ const createProxy = (
                             }
                     }
 
-                    if (data === undefined) {
+                    if (data === null) {
                         switch (
                             response.headers.get('Content-Type')?.split(';')[0]
                         ) {
@@ -346,7 +346,7 @@ const createProxy = (
 
                         if (response.status >= 300 || response.status < 200) {
                             error = new EdenFetchError(response.status, data)
-                            data = undefined
+                            data = null
                         }
                     }
 
