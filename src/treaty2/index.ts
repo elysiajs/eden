@@ -288,7 +288,7 @@ const createProxy = (
                     ) ?? fetcher!(url, fetchInit))
 
                     let data = null
-                    let error
+                    let error = null
 
                     if (onResponse) {
                         if (!Array.isArray(onResponse))

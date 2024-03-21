@@ -99,15 +99,17 @@ const client = treaty(app)
 
 describe('Treaty2', () => {
     it('get index', async () => {
-        const { data } = await client.index.get()
+        const { data, error } = await client.index.get()
 
         expect(data).toBe('a')
+        expect(error).toBeNull()
     })
 
     it('post index', async () => {
-        const { data } = await client.index.get()
+        const { data, error } = await client.index.post()
 
         expect(data).toBe('a')
+        expect(error).toBeNull()
     })
 
     it('parse number', async () => {
@@ -378,7 +380,7 @@ describe('Treaty2', () => {
     })
 
     it('send date', async () => {
-        const { data, error } = await client.date.post({ date: new Date() })
+        const { data } = await client.date.post({ date: new Date() })
 
         expect(data).toBeInstanceOf(Date)
     })
