@@ -64,7 +64,7 @@ export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
         this.url = url
     }
 
-    send(data: Schema['body'] | Schema['body'][]) {
+    send(data: Schema['subscribe']['body'] | Schema['subscribe']['body'][]) {
         if (Array.isArray(data)) {
             data.forEach((datum) => this.send(datum))
 
@@ -80,7 +80,7 @@ export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
 
     on<K extends keyof WebSocketEventMap>(
         type: K,
-        listener: (event: EdenTreaty.WSEvent<K, Schema['response']>) => void,
+        listener: (event: EdenTreaty.WSEvent<K, Schema['subscribe']['response']>) => void,
         options?: boolean | AddEventListenerOptions
     ) {
         return this.addEventListener(type, listener, options)
@@ -98,7 +98,7 @@ export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
 
     subscribe(
         onMessage: (
-            event: EdenTreaty.WSEvent<'message', Schema['response']>
+            event: EdenTreaty.WSEvent<'message', Schema['subscribe']['response']>
         ) => void,
         options?: boolean | AddEventListenerOptions
     ) {
@@ -107,7 +107,7 @@ export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
 
     addEventListener<K extends keyof WebSocketEventMap>(
         type: K,
-        listener: (event: EdenTreaty.WSEvent<K, Schema['response']>) => void,
+        listener: (event: EdenTreaty.WSEvent<K, Schema['subscribe']['response']>) => void,
         options?: boolean | AddEventListenerOptions
     ) {
         this.ws.addEventListener(
