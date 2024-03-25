@@ -296,9 +296,12 @@ const createProxy = (
 
                         for (const value of onResponse)
                             try {
-                                data = await value(response.clone())
+                                const temp = await value(response.clone())
 
-                                if (data !== undefined && data !== null) break
+                                if (data !== undefined && data !== null) {
+                                    data = temp
+                                    break
+                                }
                             } catch (err) {
                                 if (err instanceof EdenFetchError) error = err
                                 else error = new EdenFetchError(422, err)

@@ -1,4 +1,8 @@
 # 1.0.6 - 21 Mar 2024
+Bug fix:
+- treaty2: default onResponse to null and mutate when need
+
+# 1.0.6 - 21 Mar 2024
 Change:
 - treaty2: use null as default error value instead of undefined
 
