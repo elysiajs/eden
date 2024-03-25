@@ -298,7 +298,7 @@ const createProxy = (
                             try {
                                 const temp = await value(response.clone())
 
-                                if (data !== undefined && data !== null) {
+                                if (temp !== undefined && temp !== null) {
                                     data = temp
                                     break
                                 }
@@ -353,15 +353,13 @@ const createProxy = (
                         }
                     }
 
-                    const result = {
+                    return {
                         data,
                         error,
                         response,
                         status: response.status,
                         headers: response.headers
                     }
-
-                    return result
                 })()
             }
 
