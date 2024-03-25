@@ -1,6 +1,13 @@
 # 1.0.5 - 20 Mar 2024
+Feature:
+treaty2: add `keepDomain` option
+
 Change:
 - treaty2: use null as default data value instead of undefined
+
+Fix:
+- treaty2: aligned schema with elysia/ws
+- treaty: use uppercase http verbs
 
 # 1.0.4 - 18 Mar 2024
 Bug fix:
