@@ -41,7 +41,7 @@ export namespace EdenTreaty {
                     ? (params?: {
                           $query?: Record<string, string>
                       }) => EdenWS<Route>
-                    : (params: { $query: Route['query'] }) => EdenWS<Route>
+                    : (params: { $query: Route['query'] }) => EdenWS<Route['subscribe']>
                 : // ? HTTP route
                 ((
                       params: Prettify<

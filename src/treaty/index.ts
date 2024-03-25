@@ -55,6 +55,8 @@ const createNewFile = (v: File) =>
               reader.readAsArrayBuffer(v)
           })
 
+type MaybeArray<T> = T | T[]
+
 export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
     ws: WebSocket
     url: string
@@ -64,7 +66,7 @@ export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
         this.url = url
     }
 
-    send(data: Schema['subscribe']['body'] | Schema['subscribe']['body'][]) {
+    send(data: MaybeArray<Schema['body']>) {
         if (Array.isArray(data)) {
             data.forEach((datum) => this.send(datum))
 
@@ -80,7 +82,7 @@ export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
 
     on<K extends keyof WebSocketEventMap>(
         type: K,
-        listener: (event: EdenTreaty.WSEvent<K, Schema['subscribe']['response']>) => void,
+        listener: (event: EdenTreaty.WSEvent<K, Schema['response']>) => void,
         options?: boolean | AddEventListenerOptions
     ) {
         return this.addEventListener(type, listener, options)
@@ -98,7 +100,7 @@ export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
 
     subscribe(
         onMessage: (
-            event: EdenTreaty.WSEvent<'message', Schema['subscribe']['response']>
+            event: EdenTreaty.WSEvent<'message', Schema['response']>
         ) => void,
         options?: boolean | AddEventListenerOptions
     ) {
@@ -107,7 +109,7 @@ export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
 
     addEventListener<K extends keyof WebSocketEventMap>(
         type: K,
-        listener: (event: EdenTreaty.WSEvent<K, Schema['subscribe']['response']>) => void,
+        listener: (event: EdenTreaty.WSEvent<K, Schema['response']>) => void,
         options?: boolean | AddEventListenerOptions
     ) {
         this.ws.addEventListener(
