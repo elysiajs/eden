@@ -252,7 +252,7 @@ const createProxy = (
                             contentType = 'text/plain'
 
                     let fetchInit = {
-                        method,
+                        method: method?.toUpperCase(),
                         body,
                         ...conf,
                         headers: {
@@ -288,7 +288,7 @@ const createProxy = (
                     ) ?? fetcher!(url, fetchInit))
 
                     let data = null
-                    let error
+                    let error = null
 
                     if (onResponse) {
                         if (!Array.isArray(onResponse))
@@ -381,13 +381,15 @@ export const treaty = <
     config: Treaty.Config = {}
 ): Treaty.Create<App> => {
     if (typeof domain === 'string') {
-        if (!domain.includes('://'))
-            domain =
-                (locals.find((v) => (domain as string).includes(v))
-                    ? 'http://'
-                    : 'https://') + domain
+        if (!config.keepDomain) {
+            if (!domain.includes('://'))
+                domain =
+                    (locals.find((v) => (domain as string).includes(v))
+                        ? 'http://'
+                        : 'https://') + domain
 
-        if (domain.endsWith('/')) domain = domain.slice(0, -1)
+            if (domain.endsWith('/')) domain = domain.slice(0, -1)
+        }
 
         return createProxy(domain, config)
     }

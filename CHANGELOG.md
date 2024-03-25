@@ -1,3 +1,7 @@
+# 1.0.6 - 21 Mar 2024
+Change:
+- treaty2: use null as default error value instead of undefined
+
 # 1.0.5 - 20 Mar 2024
 Feature:
 treaty2: add `keepDomain` option

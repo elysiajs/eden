@@ -129,6 +129,7 @@ export namespace Treaty {
             ) => MaybePromise<FetchRequestInit | void>
         >
         onResponse?: MaybeArray<(response: Response) => MaybePromise<unknown>>
+        keepDomain?: boolean
     }
 
     type UnwrapAwaited<T extends Record<number, unknown>> = {
