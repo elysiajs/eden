@@ -233,7 +233,7 @@ const createProxy = (
             if (method === 'SUBSCRIBE')
                 return new EdenWS(
                     url.replace(
-                        /^([^]+):\/\//,
+                        /^([^:]+):\/\//,
                         url.startsWith('https://') ? 'wss://' : 'ws://'
                     )
                 )
