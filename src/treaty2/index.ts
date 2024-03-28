@@ -89,8 +89,10 @@ const createProxy = (
                 (typeof body === 'object' && Object.keys(body).length !== 1) ||
                 method.includes(paths.at(-1) as any)
             ) {
-                const method = paths.pop()
-                const path = '/' + paths.join('/')
+
+                const methodPaths = [...paths];
+                const method = methodPaths.pop();
+                const path = '/' + methodPaths.join('/');
 
                 let {
                     fetcher = fetch,
