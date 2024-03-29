@@ -195,11 +195,7 @@ const createProxy = (
                         options?.headers?.contentType
 
                     if (!contentType)
-                        if (typeof body === 'object') {
-                            contentType = 'application/json'
-
-                            body = JSON.stringify(body)
-                        } else if (hasFile(body)) {
+                        if (hasFile(body)) {
                             const formData = new FormData()
 
                             // FormData is 1 level deep
@@ -249,7 +245,12 @@ const createProxy = (
                                 formData.append(key, field as string)
                             }
 
+                            // contentType = 'multipart/form-data'
                             body = formData
+                        } else if (typeof body === 'object') {
+                            contentType = 'application/json'
+
+                            body = JSON.stringify(body)
                         } else if (body !== undefined && body !== null)
                             contentType = 'text/plain'
 
@@ -262,6 +263,9 @@ const createProxy = (
                             'content-type': contentType
                         }
                     } satisfies FetchRequestInit
+
+                    if (contentType === undefined)
+                        delete fetchInit.headers['content-type']
 
                     if (isGetOrHead) delete fetchInit.body
 
