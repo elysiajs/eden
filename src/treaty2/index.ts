@@ -89,10 +89,9 @@ const createProxy = (
                 (typeof body === 'object' && Object.keys(body).length !== 1) ||
                 method.includes(paths.at(-1) as any)
             ) {
-
-                const methodPaths = [...paths];
-                const method = methodPaths.pop();
-                const path = '/' + methodPaths.join('/');
+                const methodPaths = [...paths]
+                const method = methodPaths.pop()
+                const path = '/' + methodPaths.join('/')
 
                 let {
                     fetcher = fetch,
@@ -179,7 +178,7 @@ const createProxy = (
                 }
 
                 return (async () => {
-                    let contentType: string =
+                    const contentType: string =
                         (headers instanceof Headers
                             ? headers.get('content-type')
                             : Array.isArray(headers)
@@ -191,19 +190,53 @@ const createProxy = (
                               })
                             : typeof headers === 'function'
                             ? headers(path, options ?? {})
-                            : headers?.contentType) ||
-                        options?.headers?.contentType
+                            : headers?.['content-type']) ||
+                        options?.headers?.['content-type']
 
-                    if (!contentType)
-                        if (typeof body === 'object') {
-                            contentType = 'application/json'
+                    let fetchInit = {
+                        method: method?.toUpperCase(),
+                        body,
+                        ...conf,
+                        headers: {
+                            ...(headers as Record<string, string>),
+                            'content-type': contentType
+                        }
+                    } satisfies FetchRequestInit
 
-                            body = JSON.stringify(body)
-                        } else if (hasFile(body)) {
+                    if (isGetOrHead) delete fetchInit.body
+
+                    if (onRequest) {
+                        if (!Array.isArray(onRequest)) onRequest = [onRequest]
+
+                        for (const value of onRequest) {
+                            const temp = await value(path, fetchInit)
+
+                            if (typeof temp === 'object')
+                                fetchInit = {
+                                    ...fetchInit,
+                                    ...temp,
+                                    headers: {
+                                        ...fetchInit.headers,
+                                        ...temp.headers
+                                    }
+                                }
+                        }
+                    }
+
+                    if (true)
+                        if (typeof fetchInit.body === 'object') {
+                            ;(fetchInit.headers as Record<string, string>)[
+                                'content-type'
+                            ] = 'application/json'
+
+                            fetchInit.body = JSON.stringify(fetchInit.body)
+                        } else if (hasFile(fetchInit.body)) {
                             const formData = new FormData()
 
                             // FormData is 1 level deep
-                            for (const [key, field] of Object.entries(body)) {
+                            for (const [key, field] of Object.entries(
+                                fetchInit.body
+                            )) {
                                 if (isServer) {
                                     formData.append(key, field as any)
 
@@ -249,39 +282,12 @@ const createProxy = (
                                 formData.append(key, field as string)
                             }
 
-                            body = formData
-                        } else if (body !== undefined && body !== null)
-                            contentType = 'text/plain'
-
-                    let fetchInit = {
-                        method: method?.toUpperCase(),
-                        body,
-                        ...conf,
-                        headers: {
-                            ...(headers as Record<string, string>),
-                            'content-type': contentType
+                            fetchInit.body = formData
+                        } else if (fetchInit.body !== undefined) {
+                            ;(fetchInit.headers as Record<string, string>)[
+                                'content-type'
+                            ] = 'text/plain'
                         }
-                    } satisfies FetchRequestInit
-
-                    if (isGetOrHead) delete fetchInit.body
-
-                    if (onRequest) {
-                        if (!Array.isArray(onRequest)) onRequest = [onRequest]
-
-                        for (const value of onRequest) {
-                            const temp = await value(path, fetchInit)
-
-                            if (typeof temp === 'object')
-                                fetchInit = {
-                                    ...fetchInit,
-                                    ...temp,
-                                    headers: {
-                                        ...fetchInit.headers,
-                                        ...temp.headers
-                                    }
-                                }
-                        }
-                    }
 
                     const url = domain + path + q
 
