@@ -223,7 +223,7 @@ const createProxy = (
                         }
                     }
 
-                    if (true)
+                    if (fetchInit.body !== undefined && !isGetOrHead && !contentType)
                         if (typeof fetchInit.body === 'object') {
                             ;(fetchInit.headers as Record<string, string>)[
                                 'content-type'

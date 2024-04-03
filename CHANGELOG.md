@@ -1,6 +1,10 @@
+# 1.0.10 - 3 Apr 2024
+Bug fix:
+- treaty2: skip content-type detection if provided
+
 # 1.0.9 - 3 Apr 2024
 Change:
-- `onRequest` execute before body serialization
+- treaty2: `onRequest` execute before body serialization
 
 # 1.0.8 - 28 Mar 2024
 Bug fix:
