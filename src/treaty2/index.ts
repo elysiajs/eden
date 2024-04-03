@@ -67,6 +67,52 @@ const createNewFile = (v: File) =>
               reader.readAsArrayBuffer(v)
           })
 
+const processHeaders = (
+    h: Treaty.Config['headers'],
+    path: string,
+    options: RequestInit = {},
+    headers: Record<string, string> = {}
+): Record<string, string> => {
+    if (Array.isArray(h)) {
+        for (const value of h)
+            if (!Array.isArray(value))
+                headers = processHeaders(value, path, options, headers)
+            else {
+                const key = value[0]
+                if (typeof key === 'string')
+                    headers[key.toLowerCase()] = value[1] as string
+                else
+                    for (const [k, value] of key)
+                        headers[k.toLowerCase()] = value as string
+            }
+
+        return headers
+    }
+
+    if (!h) return headers
+
+    switch (typeof h) {
+        case 'function':
+            const v = h(path, options)
+            if (v) return processHeaders(v, path, options, headers)
+            return headers
+
+        case 'object':
+            if (h instanceof Headers) {
+                h.forEach((value, key) => {
+                    headers[key.toLowerCase()] = value
+                })
+                return headers
+            }
+
+            for (const [key, value] of Object.entries(h))
+                headers[key.toLowerCase()] = value as string
+
+        default:
+            return headers
+    }
+}
+
 const createProxy = (
     domain: string,
     config: Treaty.Config,
@@ -106,12 +152,7 @@ const createProxy = (
                     method === 'head' ||
                     method === 'subscribe'
 
-                headers = {
-                    ...(typeof headers === 'object' && !Array.isArray(headers)
-                        ? headers
-                        : {}),
-                    ...(isGetOrHead ? body?.headers : options?.headers)
-                }
+                headers = processHeaders(headers, path, options)
 
                 const query = isGetOrHead
                     ? (body as Record<string, string>)?.query
@@ -121,41 +162,6 @@ const createProxy = (
                 if (query)
                     for (const [key, value] of Object.entries(query))
                         q += (q ? '&' : '?') + `${key}=${value}`
-
-                if (
-                    typeof config.headers === 'function' &&
-                    !(headers instanceof Headers)
-                ) {
-                    const temp = config.headers(path, options ?? {})
-
-                    if (temp) {
-                        // @ts-expect-error
-                        headers = {
-                            ...headers,
-                            ...temp
-                        }
-                    }
-                } else if (
-                    Array.isArray(config.headers) &&
-                    config.headers.every((x) => typeof x === 'function')
-                )
-                    for (const value of config.headers as Function[]) {
-                        const temp = value(path, options ?? {})
-
-                        if (temp)
-                            headers = {
-                                ...headers,
-                                ...temp
-                            }
-                    }
-                else if (headers instanceof Headers) {
-                    if (!headers) headers = {}
-
-                    for (const [key, value] of Object.entries(headers)) {
-                        // @ts-expect-error
-                        headers[key] = value
-                    }
-                }
 
                 if (method === 'subscribe') {
                     const url =
@@ -178,30 +184,22 @@ const createProxy = (
                 }
 
                 return (async () => {
-                    const contentType: string =
-                        (headers instanceof Headers
-                            ? headers.get('content-type')
-                            : Array.isArray(headers)
-                            ? headers.find((x) => {
-                                  if (Array.isArray(x))
-                                      if (x[0] === 'headers') return x[1]
-
-                                  return false
-                              })
-                            : typeof headers === 'function'
-                            ? headers(path, options ?? {})
-                            : headers?.['content-type']) ||
-                        options?.headers?.['content-type']
-
                     let fetchInit = {
                         method: method?.toUpperCase(),
                         body,
                         ...conf,
-                        headers: {
-                            ...(headers as Record<string, string>),
-                            'content-type': contentType
-                        }
+                        headers
                     } satisfies FetchRequestInit
+
+                    fetchInit.headers = {
+                        ...headers,
+                        ...processHeaders(
+                            // For GET and HEAD, options is moved to body (1st param)
+                            isGetOrHead ? body?.headers : options?.headers,
+                            path,
+                            fetchInit
+                        )
+                    }
 
                     if (isGetOrHead) delete fetchInit.body
 
@@ -217,13 +215,23 @@ const createProxy = (
                                     ...temp,
                                     headers: {
                                         ...fetchInit.headers,
-                                        ...temp.headers
+                                        ...processHeaders(
+                                            temp.headers,
+                                            path,
+                                            fetchInit
+                                        )
                                     }
                                 }
                         }
                     }
 
-                    if (fetchInit.body !== undefined && !isGetOrHead && !contentType)
+                    // ? Duplicate because end-user might add a body in onRequest
+                    if (isGetOrHead) delete fetchInit.body
+
+                    if (
+                        fetchInit.body !== undefined &&
+                        !fetchInit.headers['content-type']
+                    )
                         if (typeof fetchInit.body === 'object') {
                             ;(fetchInit.headers as Record<string, string>)[
                                 'content-type'

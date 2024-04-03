@@ -114,14 +114,13 @@ export namespace Treaty {
     export interface Config {
         fetch?: Omit<RequestInit, 'headers' | 'method'>
         fetcher?: typeof fetch
-        headers?:
+        headers?: MaybeArray<
             | RequestInit['headers']
-            | MaybeArray<
-                  (
-                      path: string,
-                      options: RequestInit
-                  ) => RequestInit['headers'] | void
-              >
+            | ((
+                  path: string,
+                  options: RequestInit
+              ) => RequestInit['headers'] | void)
+        >
         onRequest?: MaybeArray<
             (
                 path: string,

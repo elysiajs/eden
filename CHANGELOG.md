@@ -1,3 +1,11 @@
+# 1.0.11 - 3 Apr 2024
+Improvement:
+- treaty2: add dedicated `processHeaders` function
+- treaty2: simplify some headers workflow
+
+Change:
+- treaty2: using case-insensitive headers
+
 # 1.0.10 - 3 Apr 2024
 Bug fix:
 - treaty2: skip content-type detection if provided
