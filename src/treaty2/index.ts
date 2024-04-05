@@ -201,6 +201,13 @@ const createProxy = (
                         )
                     }
 
+                    // Move RequestInit out of body
+                    if (body && typeof body === 'object' && 'fetch' in body)
+                        fetchInit = {
+                            ...fetchInit,
+                            ...fetchInit.body.fetch
+                        }
+
                     if (isGetOrHead) delete fetchInit.body
 
                     if (onRequest) {
