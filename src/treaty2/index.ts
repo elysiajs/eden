@@ -201,17 +201,15 @@ const createProxy = (
                         )
                     }
 
-                    // Move RequestInit out of body for GET and HEAD
-                    if (
-                        isGetOrHead &&
-                        body &&
-                        typeof body === 'object' &&
-                        'fetch' in body
-                    )
-                        fetchInit = {
-                            ...fetchInit,
-                            ...fetchInit.body.fetch
-                        }
+                    const fetchOpts =
+                        isGetOrHead && typeof body === 'object'
+                            ? body.fetch
+                            : options?.fetch
+
+                    fetchInit = {
+                        ...fetchInit,
+                        ...fetchOpts
+                    }
 
                     if (isGetOrHead) delete fetchInit.body
 
@@ -310,7 +308,7 @@ const createProxy = (
                         }
 
                     const url = domain + path + q
-
+                    console.log('fetchInit', fetchInit)
                     const response = await (elysia?.handle(
                         new Request(url, fetchInit)
                     ) ?? fetcher!(url, fetchInit))

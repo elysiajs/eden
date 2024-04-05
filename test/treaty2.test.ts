@@ -98,6 +98,15 @@ const app = new Elysia()
         '/redirect',
         ({ set }) => (set.redirect = 'http://localhost:8083/true')
     )
+    .post(
+        '/redirect',
+        ({ set }) => (set.redirect = 'http://localhost:8083/true'),
+        {
+            body: t.Object({
+                username: t.String()
+            })
+        }
+    )
 
 const client = treaty(app)
 
@@ -422,6 +431,23 @@ describe('Treaty2 - Using endpoint URL', () => {
                 redirect: 'manual'
             }
         })
+        expect(status).toEqual(302)
+        expect(new Headers(headers).get('location')).toEqual(
+            'http://localhost:8083/true'
+        )
+    })
+
+    it('redirect should set location header with post', async () => {
+        const { headers, status } = await treatyApp.redirect.post(
+            {
+                username: 'a'
+            },
+            {
+                fetch: {
+                    redirect: 'manual'
+                }
+            }
+        )
         expect(status).toEqual(302)
         expect(new Headers(headers).get('location')).toEqual(
             'http://localhost:8083/true'
