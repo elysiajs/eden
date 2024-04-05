@@ -308,7 +308,6 @@ const createProxy = (
                         }
 
                     const url = domain + path + q
-                    console.log('fetchInit', fetchInit)
                     const response = await (elysia?.handle(
                         new Request(url, fetchInit)
                     ) ?? fetcher!(url, fetchInit))
