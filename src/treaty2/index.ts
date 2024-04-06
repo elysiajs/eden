@@ -113,6 +113,12 @@ const processHeaders = (
     }
 }
 
+export const toKebabCase = (path: string) =>
+    path.replace(
+        /[A-Z]+(?![a-z])|[A-Z]/g,
+        (match, letter) => (letter ? '-' : '') + match.toLowerCase()
+    )
+
 const createProxy = (
     domain: string,
     config: Treaty.Config,
@@ -121,6 +127,8 @@ const createProxy = (
 ): any =>
     new Proxy(() => {}, {
         get(_, param: string): any {
+            param = toKebabCase(param)
+
             return createProxy(
                 domain,
                 config,

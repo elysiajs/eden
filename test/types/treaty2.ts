@@ -16,6 +16,8 @@ const app = new Elysia()
     .post('/array', ({ body }) => body, {
         body: t.Array(t.String())
     })
+    .get('/hyphenated-path-endpoint', 'a')
+    .post('/hyphenated-path-endpoint', 'a')
     .post('/mirror', ({ body }) => body)
     .post('/body', ({ body }) => body, {
         body: t.String()
@@ -326,6 +328,18 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
               headers: HeadersInit | undefined
           }
     >()
+}
+
+// ? Should alias hyphenated paths to camel case
+{
+    type KebobRouteGet = api['hyphenated-path-endpoint']['get']
+    type KebobRoutePost = api['hyphenated-path-endpoint']['post']
+
+    type CamelCaseRouteGet = api['hyphenatedPathEndpoint']['get']
+    type CamelCaseRoutePost = api['hyphenatedPathEndpoint']['post']
+
+    expectTypeOf<KebobRouteGet>().toEqualTypeOf<CamelCaseRouteGet>()
+    expectTypeOf<KebobRoutePost>().toEqualTypeOf<CamelCaseRoutePost>()
 }
 
 // ? Should return body
