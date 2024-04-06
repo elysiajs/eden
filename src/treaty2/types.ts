@@ -24,7 +24,7 @@ type KebabToCamelCase<T extends string> =
     T extends `${infer First}-${infer Rest}`
         ? `${First}${Capitalize<KebabToCamelCase<Rest>>}`
         : T
-type KebabOrCamelCase<T> = T extends string ? KebabToCamelCase<T> | T : T
+type KebabOrCamelCase<T> = T extends string ? KebabToCamelCase<T> | T : never
 
 export namespace Treaty {
     interface TreatyParam {
