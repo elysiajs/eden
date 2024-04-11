@@ -6,6 +6,7 @@ import { composePath, isNumericString } from '../treaty/utils'
 import { EdenFetchError } from '../errors'
 import { EdenWS } from './ws'
 import { subscribe } from 'diagnostics_channel'
+import { stringify as stringifyQueryObject } from 'fast-querystring'
 
 const method = [
     'get',
@@ -155,13 +156,12 @@ const createProxy = (
                 headers = processHeaders(headers, path, options)
 
                 const query = isGetOrHead
-                    ? (body as Record<string, string>)?.query
+                    ? (body as Record<string, string | string[]>)?.query
                     : options?.query
 
                 let q = ''
                 if (query)
-                    for (const [key, value] of Object.entries(query))
-                        q += (q ? '&' : '?') + `${key}=${value}`
+                    q += '?' + stringifyQueryObject(query)
 
                 if (method === 'subscribe') {
                     const url =

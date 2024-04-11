@@ -74,6 +74,7 @@
     "trailingComma": "none"
   },
   "dependencies": {
-    "@elysiajs/stream": "rc"
+    "@elysiajs/stream": "rc",
+    "fast-querystring": "^1.1.2"
   }
 }
