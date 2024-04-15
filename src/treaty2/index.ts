@@ -159,9 +159,20 @@ const createProxy = (
                     : options?.query
 
                 let q = ''
-                if (query)
-                    for (const [key, value] of Object.entries(query))
-                        q += (q ? '&' : '?') + `${key}=${value}`
+                if (query) {
+                    const append = (key: string, value: string) => {
+                        q += (q ? '&' : '?') + `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+                    }
+
+                    for (const [key, value] of Object.entries(query)) {
+                        if (Array.isArray(value)) {
+                            for (const v of value) 
+                                append(key, v)
+                            continue
+                        }
+                        append(key, `${value}`)
+                    }
+                }
 
                 if (method === 'subscribe') {
                     const url =
