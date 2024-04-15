@@ -155,7 +155,7 @@ const createProxy = (
                 headers = processHeaders(headers, path, options)
 
                 const query = isGetOrHead
-                    ? (body as Record<string, string>)?.query
+                    ? (body as Record<string, string|string[]|undefined>)?.query
                     : options?.query
 
                 let q = ''
