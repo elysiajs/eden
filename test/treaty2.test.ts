@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia'
 import { treaty } from '../src'
 
-import { describe, expect, it, mock } from 'bun:test'
+import { describe, expect, it, beforeAll, afterAll } from 'bun:test'
 
 const app = new Elysia()
     .get('/', 'a')
@@ -94,6 +94,19 @@ const app = new Elysia()
             date: t.Date()
         })
     })
+    .get(
+        '/redirect',
+        ({ set }) => (set.redirect = 'http://localhost:8083/true')
+    )
+    .post(
+        '/redirect',
+        ({ set }) => (set.redirect = 'http://localhost:8083/true'),
+        {
+            body: t.Object({
+                username: t.String()
+            })
+        }
+    )
 
 const client = treaty(app)
 
@@ -383,6 +396,63 @@ describe('Treaty2', () => {
         const { data } = await client.date.post({ date: new Date() })
 
         expect(data).toBeInstanceOf(Date)
+    })
+
+    it('redirect should set location header', async () => {
+        const { headers, status } = await client['redirect'].get({
+            fetch: {
+                redirect: 'manual'
+            }
+        })
+        expect(status).toEqual(302)
+        expect(new Headers(headers).get('location')).toEqual(
+            'http://localhost:8083/true'
+        )
+    })
+})
+
+describe('Treaty2 - Using endpoint URL', () => {
+    const treatyApp = treaty<typeof app>('http://localhost:8083')
+
+    beforeAll(async () => {
+        await new Promise((resolve) => {
+            app.listen(8083, () => {
+                resolve(null)
+            })
+        })
+    })
+
+    afterAll(() => {
+        app.stop()
+    })
+
+    it('redirect should set location header', async () => {
+        const { headers, status } = await treatyApp.redirect.get({
+            fetch: {
+                redirect: 'manual'
+            }
+        })
+        expect(status).toEqual(302)
+        expect(new Headers(headers).get('location')).toEqual(
+            'http://localhost:8083/true'
+        )
+    })
+
+    it('redirect should set location header with post', async () => {
+        const { headers, status } = await treatyApp.redirect.post(
+            {
+                username: 'a'
+            },
+            {
+                fetch: {
+                    redirect: 'manual'
+                }
+            }
+        )
+        expect(status).toEqual(302)
+        expect(new Headers(headers).get('location')).toEqual(
+            'http://localhost:8083/true'
+        )
     })
 
     it('doesn\'t encode if it doesn\'t need to', async () => {
