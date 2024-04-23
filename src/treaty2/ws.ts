@@ -64,7 +64,7 @@ export class EdenWS<in out Schema extends InputSchema<any> = {}> {
                     let data = (ws as MessageEvent).data.toString() as any
                     const start = data.charCodeAt(0)
                     const end = data.charCodeAt(data.length - 1)
-                    if (start === 47 || start === 123)
+                    if (start === 91 || start === 123)
                         try {
                             data = JSON.parse(data, (key, value) => {
                                 if(typeof value === 'string' && ISO8601DateString.test(value)) {
