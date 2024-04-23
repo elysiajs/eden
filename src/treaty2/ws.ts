@@ -72,6 +72,7 @@ export class EdenWS<in out Schema extends InputSchema<any> = {}> {
                     else if (isNumericString(data)) data = +data
                     else if (data === 'true') data = true
                     else if (data === 'false') data = false
+                    else if (data === 'null') data = null
 
                     listener({
                         ...ws,
