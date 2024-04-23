@@ -195,71 +195,33 @@ const createProxy = (
                 }
 
                 return (async () => {
+                    let contentType: string =
+                        (headers instanceof Headers
+                            ? headers.get('content-type')
+                            : Array.isArray(headers)
+                            ? headers.find((x) => {
+                                  if (Array.isArray(x))
+                                      if (x[0] === 'headers') return x[1]
+
+                                  return false
+                              })
+                            : typeof headers === 'function'
+                            ? headers(path, options ?? {})
+                            : headers?.contentType) ||
+                        options?.headers?.contentType
+                    
                     let fetchInit = {
                         method: method?.toUpperCase(),
                         body,
                         ...conf,
-                        headers
+                        headers: {
+                            ...(headers as Record<string, string>),
+                            'content-type': contentType
+                        }
                     } satisfies FetchRequestInit
 
-                    fetchInit.headers = {
-                        ...headers,
-                        ...processHeaders(
-                            // For GET and HEAD, options is moved to body (1st param)
-                            isGetOrHead ? body?.headers : options?.headers,
-                            path,
-                            fetchInit
-                        )
-                    }
-
-                    const fetchOpts =
-                        isGetOrHead && typeof body === 'object'
-                            ? body.fetch
-                            : options?.fetch
-
-                    fetchInit = {
-                        ...fetchInit,
-                        ...fetchOpts
-                    }
-
-                    if (isGetOrHead) delete fetchInit.body
-
-                    if (onRequest) {
-                        if (!Array.isArray(onRequest)) onRequest = [onRequest]
-
-                        for (const value of onRequest) {
-                            const temp = await value(path, fetchInit)
-
-                            if (typeof temp === 'object')
-                                fetchInit = {
-                                    ...fetchInit,
-                                    ...temp,
-                                    headers: {
-                                        ...fetchInit.headers,
-                                        ...processHeaders(
-                                            temp.headers,
-                                            path,
-                                            fetchInit
-                                        )
-                                    }
-                                }
-                        }
-                    }
-
-                    // ? Duplicate because end-user might add a body in onRequest
-                    if (isGetOrHead) delete fetchInit.body
-
-                    if (
-                        fetchInit.body !== undefined &&
-                        !fetchInit.headers['content-type']
-                    )
-                        if (typeof fetchInit.body === 'object') {
-                            ;(fetchInit.headers as Record<string, string>)[
-                                'content-type'
-                            ] = 'application/json'
-
-                            fetchInit.body = JSON.stringify(fetchInit.body)
-                        } else if (hasFile(fetchInit.body)) {
+                    if (!contentType)
+                        if (hasFile(body)) {
                             const formData = new FormData()
 
                             // FormData is 1 level deep
@@ -311,12 +273,37 @@ const createProxy = (
                                 formData.append(key, field as string)
                             }
 
+                            // contentType = 'multipart/form-data'
                             fetchInit.body = formData
-                        } else if (fetchInit.body !== undefined) {
-                            ;(fetchInit.headers as Record<string, string>)[
-                                'content-type'
-                            ] = 'text/plain'
+                        } else if (typeof body === 'object') {
+                            contentType = 'application/json'
+
+                            fetchInit.body = JSON.stringify(body)
+                        } else if (body !== undefined && body !== null)
+                            contentType = 'text/plain'
+
+                    if (contentType === undefined)
+                        delete fetchInit.headers['content-type']
+
+                    if (isGetOrHead) delete fetchInit.body
+
+                    if (onRequest) {
+                        if (!Array.isArray(onRequest)) onRequest = [onRequest]
+
+                        for (const value of onRequest) {
+                            const temp = await value(path, fetchInit)
+
+                            if (typeof temp === 'object')
+                                fetchInit = {
+                                    ...fetchInit,
+                                    ...temp,
+                                    headers: {
+                                        ...fetchInit.headers,
+                                        ...temp.headers
+                                    }
+                                }
                         }
+                    }
 
                     const url = domain + path + q
                     const response = await (elysia?.handle(
