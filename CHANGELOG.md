@@ -1,3 +1,23 @@
+# 1.0.11 - 3 Apr 2024
+Improvement:
+- treaty2: add dedicated `processHeaders` function
+- treaty2: simplify some headers workflow
+
+Change:
+- treaty2: using case-insensitive headers
+
+# 1.0.10 - 3 Apr 2024
+Bug fix:
+- treaty2: skip content-type detection if provided
+
+# 1.0.9 - 3 Apr 2024
+Change:
+- treaty2: `onRequest` execute before body serialization
+
+# 1.0.8 - 28 Mar 2024
+Bug fix:
+- [#72](https://github.com/elysiajs/eden/pulls/72) treaty2: not mutate original paths array
+
 # 1.0.6 - 21 Mar 2024
 Bug fix:
 - treaty2: default onResponse to null and mutate when need

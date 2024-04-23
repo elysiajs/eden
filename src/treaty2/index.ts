@@ -67,6 +67,52 @@ const createNewFile = (v: File) =>
               reader.readAsArrayBuffer(v)
           })
 
+const processHeaders = (
+    h: Treaty.Config['headers'],
+    path: string,
+    options: RequestInit = {},
+    headers: Record<string, string> = {}
+): Record<string, string> => {
+    if (Array.isArray(h)) {
+        for (const value of h)
+            if (!Array.isArray(value))
+                headers = processHeaders(value, path, options, headers)
+            else {
+                const key = value[0]
+                if (typeof key === 'string')
+                    headers[key.toLowerCase()] = value[1] as string
+                else
+                    for (const [k, value] of key)
+                        headers[k.toLowerCase()] = value as string
+            }
+
+        return headers
+    }
+
+    if (!h) return headers
+
+    switch (typeof h) {
+        case 'function':
+            const v = h(path, options)
+            if (v) return processHeaders(v, path, options, headers)
+            return headers
+
+        case 'object':
+            if (h instanceof Headers) {
+                h.forEach((value, key) => {
+                    headers[key.toLowerCase()] = value
+                })
+                return headers
+            }
+
+            for (const [key, value] of Object.entries(h))
+                headers[key.toLowerCase()] = value as string
+
+        default:
+            return headers
+    }
+}
+
 const createProxy = (
     domain: string,
     config: Treaty.Config,
@@ -89,10 +135,9 @@ const createProxy = (
                 (typeof body === 'object' && Object.keys(body).length !== 1) ||
                 method.includes(paths.at(-1) as any)
             ) {
-
-                const methodPaths = [...paths];
-                const method = methodPaths.pop();
-                const path = '/' + methodPaths.join('/');
+                const methodPaths = [...paths]
+                const method = methodPaths.pop()
+                const path = '/' + methodPaths.join('/')
 
                 let {
                     fetcher = fetch,
@@ -107,54 +152,25 @@ const createProxy = (
                     method === 'head' ||
                     method === 'subscribe'
 
-                headers = {
-                    ...(typeof headers === 'object' && !Array.isArray(headers)
-                        ? headers
-                        : {}),
-                    ...(isGetOrHead ? body?.headers : options?.headers)
-                }
+                headers = processHeaders(headers, path, options)
 
                 const query = isGetOrHead
-                    ? (body as Record<string, string>)?.query
+                    ? (body as Record<string, string|string[]|undefined>)?.query
                     : options?.query
 
                 let q = ''
-                if (query)
-                    for (const [key, value] of Object.entries(query))
-                        q += (q ? '&' : '?') + `${key}=${value}`
+                if (query) {
+                    const append = (key: string, value: string) => {
+                        q += (q ? '&' : '?') + `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+                    }
 
-                if (
-                    typeof config.headers === 'function' &&
-                    !(headers instanceof Headers)
-                ) {
-                    const temp = config.headers(path, options ?? {})
-
-                    if (temp) {
-                        // @ts-expect-error
-                        headers = {
-                            ...headers,
-                            ...temp
+                    for (const [key, value] of Object.entries(query)) {
+                        if (Array.isArray(value)) {
+                            for (const v of value) 
+                                append(key, v)
+                            continue
                         }
-                    }
-                } else if (
-                    Array.isArray(config.headers) &&
-                    config.headers.every((x) => typeof x === 'function')
-                )
-                    for (const value of config.headers as Function[]) {
-                        const temp = value(path, options ?? {})
-
-                        if (temp)
-                            headers = {
-                                ...headers,
-                                ...temp
-                            }
-                    }
-                else if (headers instanceof Headers) {
-                    if (!headers) headers = {}
-
-                    for (const [key, value] of Object.entries(headers)) {
-                        // @ts-expect-error
-                        headers[key] = value
+                        append(key, `${value}`)
                     }
                 }
 
@@ -193,13 +209,25 @@ const createProxy = (
                             ? headers(path, options ?? {})
                             : headers?.contentType) ||
                         options?.headers?.contentType
+                    
+                    let fetchInit = {
+                        method: method?.toUpperCase(),
+                        body,
+                        ...conf,
+                        headers: {
+                            ...(headers as Record<string, string>),
+                            'content-type': contentType
+                        }
+                    } satisfies FetchRequestInit
 
                     if (!contentType)
                         if (hasFile(body)) {
                             const formData = new FormData()
 
                             // FormData is 1 level deep
-                            for (const [key, field] of Object.entries(body)) {
+                            for (const [key, field] of Object.entries(
+                                fetchInit.body
+                            )) {
                                 if (isServer) {
                                     formData.append(key, field as any)
 
@@ -246,23 +274,13 @@ const createProxy = (
                             }
 
                             // contentType = 'multipart/form-data'
-                            body = formData
+                            fetchInit.body = formData
                         } else if (typeof body === 'object') {
                             contentType = 'application/json'
 
-                            body = JSON.stringify(body)
+                            fetchInit.body = JSON.stringify(body)
                         } else if (body !== undefined && body !== null)
                             contentType = 'text/plain'
-
-                    let fetchInit = {
-                        method: method?.toUpperCase(),
-                        body,
-                        ...conf,
-                        headers: {
-                            ...(headers as Record<string, string>),
-                            'content-type': contentType
-                        }
-                    } satisfies FetchRequestInit
 
                     if (contentType === undefined)
                         delete fetchInit.headers['content-type']
@@ -288,7 +306,6 @@ const createProxy = (
                     }
 
                     const url = domain + path + q
-
                     const response = await (elysia?.handle(
                         new Request(url, fetchInit)
                     ) ?? fetcher!(url, fetchInit))

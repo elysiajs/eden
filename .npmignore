@@ -20,4 +20,8 @@ CHANGELOG.md
 .eslintrc.js
 tsconfig.cjs.json
 tsconfig.esm.json
+tsconfig.test.json
 vite.config.js
+.github
+.eslintrc
+tsup.config.ts

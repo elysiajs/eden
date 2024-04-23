@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia'
 import { treaty } from '../src'
 
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it, beforeAll, afterAll } from 'bun:test'
 
 const app = new Elysia()
     .get('/', 'a')
@@ -94,6 +94,19 @@ const app = new Elysia()
             date: t.Date()
         })
     })
+    .get(
+        '/redirect',
+        ({ set }) => (set.redirect = 'http://localhost:8083/true')
+    )
+    .post(
+        '/redirect',
+        ({ set }) => (set.redirect = 'http://localhost:8083/true'),
+        {
+            body: t.Object({
+                username: t.String()
+            })
+        }
+    )
 
 const client = treaty(app)
 
@@ -383,5 +396,116 @@ describe('Treaty2', () => {
         const { data } = await client.date.post({ date: new Date() })
 
         expect(data).toBeInstanceOf(Date)
+    })
+
+    it('redirect should set location header', async () => {
+        const { headers, status } = await client['redirect'].get({
+            fetch: {
+                redirect: 'manual'
+            }
+        })
+        expect(status).toEqual(302)
+        expect(new Headers(headers).get('location')).toEqual(
+            'http://localhost:8083/true'
+        )
+    })
+})
+
+describe('Treaty2 - Using endpoint URL', () => {
+    const treatyApp = treaty<typeof app>('http://localhost:8083')
+
+    beforeAll(async () => {
+        await new Promise((resolve) => {
+            app.listen(8083, () => {
+                resolve(null)
+            })
+        })
+    })
+
+    afterAll(() => {
+        app.stop()
+    })
+
+    it('redirect should set location header', async () => {
+        const { headers, status } = await treatyApp.redirect.get({
+            fetch: {
+                redirect: 'manual'
+            }
+        })
+        expect(status).toEqual(302)
+        expect(new Headers(headers).get('location')).toEqual(
+            'http://localhost:8083/true'
+        )
+    })
+
+    it('redirect should set location header with post', async () => {
+        const { headers, status } = await treatyApp.redirect.post(
+            {
+                username: 'a'
+            },
+            {
+                fetch: {
+                    redirect: 'manual'
+                }
+            }
+        )
+        expect(status).toEqual(302)
+        expect(new Headers(headers).get('location')).toEqual(
+            'http://localhost:8083/true'
+        )
+    })
+
+    it('doesn\'t encode if it doesn\'t need to', async () => {
+        const mockedFetch = mock(async () => new Response())
+        const client = treaty<typeof app>('', { fetcher: mockedFetch })
+
+        await client.index.get({
+            query: {
+                hello: 'world' 
+            }
+        })
+
+        expect(mockedFetch).toHaveBeenCalledWith(
+            expect.stringMatching(/\?hello=world$/g), {
+            headers: {},
+            method: 'GET'
+        })
+    })
+
+    it('encodes query parameters if it needs to', async () => {
+        const mockedFetch = mock(async () => new Response())
+        const client = treaty<typeof app>('', { fetcher: mockedFetch })
+
+        await client.index.get({
+            query: {
+                ['1/2']: '1/2'
+            }
+        })
+
+        expect(mockedFetch).toHaveBeenCalledWith(
+            // %1F is the encoded value for /
+            expect.stringMatching(/\?1%2F2=1%2F2$/g), {
+            headers: {},
+            method: 'GET'
+        })
+    })
+
+    it('accepts and serializes several values for the same query parameter', async () => {
+        const mockedFetch = mock(async () => new Response())
+        const client = treaty<typeof app>('', { fetcher: mockedFetch })
+
+        await client.index.get({
+            query: {
+                ['1/2']: ['1/2', '1 2']
+            }
+        })
+
+        expect(mockedFetch).toHaveBeenCalledWith(
+            // %2F is the encoded value for /
+            // %20 is the encoded value for space
+            expect.stringMatching(/\?1%2F2=1%2F2&1%2F2=1%202$/g), {
+            headers: {},
+            method: 'GET'
+        })
     })
 })
