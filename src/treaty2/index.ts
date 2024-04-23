@@ -155,21 +155,26 @@ const createProxy = (
                 headers = processHeaders(headers, path, options)
 
                 const query = isGetOrHead
-                    ? (body as Record<string, string|string[]|undefined>)?.query
+                    ? (body as Record<string, string | string[] | undefined>)
+                          ?.query
                     : options?.query
 
                 let q = ''
                 if (query) {
                     const append = (key: string, value: string) => {
-                        q += (q ? '&' : '?') + `${encodeURIComponent(key)}=${encodeURIComponent(value)}`
+                        q +=
+                            (q ? '&' : '?') +
+                            `${encodeURIComponent(key)}=${encodeURIComponent(
+                                value
+                            )}`
                     }
 
                     for (const [key, value] of Object.entries(query)) {
                         if (Array.isArray(value)) {
-                            for (const v of value) 
-                                append(key, v)
+                            for (const v of value) append(key, v)
                             continue
                         }
+
                         append(key, `${value}`)
                     }
                 }
@@ -195,95 +200,122 @@ const createProxy = (
                 }
 
                 return (async () => {
-                    let contentType: string =
-                        (headers instanceof Headers
-                            ? headers.get('content-type')
-                            : Array.isArray(headers)
-                            ? headers.find((x) => {
-                                  if (Array.isArray(x))
-                                      if (x[0] === 'headers') return x[1]
-
-                                  return false
-                              })
-                            : typeof headers === 'function'
-                            ? headers(path, options ?? {})
-                            : headers?.contentType) ||
-                        options?.headers?.contentType
-                    
                     let fetchInit = {
                         method: method?.toUpperCase(),
                         body,
                         ...conf,
-                        headers: {
-                            ...(headers as Record<string, string>),
-                            'content-type': contentType
-                        }
+                        headers
                     } satisfies FetchRequestInit
 
-                    if (!contentType)
-                        if (hasFile(body)) {
-                            const formData = new FormData()
+                    fetchInit.headers = {
+                        ...headers,
+                        ...processHeaders(
+                            // For GET and HEAD, options is moved to body (1st param)
+                            isGetOrHead ? body?.headers : options?.headers,
+                            path,
+                            fetchInit
+                        )
+                    }
 
-                            // FormData is 1 level deep
-                            for (const [key, field] of Object.entries(
-                                fetchInit.body
-                            )) {
-                                if (isServer) {
-                                    formData.append(key, field as any)
+                    const fetchOpts =
+                        isGetOrHead && typeof body === 'object'
+                            ? body.fetch
+                            : options?.fetch
 
-                                    continue
-                                }
+                    fetchInit = {
+                        ...fetchInit,
+                        ...fetchOpts
+                    }
 
-                                if (field instanceof File) {
-                                    formData.append(
-                                        key,
-                                        await createNewFile(field as any)
-                                    )
+                    if (isGetOrHead) delete fetchInit.body
 
-                                    continue
-                                }
+                    if (onRequest) {
+                        if (!Array.isArray(onRequest)) onRequest = [onRequest]
 
-                                if (field instanceof FileList) {
-                                    for (let i = 0; i < field.length; i++)
-                                        formData.append(
-                                            key as any,
-                                            await createNewFile(
-                                                (field as any)[i]
-                                            )
-                                        )
+                        for (const value of onRequest) {
+                            const temp = await value(path, fetchInit)
 
-                                    continue
-                                }
-
-                                if (Array.isArray(field)) {
-                                    for (let i = 0; i < field.length; i++) {
-                                        const value = (field as any)[i]
-
-                                        formData.append(
-                                            key as any,
-                                            value instanceof File
-                                                ? await createNewFile(value)
-                                                : value
+                            if (typeof temp === 'object')
+                                fetchInit = {
+                                    ...fetchInit,
+                                    ...temp,
+                                    headers: {
+                                        ...fetchInit.headers,
+                                        ...processHeaders(
+                                            temp.headers,
+                                            path,
+                                            fetchInit
                                         )
                                     }
-
-                                    continue
                                 }
+                        }
+                    }
 
-                                formData.append(key, field as string)
+                    // ? Duplicate because end-user might add a body in onRequest
+                    if (isGetOrHead) delete fetchInit.body
+
+                    if (hasFile(body)) {
+                        const formData = new FormData()
+
+                        // FormData is 1 level deep
+                        for (const [key, field] of Object.entries(
+                            fetchInit.body
+                        )) {
+                            if (isServer) {
+                                formData.append(key, field as any)
+
+                                continue
                             }
 
-                            // contentType = 'multipart/form-data'
-                            fetchInit.body = formData
-                        } else if (typeof body === 'object') {
-                            contentType = 'application/json'
+                            if (field instanceof File) {
+                                formData.append(
+                                    key,
+                                    await createNewFile(field as any)
+                                )
 
-                            fetchInit.body = JSON.stringify(body)
-                        } else if (body !== undefined && body !== null)
-                            contentType = 'text/plain'
+                                continue
+                            }
 
-                    if (contentType === undefined)
-                        delete fetchInit.headers['content-type']
+                            if (field instanceof FileList) {
+                                for (let i = 0; i < field.length; i++)
+                                    formData.append(
+                                        key as any,
+                                        await createNewFile((field as any)[i])
+                                    )
+
+                                continue
+                            }
+
+                            if (Array.isArray(field)) {
+                                for (let i = 0; i < field.length; i++) {
+                                    const value = (field as any)[i]
+
+                                    formData.append(
+                                        key as any,
+                                        value instanceof File
+                                            ? await createNewFile(value)
+                                            : value
+                                    )
+                                }
+
+                                continue
+                            }
+
+                            formData.append(key, field as string)
+                        }
+
+                        // contentType = 'multipart/form-data'
+                    } else if (typeof body === 'object') {
+                        ;(fetchInit.headers as Record<string, string>)[
+                            'content-type'
+                        ] = 'application/json'
+
+                        fetchInit.body = JSON.stringify(body)
+                    } else if (body !== undefined && body !== null) {
+                        ;(fetchInit.headers as Record<string, string>)[
+                            'content-type'
+                        ] = 'text/plain'
+                    }
 
                     if (isGetOrHead) delete fetchInit.body
 
@@ -300,7 +332,7 @@ const createProxy = (
                                     headers: {
                                         ...fetchInit.headers,
                                         ...temp.headers
-                                    }
+                                    } as Record<string, string>
                                 }
                         }
                     }
