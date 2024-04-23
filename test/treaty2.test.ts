@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia'
 import { treaty } from '../src'
 
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it, mock } from 'bun:test'
 
 const app = new Elysia()
     .get('/', 'a')
@@ -383,5 +383,59 @@ describe('Treaty2', () => {
         const { data } = await client.date.post({ date: new Date() })
 
         expect(data).toBeInstanceOf(Date)
+    })
+
+    it('doesn\'t encode if it doesn\'t need to', async () => {
+        const mockedFetch = mock(async () => new Response())
+        const client = treaty<typeof app>('', { fetcher: mockedFetch })
+
+        await client.index.get({
+            query: {
+                hello: 'world' 
+            }
+        })
+
+        expect(mockedFetch).toHaveBeenCalledWith(
+            expect.stringMatching(/\?hello=world$/g), {
+            headers: {},
+            method: 'GET'
+        })
+    })
+
+    it('encodes query parameters if it needs to', async () => {
+        const mockedFetch = mock(async () => new Response())
+        const client = treaty<typeof app>('', { fetcher: mockedFetch })
+
+        await client.index.get({
+            query: {
+                ['1/2']: '1/2'
+            }
+        })
+
+        expect(mockedFetch).toHaveBeenCalledWith(
+            // %1F is the encoded value for /
+            expect.stringMatching(/\?1%2F2=1%2F2$/g), {
+            headers: {},
+            method: 'GET'
+        })
+    })
+
+    it('accepts and serializes several values for the same query parameter', async () => {
+        const mockedFetch = mock(async () => new Response())
+        const client = treaty<typeof app>('', { fetcher: mockedFetch })
+
+        await client.index.get({
+            query: {
+                ['1/2']: ['1/2', '1 2']
+            }
+        })
+
+        expect(mockedFetch).toHaveBeenCalledWith(
+            // %2F is the encoded value for /
+            // %20 is the encoded value for space
+            expect.stringMatching(/\?1%2F2=1%2F2&1%2F2=1%202$/g), {
+            headers: {},
+            method: 'GET'
+        })
     })
 })
