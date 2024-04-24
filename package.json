@@ -1,6 +1,6 @@
 {
   "name": "@elysiajs/eden",
-  "version": "1.0.11",
+  "version": "1.0.12",
   "description": "Fully type-safe Elysia client",
   "author": {
     "name": "saltyAom",
@@ -10,6 +10,7 @@
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
   "exports": {
+    "./package.json": "./package.json",
     ".": {
       "require": "./dist/index.js",
       "import": "./dist/index.mjs",

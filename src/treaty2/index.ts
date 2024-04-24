@@ -163,13 +163,29 @@ const createProxy = (
                 headers = processHeaders(headers, path, options)
 
                 const query = isGetOrHead
-                    ? (body as Record<string, string>)?.query
+                    ? (body as Record<string, string | string[] | undefined>)
+                          ?.query
                     : options?.query
 
                 let q = ''
-                if (query)
-                    for (const [key, value] of Object.entries(query))
-                        q += (q ? '&' : '?') + `${key}=${value}`
+                if (query) {
+                    const append = (key: string, value: string) => {
+                        q +=
+                            (q ? '&' : '?') +
+                            `${encodeURIComponent(key)}=${encodeURIComponent(
+                                value
+                            )}`
+                    }
+
+                    for (const [key, value] of Object.entries(query)) {
+                        if (Array.isArray(value)) {
+                            for (const v of value) append(key, v)
+                            continue
+                        }
+
+                        append(key, `${value}`)
+                    }
+                }
 
                 if (method === 'subscribe') {
                     const url =
@@ -209,6 +225,16 @@ const createProxy = (
                         )
                     }
 
+                    const fetchOpts =
+                        isGetOrHead && typeof body === 'object'
+                            ? body.fetch
+                            : options?.fetch
+
+                    fetchInit = {
+                        ...fetchInit,
+                        ...fetchOpts
+                    }
+
                     if (isGetOrHead) delete fetchInit.body
 
                     if (onRequest) {
@@ -236,77 +262,90 @@ const createProxy = (
                     // ? Duplicate because end-user might add a body in onRequest
                     if (isGetOrHead) delete fetchInit.body
 
-                    if (
-                        fetchInit.body !== undefined &&
-                        !fetchInit.headers['content-type']
-                    )
-                        if (typeof fetchInit.body === 'object') {
-                            ;(fetchInit.headers as Record<string, string>)[
-                                'content-type'
-                            ] = 'application/json'
+                    if (hasFile(body)) {
+                        const formData = new FormData()
 
-                            fetchInit.body = JSON.stringify(fetchInit.body)
-                        } else if (hasFile(fetchInit.body)) {
-                            const formData = new FormData()
+                        // FormData is 1 level deep
+                        for (const [key, field] of Object.entries(
+                            fetchInit.body
+                        )) {
+                            if (isServer) {
+                                formData.append(key, field as any)
 
-                            // FormData is 1 level deep
-                            for (const [key, field] of Object.entries(
-                                fetchInit.body
-                            )) {
-                                if (isServer) {
-                                    formData.append(key, field as any)
-
-                                    continue
-                                }
-
-                                if (field instanceof File) {
-                                    formData.append(
-                                        key,
-                                        await createNewFile(field as any)
-                                    )
-
-                                    continue
-                                }
-
-                                if (field instanceof FileList) {
-                                    for (let i = 0; i < field.length; i++)
-                                        formData.append(
-                                            key as any,
-                                            await createNewFile(
-                                                (field as any)[i]
-                                            )
-                                        )
-
-                                    continue
-                                }
-
-                                if (Array.isArray(field)) {
-                                    for (let i = 0; i < field.length; i++) {
-                                        const value = (field as any)[i]
-
-                                        formData.append(
-                                            key as any,
-                                            value instanceof File
-                                                ? await createNewFile(value)
-                                                : value
-                                        )
-                                    }
-
-                                    continue
-                                }
-
-                                formData.append(key, field as string)
+                                continue
                             }
 
-                            fetchInit.body = formData
-                        } else if (fetchInit.body !== undefined) {
-                            ;(fetchInit.headers as Record<string, string>)[
-                                'content-type'
-                            ] = 'text/plain'
+                            if (field instanceof File) {
+                                formData.append(
+                                    key,
+                                    await createNewFile(field as any)
+                                )
+
+                                continue
+                            }
+
+                            if (field instanceof FileList) {
+                                for (let i = 0; i < field.length; i++)
+                                    formData.append(
+                                        key as any,
+                                        await createNewFile((field as any)[i])
+                                    )
+
+                                continue
+                            }
+
+                            if (Array.isArray(field)) {
+                                for (let i = 0; i < field.length; i++) {
+                                    const value = (field as any)[i]
+
+                                    formData.append(
+                                        key as any,
+                                        value instanceof File
+                                            ? await createNewFile(value)
+                                            : value
+                                    )
+                                }
+
+                                continue
+                            }
+
+                            formData.append(key, field as string)
                         }
 
-                    const url = domain + path + q
+                        // contentType = 'multipart/form-data'
+                    } else if (typeof body === 'object') {
+                        ;(fetchInit.headers as Record<string, string>)[
+                            'content-type'
+                        ] = 'application/json'
 
+                        fetchInit.body = JSON.stringify(body)
+                    } else if (body !== undefined && body !== null) {
+                        ;(fetchInit.headers as Record<string, string>)[
+                            'content-type'
+                        ] = 'text/plain'
+                    }
+
+                    if (isGetOrHead) delete fetchInit.body
+
+                    if (onRequest) {
+                        if (!Array.isArray(onRequest)) onRequest = [onRequest]
+
+                        for (const value of onRequest) {
+                            const temp = await value(path, fetchInit)
+
+                            if (typeof temp === 'object')
+                                fetchInit = {
+                                    ...fetchInit,
+                                    ...temp,
+                                    headers: {
+                                        ...fetchInit.headers,
+                                        ...temp.headers
+                                    } as Record<string, string>
+                                }
+                        }
+                    }
+
+                    const url = domain + path + q
                     const response = await (elysia?.handle(
                         new Request(url, fetchInit)
                     ) ?? fetcher!(url, fetchInit))

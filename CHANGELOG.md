@@ -1,3 +1,12 @@
+# 1.0.12 - 23 Apr 2024
+Improvement:
+- [#80](https://github.com/elysiajs/eden/pull/80) add package.json to export field
+
+Bug fix:
+- [#84](https://github.com/elysiajs/eden/pull/84) treaty2: adjusts the creation of the query string
+- [#76](https://github.com/elysiajs/eden/pull/76) treaty2: keep requestInit for redirect
+- [#73](https://github.com/elysiajs/eden/pull/73) treaty2: file get sent as json
+
 # 1.0.11 - 3 Apr 2024
 Improvement:
 - treaty2: add dedicated `processHeaders` function
