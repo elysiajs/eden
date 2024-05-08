@@ -1,3 +1,8 @@
+# 1.0.13 - 8 May 2024
+Bug fix:
+- [#87](https://github.com/elysiajs/eden/pull/87) serialization/deserialization problems with null, arrays and Date on websocket messages #87
+- [#90](https://github.com/elysiajs/eden/pull/90) Auto convert request body to FormData when needed
+
 # 1.0.12 - 23 Apr 2024
 Improvement:
 - [#80](https://github.com/elysiajs/eden/pull/80) add package.json to export field
