@@ -3,6 +3,26 @@ import { treaty } from '../src'
 
 import { describe, expect, it, beforeAll, afterAll, mock } from 'bun:test'
 
+
+const randomObject = { a: 'a', b: 2, c: true, d: false, e: null, f: new Date(0) }
+const randomArray = ['a', 2, true, false, null, new Date(0), { a: 'a', b: 2, c: true, d: false, e: null, f: new Date(0)}]
+const websocketPayloads = [
+    // strings
+    'str',
+    // numbers
+    1, 1.2,
+    // booleans
+    true, false,
+    // null values
+    null,
+    // A date
+    new Date(0),
+    // A random object
+    randomObject,
+    // A random array
+    randomArray
+] as const
+
 const app = new Elysia()
     .get('/', 'a')
     .post('/', 'a')
@@ -107,6 +127,14 @@ const app = new Elysia()
             })
         }
     )
+    .ws('/json-serialization-deserialization', {
+        open: async ws => {
+            for (const item of websocketPayloads) {
+                ws.send(item)
+            }
+            ws.close()
+        }
+    })
 
 const client = treaty(app)
 
@@ -501,5 +529,35 @@ describe('Treaty2 - Using endpoint URL', () => {
         })
 
         expect(data).toEqual('http://localhost/?1%2F2=1%2F2&1%2F2=1%202' as any)
+    })
+
+
+    it('Receives the proper objects back from the other end of the websocket', async (done) => {
+        app
+        .listen(8080, async () => {
+            const client = treaty<typeof app>('http://localhost:8080')
+            
+            const dataOutOfSocket = await new Promise<any[]>(res => {
+                const data: any = []
+                // Wait until we've gotten all the data
+                const socket = client['json-serialization-deserialization'].subscribe()
+                socket.subscribe(({ data: dataItem }) => {
+                    data.push(dataItem)
+                    // Only continue when we got all the messages
+                    if(data.length === websocketPayloads.length){
+                        res(data)
+                    }
+                })
+            })
+
+            // expect that everything that came out of the socket
+            // got deserialized into the same thing that we inteded to send
+            for(let i = 0; i<websocketPayloads.length; i++){
+                expect(dataOutOfSocket[i]).toEqual(websocketPayloads[i])
+            }
+
+            done()
+        })
+
     })
 })
