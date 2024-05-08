@@ -304,7 +304,9 @@ const createProxy = (
                             formData.append(key, field as string)
                         }
 
-                        // contentType = 'multipart/form-data'
+                    // We don't do this because we need to let the browser set the content type with the correct boundary
+                    // fetchInit.headers['content-type'] = 'multipart/form-data'
+                    fetchInit.body = formData
                     } else if (typeof body === 'object') {
                         ;(fetchInit.headers as Record<string, string>)[
                             'content-type'
