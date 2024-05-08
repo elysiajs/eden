@@ -1,7 +1,7 @@
 import { Elysia, t } from 'elysia'
 import { treaty } from '../src'
-
 import { describe, expect, it, beforeAll, afterAll, mock } from 'bun:test'
+import { toKebabCase } from '../src/treaty2'
 
 
 const randomObject = { a: 'a', b: 2, c: true, d: false, e: null, f: new Date(0) }
@@ -32,6 +32,8 @@ const app = new Elysia()
     .post('/array', ({ body }) => body, {
         body: t.Array(t.String())
     })
+    .get('/hyphenated-path-endpoint', 'a')
+    .post('/hyphenated-path-endpoint', 'a')
     .post('/mirror', ({ body }) => body)
     .post('/body', ({ body }) => body, {
         body: t.String()
@@ -175,6 +177,20 @@ describe('Treaty2', () => {
         const { data } = await client.array.post(['a', 'b'])
 
         expect(data).toEqual(['a', 'b'])
+    })
+
+    it('get hyphenated-path-endpoint as camelCase method', async () => {
+        const { data, error } = await client.hyphenatedPathEndpoint.get()
+
+        expect(data).toBe('a')
+        expect(error).toBeNull()
+    })
+
+    it('post hyphenated-path-endpoint as camelCase method', async () => {
+        const { data, error } = await client.hyphenatedPathEndpoint.post()
+
+        expect(data).toBe('a')
+        expect(error).toBeNull()
     })
 
     it('post body', async () => {
@@ -559,5 +575,31 @@ describe('Treaty2 - Using endpoint URL', () => {
             done()
         })
 
+    })
+})
+
+describe('toKebabCase', () => {
+    it('doesnt change lowercase strings', () => {
+        expect(toKebabCase('somestring')).toBe('somestring')
+    })
+
+    it('doesnt change kebab-case strings', () => {
+        expect(toKebabCase('some-string')).toBe('some-string')
+    })
+
+    it('converts simple camelCase strings', () => {
+        expect(toKebabCase('camelCaseString')).toBe('camel-case-string')
+    })
+
+    it('converts complex camelCase strings', () => {
+        expect(toKebabCase('someStringAPI')).toBe('some-string-api')
+    })
+
+    it('converts simple PascalCase strings', () => {
+        expect(toKebabCase('PascalCaseString')).toBe('pascal-case-string')
+    })
+
+    it('converts complex PascalCase strings', () => {
+        expect(toKebabCase('PascalStringAPI')).toBe('pascal-string-api')
     })
 })

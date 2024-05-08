@@ -20,6 +20,12 @@ type ReplaceBlobWithFiles<in out RecordType extends Record<string, unknown>> = {
 type MaybeArray<T> = T | T[]
 type MaybePromise<T> = T | Promise<T>
 
+type KebabToCamelCase<T extends string> =
+    T extends `${infer First}-${infer Rest}`
+        ? `${First}${Capitalize<KebabToCamelCase<Rest>>}`
+        : T
+type KebabOrCamelCase<T> = T extends string ? KebabToCamelCase<T> | T : never
+
 export namespace Treaty {
     interface TreatyParam {
         fetch?: RequestInit
@@ -36,7 +42,7 @@ export namespace Treaty {
     export type Sign<in out Route extends Record<string, any>> = {
         [K in keyof Route as K extends `:${string}`
             ? never
-            : K]: K extends 'subscribe' // ? Websocket route
+            : KebabOrCamelCase<K>]: K extends 'subscribe' // ? Websocket route
             ? (undefined extends Route['subscribe']['headers']
                   ? { headers?: Record<string, unknown> }
                   : {
