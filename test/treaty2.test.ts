@@ -29,6 +29,7 @@ const app = new Elysia()
     .get('/number', () => 1)
     .get('/true', () => true)
     .get('/false', () => false)
+    .get('/date', () => new Date("2022-01-01"))
     .post('/array', ({ body }) => body, {
         body: t.Array(t.String())
     })
@@ -43,6 +44,7 @@ const app = new Elysia()
             password: t.String()
         })
     })
+    .get('/randomObject', () => randomObject)
     .get('/query', ({ query }) => query, {
         query: t.Object({
             username: t.String()
@@ -169,6 +171,17 @@ describe('Treaty2', () => {
         const { data } = await client.false.get()
 
         expect(data).toEqual(false)
+    })
+
+    it('parse date', async () => {
+        const { data } = await client.date.get()
+        console.log(data instanceof Date)
+        expect(data).toEqual(new Date("2022-01-01"))
+    })
+
+    it('get random object', async () => {
+        const { data } = await client.randomObject.get()
+        expect(data).toEqual(randomObject)
     })
 
     it('post array', async () => {
