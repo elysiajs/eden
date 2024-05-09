@@ -175,7 +175,7 @@ describe('Treaty2', () => {
 
     it('parse date', async () => {
         const { data } = await client.date.get()
-        console.log(data instanceof Date)
+        expect(data instanceof Date).toBeTrue()
         expect(data).toEqual(new Date("2022-01-01"))
     })
 
