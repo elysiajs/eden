@@ -4,7 +4,7 @@ import { treaty } from '../src'
 import { describe, expect, it, beforeAll, afterAll, mock } from 'bun:test'
 
 
-const randomObject = { a: 'a', b: 2, c: true, d: false, e: null, f: new Date(0) }
+const randomObject = { a: 'a', b: 2, c: true, d: false, e: null, f: new Date(0), g: "1970-01-01T00:00:00.000Z"}
 const randomArray = ['a', 2, true, false, null, new Date(0), { a: 'a', b: 2, c: true, d: false, e: null, f: new Date(0)}]
 const websocketPayloads = [
     // strings
@@ -17,6 +17,8 @@ const websocketPayloads = [
     null,
     // A date
     new Date(0),
+    // A date as a string
+    "1970-01-01T00:00:00.000Z",
     // A random object
     randomObject,
     // A random array
@@ -29,6 +31,10 @@ const app = new Elysia()
     .get('/number', () => 1)
     .get('/true', () => true)
     .get('/false', () => false)
+    .get('/date', () => new Date("2022-01-01"))
+    .get('/dateString', () => "1970-01-01T00:00:00.000Z")
+    .get('/objectWithDateString', () => ({ d: "1970-01-01T00:00:00.000Z"}))
+    .get('/randomObject', () => randomObject)
     .post('/array', ({ body }) => body, {
         body: t.Array(t.String())
     })
@@ -169,6 +175,29 @@ describe('Treaty2', () => {
         const { data } = await client.false.get()
 
         expect(data).toEqual(false)
+    })
+
+    it('parse date', async () => {
+        const { data } = await client.date.get()
+        expect(data instanceof Date).toBeTrue()
+        expect(data).toEqual(new Date("2022-01-01"))
+    })
+
+    it('parse date string', async () => {
+        const { data } = await client.dateString.get()
+        expect(typeof data).toBe("string")
+        expect(data).toBe("1970-01-01T00:00:00.000Z")
+    })
+
+    it('parse object with date string', async () => {
+        const { data } = await client.objectWithDateString.get()
+        expect(typeof data?.d).toBe("string")
+        expect(data?.d).toBe("1970-01-01T00:00:00.000Z")
+    })
+
+    it('get random object', async () => {
+        const { data } = await client.randomObject.get()
+        expect(data).toEqual(randomObject)
     })
 
     it('post array', async () => {
