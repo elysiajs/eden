@@ -31,6 +31,8 @@ const app = new Elysia()
     .get('/false', () => false)
     .get('/date', () => new Date("2022-01-01"))
     .get('/dateString', () => "1970-01-01T00:00:00.000Z")
+    .get('/objectWithdateString', () => ({ d: "1970-01-01T00:00:00.000Z"}))
+    .get('/randomObject', () => randomObject)
     .post('/array', ({ body }) => body, {
         body: t.Array(t.String())
     })
@@ -45,7 +47,6 @@ const app = new Elysia()
             password: t.String()
         })
     })
-    .get('/randomObject', () => randomObject)
     .get('/query', ({ query }) => query, {
         query: t.Object({
             username: t.String()
@@ -184,6 +185,12 @@ describe('Treaty2', () => {
         const { data } = await client.dateString.get()
         expect(typeof data).toBe("string")
         expect(data).toBe("1970-01-01T00:00:00.000Z")
+    })
+
+    it('parse object with date string', async () => {
+        const { data } = await client.objectWithdateString.get()
+        expect(typeof data?.d).toBe("string")
+        expect(data?.d).toBe("1970-01-01T00:00:00.000Z")
     })
 
     it('get random object', async () => {
