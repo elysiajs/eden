@@ -30,6 +30,7 @@ const app = new Elysia()
     .get('/true', () => true)
     .get('/false', () => false)
     .get('/date', () => new Date("2022-01-01"))
+    .get('/dateString', () => "1970-01-01T00:00:00.000Z")
     .post('/array', ({ body }) => body, {
         body: t.Array(t.String())
     })
@@ -177,6 +178,12 @@ describe('Treaty2', () => {
         const { data } = await client.date.get()
         expect(data instanceof Date).toBeTrue()
         expect(data).toEqual(new Date("2022-01-01"))
+    })
+
+    it('parse date string', async () => {
+        const { data } = await client.dateString.get()
+        expect(typeof data).toBe("string")
+        expect(data).toBe("1970-01-01T00:00:00.000Z")
     })
 
     it('get random object', async () => {
