@@ -3,16 +3,32 @@ import { treaty } from '../src'
 
 import { describe, expect, it, beforeAll, afterAll, mock } from 'bun:test'
 
-
-const randomObject = { a: 'a', b: 2, c: true, d: false, e: null, f: new Date(0) }
-const randomArray = ['a', 2, true, false, null, new Date(0), { a: 'a', b: 2, c: true, d: false, e: null, f: new Date(0)}]
+const randomObject = {
+    a: 'a',
+    b: 2,
+    c: true,
+    d: false,
+    e: null,
+    f: new Date(0)
+}
+const randomArray = [
+    'a',
+    2,
+    true,
+    false,
+    null,
+    new Date(0),
+    { a: 'a', b: 2, c: true, d: false, e: null, f: new Date(0) }
+]
 const websocketPayloads = [
     // strings
     'str',
     // numbers
-    1, 1.2,
+    1,
+    1.2,
     // booleans
-    true, false,
+    true,
+    false,
     // null values
     null,
     // A date
@@ -127,8 +143,11 @@ const app = new Elysia()
             })
         }
     )
+    .get('/formdata', () => ({
+        image: Bun.file('./test/kyuukurarin.mp4')
+    }))
     .ws('/json-serialization-deserialization', {
-        open: async ws => {
+        open: async (ws) => {
             for (const item of websocketPayloads) {
                 ws.send(item)
             }
@@ -483,6 +502,12 @@ describe('Treaty2 - Using endpoint URL', () => {
         )
     })
 
+    it('get formdata', async () => {
+        const { data } = await treatyApp.formdata.get()
+
+        expect(data!.image.size).toBeGreaterThan(0)
+    })
+
     it("doesn't encode if it doesn't need to", async () => {
         const mockedFetch: any = mock((url: string) => {
             return new Response(url)
@@ -531,20 +556,19 @@ describe('Treaty2 - Using endpoint URL', () => {
         expect(data).toEqual('http://localhost/?1%2F2=1%2F2&1%2F2=1%202' as any)
     })
 
-
     it('Receives the proper objects back from the other end of the websocket', async (done) => {
-        app
-        .listen(8080, async () => {
+        app.listen(8080, async () => {
             const client = treaty<typeof app>('http://localhost:8080')
-            
-            const dataOutOfSocket = await new Promise<any[]>(res => {
+
+            const dataOutOfSocket = await new Promise<any[]>((res) => {
                 const data: any = []
                 // Wait until we've gotten all the data
-                const socket = client['json-serialization-deserialization'].subscribe()
+                const socket =
+                    client['json-serialization-deserialization'].subscribe()
                 socket.subscribe(({ data: dataItem }) => {
                     data.push(dataItem)
                     // Only continue when we got all the messages
-                    if(data.length === websocketPayloads.length){
+                    if (data.length === websocketPayloads.length) {
                         res(data)
                     }
                 })
@@ -552,12 +576,11 @@ describe('Treaty2 - Using endpoint URL', () => {
 
             // expect that everything that came out of the socket
             // got deserialized into the same thing that we inteded to send
-            for(let i = 0; i<websocketPayloads.length; i++){
+            for (let i = 0; i < websocketPayloads.length; i++) {
                 expect(dataOutOfSocket[i]).toEqual(websocketPayloads[i])
             }
 
             done()
         })
-
     })
 })

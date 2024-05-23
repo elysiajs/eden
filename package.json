@@ -1,6 +1,6 @@
 {
   "name": "@elysiajs/eden",
-  "version": "1.0.13",
+  "version": "1.0.14",
   "description": "Fully type-safe Elysia client",
   "author": {
     "name": "saltyAom",
@@ -54,19 +54,19 @@
     "release": "npm run build && npm run test && npm publish --access public"
   },
   "peerDependencies": {
-    "elysia": ">= 1.0.2"
+    "elysia": ">= 1.0.22"
   },
   "devDependencies": {
     "@elysiajs/cors": "0.7.0",
     "@types/bun": "^1.0.3",
     "@types/node": "^18.15.5",
-    "elysia": "^1.0.2",
+    "elysia": "^1.0.22",
     "esbuild": "^0.19.3",
     "eslint": "^8.26.0",
     "expect-type": "^0.17.3",
     "rimraf": "^4.4.1",
     "tsup": "^7.2.0",
-    "typescript": "^5.3.2"
+    "typescript": "^5.4.5"
   },
   "prettier": {
     "semi": false,
@@ -75,6 +75,6 @@
     "trailingComma": "none"
   },
   "dependencies": {
-    "@elysiajs/stream": "rc"
+    "@elysiajs/stream": "^1.0.2"
   }
 }

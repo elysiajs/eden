@@ -23,11 +23,11 @@ const locals = ['localhost', '127.0.0.1', '0.0.0.0']
 
 const isServer = typeof FileList === 'undefined'
 
-const isISO8601 =
+export const isISO8601 =
     /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))/
-const isFormalDate =
+export const isFormalDate =
     /(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat)\s(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s\d{2}\s\d{4}\s\d{2}:\d{2}:\d{2}\sGMT(?:\+|-)\d{4}\s\([^)]+\)/
-const isShortenDate =
+export const isShortenDate =
     /^(?:(?:(?:(?:0?[1-9]|[12][0-9]|3[01])[/\s-](?:0?[1-9]|1[0-2])[/\s-](?:19|20)\d{2})|(?:(?:19|20)\d{2}[/\s-](?:0?[1-9]|1[0-2])[/\s-](?:0?[1-9]|[12][0-9]|3[01]))))(?:\s(?:1[012]|0?[1-9]):[0-5][0-9](?::[0-5][0-9])?(?:\s[AP]M)?)?$/
 
 const isFile = (v: any) => {
@@ -304,9 +304,9 @@ const createProxy = (
                             formData.append(key, field as string)
                         }
 
-                    // We don't do this because we need to let the browser set the content type with the correct boundary
-                    // fetchInit.headers['content-type'] = 'multipart/form-data'
-                    fetchInit.body = formData
+                        // We don't do this because we need to let the browser set the content type with the correct boundary
+                        // fetchInit.headers['content-type'] = 'multipart/form-data'
+                        fetchInit.body = formData
                     } else if (typeof body === 'object') {
                         ;(fetchInit.headers as Record<string, string>)[
                             'content-type'
@@ -344,6 +344,7 @@ const createProxy = (
                         new Request(url, fetchInit)
                     ) ?? fetcher!(url, fetchInit))
 
+                    // @ts-ignore
                     let data = null
                     let error = null
 
@@ -377,6 +378,17 @@ const createProxy = (
 
                             case 'application/octet-stream':
                                 data = await response.arrayBuffer()
+                                break
+
+                            case 'multipart/form-data':
+                                const temp = await response.formData()
+
+                                data = {}
+                                temp.forEach((value, key) => {
+                                    // @ts-ignore
+                                    data[key] = value
+                                })
+
                                 break
 
                             default:
