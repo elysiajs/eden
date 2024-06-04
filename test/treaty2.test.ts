@@ -5,7 +5,7 @@ import { describe, expect, it, beforeAll, afterAll, mock } from 'bun:test'
 
 
 const randomObject = { a: 'a', b: 2, c: true, d: false, e: null, f: new Date(0) }
-const randomArray = ['a', 2, true, false, null, new Date(0), { a: 'a', b: 2, c: true, d: false, e: null, f: new Date(0)}]
+const randomArray = ['a', 2, true, false, null, new Date(0), { a: 'a', b: 2, c: true, d: false, e: null, f: new Date(0) }]
 const websocketPayloads = [
     // strings
     'str',
@@ -91,6 +91,21 @@ const app = new Elysia()
             headers: t.Object({
                 username: t.String(),
                 alias: t.Literal('Kristen')
+            })
+        }
+    )
+    .get(
+        '/headers-uppercased',
+        ({ headers, headers: { username, alias } }) => ({
+            username,
+            alias,
+            authorization: headers.authorization
+        }),
+        {
+            headers: t.Object({
+                username: t.String(),
+                alias: t.Literal('Kristen'),
+                authorization: t.Optional(t.Literal('Bearer token'))
             })
         }
     )
@@ -318,6 +333,38 @@ describe('Treaty2', () => {
             data: {
                 ...headers,
                 'x-custom': 'custom'
+            }
+        })
+    })
+
+    it('can handle upper case header values', async () => {
+        const client = treaty(app, {
+            onRequest(path) {
+                if (path === '/headers-uppercased') {
+                    return {
+                        headers: {
+                            Authorization: 'Bearer token'
+                        }
+                    }
+                }
+            },
+            async onResponse(response) {
+                return { intercepted: true, data: await response.json() }
+            }
+        })
+
+        const headers = { username: 'a', alias: 'Kristen' } as const
+
+        const { data } = await client['headers-uppercased'].get({
+            headers
+        })
+
+        expect(data).toEqual({
+            // @ts-expect-error
+            intercepted: true,
+            data: {
+                ...headers,
+                authorization: 'Bearer token'
             }
         })
     })
