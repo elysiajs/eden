@@ -5,7 +5,6 @@ import type { Treaty } from './types'
 import { composePath, isNumericString } from '../treaty/utils'
 import { EdenFetchError } from '../errors'
 import { EdenWS } from './ws'
-import { subscribe } from 'diagnostics_channel'
 
 const method = [
     'get',
@@ -93,6 +92,9 @@ const processHeaders = (
 
     switch (typeof h) {
         case 'function':
+            if (h instanceof Headers)
+                return processHeaders(h, path, options, headers)
+
             const v = h(path, options)
             if (v) return processHeaders(v, path, options, headers)
             return headers
@@ -110,6 +112,67 @@ const processHeaders = (
 
         default:
             return headers
+    }
+}
+
+export async function* streamResponse(response: Response) {
+    const body = response.body
+
+    if (!body) return
+
+    const reader = body.getReader()
+    const decoder = new TextDecoder()
+
+    try {
+        while (true) {
+            const { done, value } = await reader.read()
+            if (done) break
+
+            const data = decoder.decode(value)
+
+            if (isNumericString(data)) {
+                yield +data
+                continue
+            }
+
+            if (data === 'true') {
+                yield true
+                continue
+            }
+
+            if (data === 'false') {
+                yield false
+                continue
+            }
+
+            const start = data.charCodeAt(0)
+            const end = data.charCodeAt(data.length - 1)
+
+            if ((start === 123 && end === 125) || (start === 91 && end === 93))
+                try {
+                    yield JSON.parse(data)
+
+                    continue
+                } catch {}
+
+            // Remove quote from stringified date
+            const temp = data.replace(/"/g, '')
+
+            if (
+                isISO8601.test(temp) ||
+                isFormalDate.test(temp) ||
+                isShortenDate.test(temp)
+            ) {
+                const date = new Date(temp)
+                if (!Number.isNaN(date.getTime())) yield date
+
+                continue
+            }
+
+            yield data
+        }
+    } finally {
+        reader.releaseLock()
     }
 }
 
@@ -372,6 +435,10 @@ const createProxy = (
                         switch (
                             response.headers.get('Content-Type')?.split(';')[0]
                         ) {
+                            case 'text/event-stream':
+                                data = streamResponse(response)
+                                break
+
                             case 'application/json':
                                 data = await response.json()
                                 break
