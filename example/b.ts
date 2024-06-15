@@ -1,12 +1,13 @@
-import { edenTreaty, treaty } from '../src'
+import { Elysia } from 'elysia'
+import { treaty } from '../src'
 
-import { Elysia, error, t } from 'elysia'
-
-const app = new Elysia()
-    .post('/json', ({ body }) => body)
-
-type app = typeof app
+const app = new Elysia().get('/', () => ({
+    a: Bun.file('./test/kyuukurarin.mp4')
+}))
 
 const api = treaty(app)
+const { data, error } = await api.index.get()
 
-api.json.post({ hello: 'world' }).then(console.log)
+if (error) throw error
+
+console.log(data.a.size)

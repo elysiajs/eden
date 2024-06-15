@@ -17,6 +17,18 @@ type ReplaceBlobWithFiles<in out RecordType extends Record<string, unknown>> = {
         : RecordType[K]
 } & {}
 
+type ReplaceGeneratorWithAsyncGenerator<
+    in out RecordType extends Record<string, unknown>
+> = {
+    [K in keyof RecordType]: RecordType[K] extends Generator<
+        infer A,
+        infer B,
+        infer C
+    >
+        ? AsyncGenerator<A, B, C>
+        : RecordType[K]
+} & {}
+
 type MaybeArray<T> = T | T[]
 type MaybePromise<T> = T | Promise<T>
 
@@ -135,7 +147,13 @@ export namespace Treaty {
         [K in keyof T]: Awaited<T[K]>
     }
 
-    type TreatyResponse<Res extends Record<number, unknown>> =
+    type TreatyResponse<
+        _Res extends Record<number, unknown>,
+        Res extends Record<
+            number,
+            unknown
+        > = ReplaceGeneratorWithAsyncGenerator<_Res>
+    > =
         | {
               data: Res[200]
               error: null

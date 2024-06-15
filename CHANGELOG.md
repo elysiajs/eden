@@ -1,3 +1,8 @@
+# 1.0.14 - 23 May 2024
+Feature:
+- treaty2: add support for multipart/form-data
+- fetch: add support for multipart/form-data
+
 # 1.0.13 - 8 May 2024
 Bug fix:
 - [#87](https://github.com/elysiajs/eden/pull/87) serialization/deserialization problems with null, arrays and Date on websocket messages #87

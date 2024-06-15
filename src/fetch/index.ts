@@ -1,8 +1,11 @@
 import type { Elysia } from 'elysia'
 
+import { isFormalDate, isISO8601, isShortenDate } from '../treaty2'
+
 import { EdenFetchError } from '../errors'
 import type { EdenFetch } from './types'
 import { isNumericString } from '../treaty/utils'
+
 export type { EdenFetch } from './types'
 
 export const edenFetch =
@@ -47,39 +50,68 @@ export const edenFetch =
                     : // @ts-ignore
                       options.headers,
                 body: body as any
-            }).then(async (res) => {
+            }).then(async (response) => {
+                // @ts-ignore
                 let data
 
-                switch (res.headers.get('Content-Type')?.split(';')[0]) {
+                switch (response.headers.get('Content-Type')?.split(';')[0]) {
                     case 'application/json':
-                        data = await res.json()
+                        data = await response.json()
+                        break
+
+                    case 'application/octet-stream':
+                        data = await response.arrayBuffer()
+                        break
+
+                    case 'multipart/form-data':
+                        const temp = await response.formData()
+
+                        data = {}
+                        temp.forEach((value, key) => {
+                            // @ts-ignore
+                            data[key] = value
+                        })
+
                         break
 
                     default:
-                        data = await res.text().then((d) => {
-                            if (isNumericString(d)) return parseInt(d)
-                            if (d === 'true') return true
-                            if (d === 'false') return false
+                        data = await response.text().then((data) => {
+                            if (isNumericString(data)) return +data
+                            if (data === 'true') return true
+                            if (data === 'false') return false
 
-                            return d
+                            if (!data) return data
+
+                            // Remove quote from stringified date
+                            const temp = data.replace(/"/g, '')
+
+                            if (
+                                isISO8601.test(temp) ||
+                                isFormalDate.test(temp) ||
+                                isShortenDate.test(temp)
+                            ) {
+                                const date = new Date(temp)
+                                if (!Number.isNaN(date.getTime())) return date
+                            }
+
+                            return data
                         })
-                        break
                 }
 
-                if (res.status > 300)
+                if (response.status > 300)
                     return {
                         data: null,
-                        status: res.status,
-                        headers: res.headers,
+                        status: response.status,
+                        headers: response.headers,
                         retry: execute,
-                        error: new EdenFetchError(res.status, data)
+                        error: new EdenFetchError(response.status, data)
                     }
 
                 return {
                     data,
                     error: null,
-                    status: res.status,
-                    headers: res.headers,
+                    status: response.status,
+                    headers: response.headers,
                     retry: execute
                 }
             })
