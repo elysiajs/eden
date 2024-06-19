@@ -2,8 +2,9 @@ import type { Elysia, InputSchema } from 'elysia'
 
 import { EdenFetchError } from '../errors'
 
-import { composePath, isNumericString } from './utils'
+import { composePath } from './utils'
 import type { EdenTreaty } from './types'
+import { isNumericString } from '../utils/parsingUtils'
 
 export type { EdenTreaty } from './types'
 

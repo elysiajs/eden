@@ -2,9 +2,9 @@
 import type { Elysia } from 'elysia'
 import type { Treaty } from './types'
 
-import { composePath, isNumericString } from '../treaty/utils'
 import { EdenFetchError } from '../errors'
 import { EdenWS } from './ws'
+import { parseStringifiedValue } from '../utils/parsingUtils'
 
 const method = [
     'get',
@@ -21,13 +21,6 @@ const method = [
 const locals = ['localhost', '127.0.0.1', '0.0.0.0']
 
 const isServer = typeof FileList === 'undefined'
-
-export const isISO8601 =
-    /(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d([+-][0-2]\d:[0-5]\d|Z))/
-export const isFormalDate =
-    /(?:Sun|Mon|Tue|Wed|Thu|Fri|Sat)\s(?:Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\s\d{2}\s\d{4}\s\d{2}:\d{2}:\d{2}\sGMT(?:\+|-)\d{4}\s\([^)]+\)/
-export const isShortenDate =
-    /^(?:(?:(?:(?:0?[1-9]|[12][0-9]|3[01])[/\s-](?:0?[1-9]|1[0-2])[/\s-](?:19|20)\d{2})|(?:(?:19|20)\d{2}[/\s-](?:0?[1-9]|1[0-2])[/\s-](?:0?[1-9]|[12][0-9]|3[01]))))(?:\s(?:1[012]|0?[1-9]):[0-5][0-9](?::[0-5][0-9])?(?:\s[AP]M)?)?$/
 
 const isFile = (v: any) => {
     if (isServer) return v instanceof Blob
@@ -130,46 +123,7 @@ export async function* streamResponse(response: Response) {
 
             const data = decoder.decode(value)
 
-            if (isNumericString(data)) {
-                yield +data
-                continue
-            }
-
-            if (data === 'true') {
-                yield true
-                continue
-            }
-
-            if (data === 'false') {
-                yield false
-                continue
-            }
-
-            const start = data.charCodeAt(0)
-            const end = data.charCodeAt(data.length - 1)
-
-            if ((start === 123 && end === 125) || (start === 91 && end === 93))
-                try {
-                    yield JSON.parse(data)
-
-                    continue
-                } catch {}
-
-            // Remove quote from stringified date
-            const temp = data.replace(/"/g, '')
-
-            if (
-                isISO8601.test(temp) ||
-                isFormalDate.test(temp) ||
-                isShortenDate.test(temp)
-            ) {
-                const date = new Date(temp)
-                if (!Number.isNaN(date.getTime())) yield date
-
-                continue
-            }
-
-            yield data
+            yield parseStringifiedValue(data)
         }
     } finally {
         reader.releaseLock()
@@ -431,62 +385,50 @@ const createProxy = (
                             }
                     }
 
-                    if (data === null) {
-                        switch (
-                            response.headers.get('Content-Type')?.split(';')[0]
-                        ) {
-                            case 'text/event-stream':
-                                data = streamResponse(response)
-                                break
-
-                            case 'application/json':
-                                data = await response.json()
-                                break
-
-                            case 'application/octet-stream':
-                                data = await response.arrayBuffer()
-                                break
-
-                            case 'multipart/form-data':
-                                const temp = await response.formData()
-
-                                data = {}
-                                temp.forEach((value, key) => {
-                                    // @ts-ignore
-                                    data[key] = value
-                                })
-
-                                break
-
-                            default:
-                                data = await response.text().then((data) => {
-                                    if (isNumericString(data)) return +data
-                                    if (data === 'true') return true
-                                    if (data === 'false') return false
-
-                                    if (!data) return data
-
-                                    // Remove quote from stringified date
-                                    const temp = data.replace(/"/g, '')
-
-                                    if (
-                                        isISO8601.test(temp) ||
-                                        isFormalDate.test(temp) ||
-                                        isShortenDate.test(temp)
-                                    ) {
-                                        const date = new Date(temp)
-                                        if (!Number.isNaN(date.getTime()))
-                                            return date
-                                    }
-
-                                    return data
-                                })
+                    if (data !== null) {
+                        return {
+                            data,
+                            error,
+                            response,
+                            status: response.status,
+                            headers: response.headers
                         }
+                    }
 
-                        if (response.status >= 300 || response.status < 200) {
-                            error = new EdenFetchError(response.status, data)
-                            data = null
-                        }
+                    switch (
+                        response.headers.get('Content-Type')?.split(';')[0]
+                    ) {
+                        case 'text/event-stream':
+                            data = streamResponse(response)
+                            break
+
+                        case 'application/json':
+                            data = await response.json()
+                            break
+                        case 'application/octet-stream':
+                            data = await response.arrayBuffer()
+                            break
+
+                        case 'multipart/form-data':
+                            const temp = await response.formData()
+
+                            data = {}
+                            temp.forEach((value, key) => {
+                                // @ts-ignore
+                                data[key] = value
+                            })
+
+                            break
+
+                        default:
+                            data = await response
+                                .text()
+                                .then(parseStringifiedValue) // Since this change, if the string contains a stringified JSOn, it will be parsed as such. Is it OK?
+                    }
+
+                    if (response.status >= 300 || response.status < 200) {
+                        error = new EdenFetchError(response.status, data)
+                        data = null
                     }
 
                     return {

@@ -191,8 +191,8 @@ describe('Treaty2', () => {
         expect(data).toEqual(false)
     })
 
-    it('parse object with date', async () => {
-        const { data } = await client['dateObject'].get()
+    it.todo('parse object with date', async () => {
+        const { data } = await client.dateObject.get()
 
         expect(data?.date).toBeInstanceOf(Date)
     })

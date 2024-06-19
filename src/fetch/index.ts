@@ -1,10 +1,8 @@
 import type { Elysia } from 'elysia'
 
-import { isFormalDate, isISO8601, isShortenDate } from '../treaty2'
-
 import { EdenFetchError } from '../errors'
 import type { EdenFetch } from './types'
-import { isNumericString } from '../treaty/utils'
+import { parseStringifiedValue } from '../utils/parsingUtils'
 
 export type { EdenFetch } from './types'
 
@@ -75,27 +73,7 @@ export const edenFetch =
                         break
 
                     default:
-                        data = await response.text().then((data) => {
-                            if (isNumericString(data)) return +data
-                            if (data === 'true') return true
-                            if (data === 'false') return false
-
-                            if (!data) return data
-
-                            // Remove quote from stringified date
-                            const temp = data.replace(/"/g, '')
-
-                            if (
-                                isISO8601.test(temp) ||
-                                isFormalDate.test(temp) ||
-                                isShortenDate.test(temp)
-                            ) {
-                                const date = new Date(temp)
-                                if (!Number.isNaN(date.getTime())) return date
-                            }
-
-                            return data
-                        })
+                        data = await response.text().then(parseStringifiedValue)
                 }
 
                 if (response.status > 300)
