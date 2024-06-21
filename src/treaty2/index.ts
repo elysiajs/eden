@@ -103,6 +103,8 @@ const processHeaders = (
             for (const [key, value] of Object.entries(h))
                 headers[key.toLowerCase()] = value as string
 
+            return headers
+
         default:
             return headers
     }
@@ -350,7 +352,11 @@ const createProxy = (
                                     ...temp,
                                     headers: {
                                         ...fetchInit.headers,
-                                        ...temp.headers
+                                        ...processHeaders(
+                                            temp.headers,
+                                            path,
+                                            fetchInit
+                                        )
                                     } as Record<string, string>
                                 }
                         }

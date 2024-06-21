@@ -1,14 +1,17 @@
 import { Elysia } from 'elysia'
 import { treaty } from '../src'
 
-const app = new Elysia().get('/', function* () {
-    for (let i = 0; i < 1000; i++) 
-        yield i
+new Elysia().get('/', 'stuff').listen(4000)
+
+const a = treaty('http://localhost:4000', {
+    onRequest: (path, options) => {
+        return {
+            headers: {
+                Authorization: `Bearer stuff`
+            }
+        }
+    }
 })
 
-const client = treaty(app)
+a.index.get()
 
-const { data, error } = await client.index.get()
-
-for await (const chunk of data!)
-    console.log(chunk)
