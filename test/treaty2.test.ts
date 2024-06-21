@@ -130,6 +130,7 @@ const app = new Elysia()
             date: t.Date()
         })
     })
+    .get('/dateObject', () => ({ date: new Date() }))
     .get(
         '/redirect',
         ({ set }) => (set.redirect = 'http://localhost:8083/true')
@@ -188,6 +189,12 @@ describe('Treaty2', () => {
         const { data } = await client.false.get()
 
         expect(data).toEqual(false)
+    })
+
+    it.todo('parse object with date', async () => {
+        const { data } = await client.dateObject.get()
+
+        expect(data?.date).toBeInstanceOf(Date)
     })
 
     it('post array', async () => {

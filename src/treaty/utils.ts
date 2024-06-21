@@ -13,6 +13,3 @@ export const composePath = (
 
     return `${domain}${path}?${q.slice(0, -1)}`
 }
-
-export const isNumericString = (message: string) =>
-    message.trim().length !== 0 && !Number.isNaN(Number(message))

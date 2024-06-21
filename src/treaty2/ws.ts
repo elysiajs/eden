@@ -1,6 +1,6 @@
 import type { InputSchema } from 'elysia'
 import type { Treaty } from './types'
-import { isNumericString } from '../treaty/utils'
+import { isNumericString } from '../utils/parsingUtils'
 
 const ISO8601DateString = /\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3}Z/
 
@@ -67,23 +67,28 @@ export class EdenWS<in out Schema extends InputSchema<any> = {}> {
                     if (start === 91 || start === 123)
                         try {
                             data = JSON.parse(data, (key, value) => {
-                                if(typeof value === 'string' && ISO8601DateString.test(value)) {
+                                if (
+                                    typeof value === 'string' &&
+                                    ISO8601DateString.test(value)
+                                ) {
                                     const d = new Date(value)
-                                    if(!Number.isNaN(d.getTime())) 
-                                        return d
+                                    if (!Number.isNaN(d.getTime())) return d
                                 }
                                 return value
                             })
                         } catch {
                             // Not Empty
                         }
-
                     else if (isNumericString(data)) data = +data
                     else if (data === 'true') data = true
                     else if (data === 'false') data = false
                     else if (data === 'null') data = null
                     // Remove " before parsing
-                    else if (start === 34 && end === 34 && ISO8601DateString.test(data))
+                    else if (
+                        start === 34 &&
+                        end === 34 &&
+                        ISO8601DateString.test(data)
+                    )
                         data = new Date(data.substring(1, data.length - 1))
 
                     listener({
