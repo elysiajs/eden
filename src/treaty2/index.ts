@@ -246,31 +246,6 @@ const createProxy = (
 
                     if (isGetOrHead) delete fetchInit.body
 
-                    if (onRequest) {
-                        if (!Array.isArray(onRequest)) onRequest = [onRequest]
-
-                        for (const value of onRequest) {
-                            const temp = await value(path, fetchInit)
-
-                            if (typeof temp === 'object')
-                                fetchInit = {
-                                    ...fetchInit,
-                                    ...temp,
-                                    headers: {
-                                        ...fetchInit.headers,
-                                        ...processHeaders(
-                                            temp.headers,
-                                            path,
-                                            fetchInit
-                                        )
-                                    }
-                                }
-                        }
-                    }
-
-                    // ? Duplicate because end-user might add a body in onRequest
-                    if (isGetOrHead) delete fetchInit.body
-
                     if (hasFile(body)) {
                         const formData = new FormData()
 
@@ -350,11 +325,18 @@ const createProxy = (
                                     ...temp,
                                     headers: {
                                         ...fetchInit.headers,
-                                        ...temp.headers
-                                    } as Record<string, string>
+                                        ...processHeaders(
+                                            temp.headers,
+                                            path,
+                                            fetchInit
+                                        )
+                                    }
                                 }
                         }
                     }
+
+                    // ? Duplicate because end-user might add a body in onRequest
+                    if (isGetOrHead) delete fetchInit.body
 
                     const url = domain + path + q
                     const response = await (elysia?.handle(
