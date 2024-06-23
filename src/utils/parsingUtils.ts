@@ -49,7 +49,7 @@ export const parseStringifiedObject = (data: string) =>
         return value
     })
 
-export const parseStringifiedValue = (value: any) => {
+export const parseStringifiedValue = (value: string) => {
     if (!value) {
         return value
     }
