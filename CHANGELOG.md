@@ -1,3 +1,8 @@
+# 1.0.15 - 21 Jun 2024
+Bug fix:
+- [#105](https://github.com/elysiajs/eden/pull/105) Unify parsing into a util and add support for Date inside object
+- [#100](https://github.com/elysiajs/eden/issues/100) Duplicated values when passing uppercase values for headers
+
 # 1.0.14 - 23 May 2024
 Feature:
 - treaty2: add support for multipart/form-data
