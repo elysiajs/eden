@@ -80,3 +80,11 @@ export const parseStringifiedValue = (value: string) => {
 
     return value
 }
+
+export const parseMessageEvent = (event: MessageEvent) => {
+    const messageString = event.data.toString()
+
+    return messageString === 'null'
+        ? null
+        : parseStringifiedValue(messageString)
+}

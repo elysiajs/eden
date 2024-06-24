@@ -1,6 +1,6 @@
 import type { InputSchema } from 'elysia'
 import type { Treaty } from './types'
-import { parseStringifiedValue } from '../utils/parsingUtils'
+import { parseMessageEvent } from '../utils/parsingUtils'
 
 export class EdenWS<in out Schema extends InputSchema<any> = {}> {
     ws: WebSocket
@@ -59,11 +59,7 @@ export class EdenWS<in out Schema extends InputSchema<any> = {}> {
             type,
             (ws) => {
                 if (type === 'message') {
-                    const messageString = (ws as MessageEvent).data.toString()
-                    const data =
-                        messageString === 'null'
-                            ? null
-                            : parseStringifiedValue(messageString)
+                    const data = parseMessageEvent(ws as MessageEvent)
 
                     listener({
                         ...ws,
