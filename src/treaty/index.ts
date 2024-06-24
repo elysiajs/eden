@@ -1,10 +1,8 @@
 import type { Elysia, InputSchema } from 'elysia'
-
 import { EdenFetchError } from '../errors'
-
 import { composePath } from './utils'
 import type { EdenTreaty } from './types'
-import { isNumericString } from '../utils/parsingUtils'
+import { parseMessageEvent, parseStringifiedValue } from '../utils/parsingUtils'
 
 export type { EdenTreaty } from './types'
 
@@ -117,18 +115,7 @@ export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
             type,
             (ws) => {
                 if (type === 'message') {
-                    let data = (ws as MessageEvent).data.toString() as any
-                    const start = data.charCodeAt(0)
-
-                    if (start === 47 || start === 123)
-                        try {
-                            data = JSON.parse(data)
-                        } catch {
-                            // Not Empty
-                        }
-                    else if (isNumericString(data)) data = +data
-                    else if (data === 'true') data = true
-                    else if (data === 'false') data = false
+                    const data = parseMessageEvent(ws as MessageEvent)
 
                     listener({
                         ...ws,
@@ -333,13 +320,7 @@ const createProxy = (
                         break
 
                     default:
-                        data = await response.text().then((data) => {
-                            if (isNumericString(data)) return +data
-                            if (data === 'true') return true
-                            if (data === 'false') return false
-
-                            return data
-                        })
+                        data = await response.text().then(parseStringifiedValue)
                 }
 
                 const error =

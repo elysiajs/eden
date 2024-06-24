@@ -6,6 +6,51 @@ import { parseStringifiedValue } from '../utils/parsingUtils'
 
 export type { EdenFetch } from './types'
 
+const parseResponse = async (response: Response) => {
+    const contentType = response.headers.get('Content-Type')?.split(';')[0]
+
+    switch (contentType) {
+        case 'application/json':
+            return response.json()
+        case 'application/octet-stream':
+            return response.arrayBuffer()
+        case 'multipart/form-data': {
+            const formData = await response.formData()
+
+            const data = {}
+            formData.forEach((value, key) => {
+                // @ts-ignore
+                data[key] = value
+            })
+
+            return data
+        }
+    }
+
+    return response.text().then(parseStringifiedValue)
+}
+
+const handleResponse = async (response: Response, retry: () => any) => {
+    const data = await parseResponse(response)
+
+    if (response.status > 300)
+        return {
+            data: null,
+            status: response.status,
+            headers: response.headers,
+            retry,
+            error: new EdenFetchError(response.status, data)
+        }
+
+    return {
+        data,
+        error: null,
+        status: response.status,
+        headers: response.headers,
+        retry
+    }
+}
+
 export const edenFetch =
     <App extends Elysia<any, any, any, any, any, any, any, any>>(
         server: string,
@@ -18,81 +63,35 @@ export const edenFetch =
                 endpoint = endpoint.replace(`:${key}`, value as string)
             })
 
-        // @ts-ignore
         const contentType = options.headers?.['Content-Type']
 
         if (!contentType || contentType === 'application/json')
             try {
                 body = JSON.stringify(body)
-            } catch (error) {
-                //
-            }
+            } catch (error) {}
 
         const fetch = config?.fetcher || globalThis.fetch
         const queryStr = query
             ? `?${new URLSearchParams(query).toString()}`
             : ''
+        const requestUrl = `${server}${endpoint}${queryStr}`
+        const headers = body
+            ? {
+                  'content-type': 'application/json',
+                  ...options.headers
+              }
+            : options.headers
+        const init = {
+            ...options,
+            method: options.method?.toUpperCase() || 'GET',
+            headers,
+            body: body as any
+        }
 
-        // @ts-ignore
         const execute = () =>
-            fetch(server + endpoint + queryStr, {
-                ...options,
-                // @ts-ignore
-                method: options.method?.toUpperCase() || 'GET',
-                headers: body
-                    ? {
-                          'content-type': 'application/json',
-                          // @ts-ignore
-                          ...options.headers
-                      }
-                    : // @ts-ignore
-                      options.headers,
-                body: body as any
-            }).then(async (response) => {
-                // @ts-ignore
-                let data
-
-                switch (response.headers.get('Content-Type')?.split(';')[0]) {
-                    case 'application/json':
-                        data = await response.json()
-                        break
-
-                    case 'application/octet-stream':
-                        data = await response.arrayBuffer()
-                        break
-
-                    case 'multipart/form-data':
-                        const temp = await response.formData()
-
-                        data = {}
-                        temp.forEach((value, key) => {
-                            // @ts-ignore
-                            data[key] = value
-                        })
-
-                        break
-
-                    default:
-                        data = await response.text().then(parseStringifiedValue)
-                }
-
-                if (response.status > 300)
-                    return {
-                        data: null,
-                        status: response.status,
-                        headers: response.headers,
-                        retry: execute,
-                        error: new EdenFetchError(response.status, data)
-                    }
-
-                return {
-                    data,
-                    error: null,
-                    status: response.status,
-                    headers: response.headers,
-                    retry: execute
-                }
-            })
+            fetch(requestUrl, init).then((response) =>
+                handleResponse(response, execute)
+            )
 
         return execute()
     }
