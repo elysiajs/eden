@@ -147,7 +147,7 @@ export namespace Treaty {
         [K in keyof T]: Awaited<T[K]>
     }
 
-    type TreatyResponse<
+    export type TreatyResponse<
         _Res extends Record<number, unknown>,
         Res extends Record<
             number,

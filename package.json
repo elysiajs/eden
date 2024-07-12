@@ -25,6 +25,13 @@
       "default": "./dist/treaty.js",
       "types": "./dist/treaty/index.d.ts"
     },
+    "./treaty2": {
+      "require": "./dist/2.js",
+      "import": "./dist/treaty2.mjs",
+      "node": "./dist/treaty2.js",
+      "default": "./dist/treaty2.js",
+      "types": "./dist/treaty2/index.d.ts"
+    },
     "./fetch": {
       "require": "./dist/fetch.js",
       "import": "./dist/fetch.mjs",
