@@ -49,7 +49,7 @@ export const parseStringifiedObject = (data: string) =>
         return value
     })
 
-export const parseStringifiedValue = (value: any) => {
+export const parseStringifiedValue = (value: string) => {
     if (!value) {
         return value
     }
@@ -79,4 +79,12 @@ export const parseStringifiedValue = (value: any) => {
     }
 
     return value
+}
+
+export const parseMessageEvent = (event: MessageEvent) => {
+    const messageString = event.data.toString()
+
+    return messageString === 'null'
+        ? null
+        : parseStringifiedValue(messageString)
 }

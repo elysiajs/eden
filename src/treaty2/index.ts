@@ -429,7 +429,7 @@ const createProxy = (
                         default:
                             data = await response
                                 .text()
-                                .then(parseStringifiedValue) // Since this change, if the string contains a stringified JSOn, it will be parsed as such. Is it OK?
+                                .then(parseStringifiedValue)
                     }
 
                     if (response.status >= 300 || response.status < 200) {
