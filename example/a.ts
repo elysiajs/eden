@@ -1,17 +1,17 @@
-import { Elysia } from 'elysia'
+import { Elysia, t } from 'elysia'
 import { treaty } from '../src'
 
-new Elysia().get('/', 'stuff').listen(4000)
+const a = new Elysia().get(
+	'/id/:id?',
+	({ params: { id } }) => id)
 
-const a = treaty('http://localhost:4000', {
-    onRequest: (path, options) => {
-        return {
-            headers: {
-                Authorization: `Bearer stuff`
-            }
-        }
-    }
-})
+treaty(a).id({ id: '1' }).get().then(console.log)
+treaty(a).id.get().then(console.log)
 
-a.index.get()
+// a.handle(new Request('http://localhost/error')).then(x => x.status).then(console.log)
 
+// const api = treaty(a)
+
+// const { data, error, response } = await api.error.get()
+
+// console.log(data, error, response)
