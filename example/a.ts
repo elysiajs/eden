@@ -1,17 +1,28 @@
-import { Elysia, t } from 'elysia'
-import { treaty } from '../src'
+import { Elysia } from 'elysia'
 
-const a = new Elysia().get(
-	'/id/:id?',
-	({ params: { id } }) => id)
+const encoder = new TextEncoder()
 
-treaty(a).id({ id: '1' }).get().then(console.log)
-treaty(a).id.get().then(console.log)
+new Elysia()
+    .mapResponse(({ response, set }) => {
+        const isJson = typeof response === 'object'
 
-// a.handle(new Request('http://localhost/error')).then(x => x.status).then(console.log)
+        const text = isJson
+            ? JSON.stringify(response)
+            : response?.toString() ?? ''
 
-// const api = treaty(a)
+        set.headers['Content-Encoding'] = 'gzip'
 
-// const { data, error, response } = await api.error.get()
-
-// console.log(data, error, response)
+        return new Response(
+            Bun.gzipSync(encoder.encode(text)),
+            {
+                headers: {
+                    'Content-Type': `${
+                        isJson ? 'application/json' : 'text/plain'
+                    }; charset=utf-8`
+                }
+            }
+        )
+    })
+    .get('/text', () => 'mapResponse')
+    .get('/json', () => ({ map: 'response' }))
+    .listen(3000)
