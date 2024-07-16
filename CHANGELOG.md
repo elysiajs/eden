@@ -1,3 +1,8 @@
+# 1.1.0 - 16 Jul 2024
+Feature:
+- support Elysia 1.1
+- support response streaming with type inference
+
 # 1.0.15 - 21 Jun 2024
 Bug fix:
 - [#105](https://github.com/elysiajs/eden/pull/105) Unify parsing into a util and add support for Date inside object
