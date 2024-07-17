@@ -70,3 +70,5 @@ export type TreatyToPath<T, Path extends string = ''> = UnionToIntersect<
           }[keyof T]
         : {}
 >
+
+export type Not<T> = T extends true ? false : true

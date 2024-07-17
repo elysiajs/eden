@@ -1,3 +1,7 @@
+# 1.1.1 - 17 Jul 2024
+Feature:
+- support conditional value or stream from generator function
+
 # 1.1.0 - 16 Jul 2024
 Feature:
 - support Elysia 1.1

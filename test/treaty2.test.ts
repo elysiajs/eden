@@ -157,6 +157,17 @@ const app = new Elysia()
 		yield 'b'
 		yield 'c'
 	})
+	.get('/stream-async', async function* stream() {
+		yield 'a'
+		yield 'b'
+		yield 'c'
+	})
+	.get('/stream-return', function* stream() {
+		return 'a'
+	})
+	.get('/stream-return-async', function* stream() {
+		return 'a'
+	})
 	.get('/id/:id?', ({ params: { id = 'unknown' } }) => id)
 
 const client = treaty(app)
@@ -467,13 +478,34 @@ describe('Treaty2', () => {
 		)
 	})
 
-	it('stream', async () => {
+	it('generator return stream', async () => {
 		const a = await client.stream.get()
 		const result = <string[]>[]
 
 		for await (const chunk of a.data!) result.push(chunk)
 
 		expect(result).toEqual(['a', 'b', 'c'])
+	})
+
+	it('generator return async stream', async () => {
+		const a = await client['stream-async'].get()
+		const result = <string[]>[]
+
+		for await (const chunk of a.data!) result.push(chunk)
+
+		expect(result).toEqual(['a', 'b', 'c'])
+	})
+
+	it('generator return value', async () => {
+		const a = await client['stream-return'].get()
+
+		expect(a.data).toBe('a')
+	})
+
+	it('generator return async value', async () => {
+		const a = await client['stream-return-async'].get()
+
+		expect(a.data).toBe('a')
 	})
 
 	it('handle optional params', async () => {

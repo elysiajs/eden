@@ -1034,3 +1034,99 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
         }
     >
 }
+
+// ? Return AsyncGenerator on yield
+{
+    const app = new Elysia().get('', function* () {
+        yield 1
+        yield 2
+        yield 3
+    })
+
+    const { data } = await treaty(app).index.get()
+
+    expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
+        1 | 2 | 3,
+        void,
+        unknown
+    > | null>()
+}
+
+// ? Return actual value on generator if not yield
+{
+    const app = new Elysia().get('', function* () {
+        return 'a'
+    })
+
+    const { data } = await treaty(app).index.get()
+
+    expectTypeOf<typeof data>().toEqualTypeOf<string | null>()
+}
+
+// ? Return both actual value and generator if yield and return
+{
+    const app = new Elysia().get('', function* () {
+        if (Math.random() > 0.5) return 'a'
+
+        yield 1
+        yield 2
+        yield 3
+    })
+
+    const { data } = await treaty(app).index.get()
+
+    expectTypeOf<typeof data>().toEqualTypeOf<
+        | 'a'
+        | AsyncGenerator<1 | 2 | 3, 'a' | undefined, unknown>
+        | null
+        | undefined
+    >()
+}
+
+// ? Return AsyncGenerator on yield
+{
+    const app = new Elysia().get('', async function* () {
+        yield 1
+        yield 2
+        yield 3
+    })
+
+    const { data } = await treaty(app).index.get()
+
+    expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
+        1 | 2 | 3,
+        void,
+        unknown
+    > | null>()
+}
+
+// ? Return actual value on generator if not yield
+{
+    const app = new Elysia().get('', async function* () {
+        return 'a'
+    })
+
+    const { data } = await treaty(app).index.get()
+
+    expectTypeOf<typeof data>().toEqualTypeOf<string | null>()
+}
+
+// ? Return both actual value and generator if yield and return
+{
+	const app = new Elysia().get('', async function* () {
+        if (Math.random() > 0.5) return 'a'
+
+        yield 1
+        yield 2
+        yield 3
+    })
+
+    const { data } = await treaty(app).index.get()
+
+    expectTypeOf<typeof data>().toEqualTypeOf<
+        | 'a'
+        | AsyncGenerator<1 | 2 | 3, 'a' | undefined, unknown>
+        | null
+        | undefined
+    >()
+}
