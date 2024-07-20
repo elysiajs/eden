@@ -114,7 +114,7 @@ const processHeaders = (
 
 interface SSEEvent {
     event: string;
-    data: string;
+    data: any;
     id?: string;
 }
 
@@ -139,8 +139,11 @@ export async function* streamSSEResponse(response: Response): AsyncGenerator<SSE
                 buffer = buffer.slice(eventEnd + 2);
 
                 const event = parseEvent(eventData);
+				if (event?.event === 'error') {
+					throw new EdenFetchError(500, event.data);
+				}
                 if (event) {
-                    yield event;
+                    yield event.data;
                 }
             }
         }
@@ -171,13 +174,13 @@ function parseEvent(eventData: string): SSEEvent | null {
             id = line.slice(3).trim();
         }
     }
-	if (!event || !data.trim()) return null;
+	if (!event || !data) return null;
 
     return { event, data: tryParsingJson(data), id };
 }
 
 
-function tryParsingJson(data: string) {
+function tryParsingJson(data: string): any {
 	try {
 		return JSON.parse(data)
 	} catch (error) {
