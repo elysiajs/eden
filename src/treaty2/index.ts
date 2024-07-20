@@ -158,7 +158,7 @@ export async function* streamSSEResponse(response: Response): AsyncGenerator<SSE
 
 function parseEvent(eventData: string): SSEEvent | null {
     let event: string = 'message';
-    let data: string[] = [];
+    let data: string = '';
     let id: string | undefined;
 
     const lines = eventData.split('\n');
@@ -166,20 +166,24 @@ function parseEvent(eventData: string): SSEEvent | null {
         if (line.startsWith('event:')) {
             event = line.slice(6).trim();
         } else if (line.startsWith('data:')) {
-            data.push(line.slice(5));
+            data += line.slice(5).trim();
         } else if (line.startsWith('id:')) {
             id = line.slice(3).trim();
         }
     }
+	if (!event || !data.trim()) return null;
 
-    if (data.length > 0) {
-        const dataString = data.join('\n');
-        return { event, data: dataString, id };
-    }
-
-    return null;
+    return { event, data: tryParsingJson(data), id };
 }
 
+
+function tryParsingJson(data: string) {
+	try {
+		return JSON.parse(data)
+	} catch (error) {
+		return data
+	}
+}
 
 const createProxy = (
 	domain: string,
