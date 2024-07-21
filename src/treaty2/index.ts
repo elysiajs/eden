@@ -2,6 +2,8 @@
 /* eslint-disable no-case-declarations */
 /* eslint-disable prefer-const */
 import type { Elysia } from 'elysia'
+import { EventSourceParserStream } from 'eventsource-parser/stream'
+
 import type { Treaty } from './types'
 
 import { EdenFetchError } from '../errors'
@@ -118,65 +120,54 @@ interface SSEEvent {
     id?: string;
 }
 
-export async function* streamSSEResponse(response: Response): AsyncGenerator<SSEEvent> {
-    const body = response.body;
-    if (!body) return;
 
-    const reader = body.getReader();
-    const decoder = new TextDecoder();
-    let buffer = '';
-
-    try {
-        while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-
-            let eventEnd: number;
-            while ((eventEnd = buffer.indexOf('\n\n')) >= 0) {
-                const eventData = buffer.slice(0, eventEnd);
-                buffer = buffer.slice(eventEnd + 2);
-
-                const event = parseEvent(eventData);
-				if (event?.event === 'error') {
-					throw new EdenFetchError(500, event.data);
-				}
-                if (event) {
-                    yield event.data;
+export class TextDecoderStream extends TransformStream<Uint8Array, string> {
+    constructor() {
+        const decoder = new TextDecoder('utf-8', {
+            fatal: true,
+            ignoreBOM: true
+        })
+        super({
+            transform(
+                chunk: Uint8Array,
+                controller: TransformStreamDefaultController<string>
+            ) {
+                const decoded = decoder.decode(chunk, { stream: true })
+                if (decoded.length > 0) {
+                    controller.enqueue(decoded)
+                }
+            },
+            flush(controller: TransformStreamDefaultController<string>) {
+                const output = decoder.decode()
+                if (output.length > 0) {
+                    controller.enqueue(output)
                 }
             }
-        }
-
-        if (buffer.trim()) {
-            const event = parseEvent(buffer);
-            if (event) {
-                yield event;
-            }
-        }
-    } finally {
-        reader.releaseLock();
+        })
     }
 }
 
-function parseEvent(eventData: string): SSEEvent | null {
-    let event: string = 'message';
-    let data: string = '';
-    let id: string | undefined;
+export async function* streamSSEResponse(
+    response: Response
+): AsyncGenerator<SSEEvent> {
+    const body = response.body
+    if (!body) return
 
-    const lines = eventData.split('\n');
-    for (const line of lines) {
-        if (line.startsWith('event:')) {
-            event = line.slice(6).trim();
-        } else if (line.startsWith('data:')) {
-            data += line.slice(5).trim();
-        } else if (line.startsWith('id:')) {
-            id = line.slice(3).trim();
+    const eventStream = response.body
+        .pipeThrough(new TextDecoderStream())
+        .pipeThrough(new EventSourceParserStream())
+
+    let reader = eventStream.getReader()
+    while (true) {
+        const { done, value: event } = await reader.read()
+        if (done) break
+        if (event?.event === 'error') {
+            throw new EdenFetchError(500, event.data)
+        }
+        if (event) {
+            yield tryParsingJson(event.data)
         }
     }
-	if (!event || !data) return null;
-
-    return { event, data: tryParsingJson(data), id };
 }
 
 
