@@ -147,7 +147,7 @@ export class TextDecoderStream extends TransformStream<Uint8Array, string> {
     }
 }
 
-export async function* streamSSEResponse(
+export async function* streamResponse(
     response: Response
 ): AsyncGenerator<SSEEvent> {
     const body = response.body
@@ -452,7 +452,7 @@ const createProxy = (
 						response.headers.get('Content-Type')?.split(';')[0]
 					) {
 						case 'text/event-stream':
-							data = streamSSEResponse(response)
+							data = streamResponse(response)
 							break
 
 						case 'application/json':
