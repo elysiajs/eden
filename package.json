@@ -76,6 +76,9 @@
     "typescript": "^5.4.5",
     "vite": "^5.3.3"
   },
+  "dependencies": {
+    "eventsource-parser": "^1.1.2"
+  },
   "prettier": {
     "semi": false,
     "tabWidth": 4,

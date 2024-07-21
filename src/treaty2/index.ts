@@ -2,6 +2,8 @@
 /* eslint-disable no-case-declarations */
 /* eslint-disable prefer-const */
 import type { Elysia } from 'elysia'
+import { EventSourceParserStream } from 'eventsource-parser/stream'
+
 import type { Treaty } from './types'
 
 import { EdenFetchError } from '../errors'
@@ -112,25 +114,72 @@ const processHeaders = (
 	}
 }
 
-export async function* streamResponse(response: Response) {
-	const body = response.body
+interface SSEEvent {
+    event: string;
+    data: any;
+    id?: string;
+}
 
-	if (!body) return
 
-	const reader = body.getReader()
-	const decoder = new TextDecoder()
+class TextDecoderStream extends TransformStream<Uint8Array, string> {
+    constructor() {
+        const decoder = new TextDecoder('utf-8', {
+            fatal: true,
+            ignoreBOM: true
+        })
+        super({
+            transform(
+                chunk: Uint8Array,
+                controller: TransformStreamDefaultController<string>
+            ) {
+                const decoded = decoder.decode(chunk, { stream: true })
+                if (decoded.length > 0) {
+                    controller.enqueue(decoded)
+                }
+            },
+            flush(controller: TransformStreamDefaultController<string>) {
+                const output = decoder.decode()
+                if (output.length > 0) {
+                    controller.enqueue(output)
+                }
+            }
+        })
+    }
+}
 
+export async function* streamResponse(
+    response: Response
+): AsyncGenerator<SSEEvent> {
+    const body = response.body
+    if (!body) return
+
+    const eventStream = response.body
+        .pipeThrough(new TextDecoderStream())
+        .pipeThrough(new EventSourceParserStream())
+
+    let reader = eventStream.getReader()
+    try {
+        while (true) {
+            const { done, value: event } = await reader.read()
+            if (done) break
+            if (event?.event === 'error') {
+                throw new EdenFetchError(500, event.data)
+            }
+            if (event) {
+                yield tryParsingJson(event.data)
+            }
+        }
+    } finally {
+        reader.releaseLock()
+    }
+}
+
+
+function tryParsingJson(data: string): any {
 	try {
-		while (true) {
-			const { done, value } = await reader.read()
-			if (done) break
-
-			const data = decoder.decode(value)
-
-			yield parseStringifiedValue(data)
-		}
-	} finally {
-		reader.releaseLock()
+		return JSON.parse(data)
+	} catch (error) {
+		return null
 	}
 }
 
