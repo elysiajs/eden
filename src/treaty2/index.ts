@@ -121,7 +121,7 @@ interface SSEEvent {
 }
 
 
-export class TextDecoderStream extends TransformStream<Uint8Array, string> {
+class TextDecoderStream extends TransformStream<Uint8Array, string> {
     constructor() {
         const decoder = new TextDecoder('utf-8', {
             fatal: true,
