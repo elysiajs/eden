@@ -158,15 +158,19 @@ export async function* streamResponse(
         .pipeThrough(new EventSourceParserStream())
 
     let reader = eventStream.getReader()
-    while (true) {
-        const { done, value: event } = await reader.read()
-        if (done) break
-        if (event?.event === 'error') {
-            throw new EdenFetchError(500, event.data)
+    try {
+        while (true) {
+            const { done, value: event } = await reader.read()
+            if (done) break
+            if (event?.event === 'error') {
+                throw new EdenFetchError(500, event.data)
+            }
+            if (event) {
+                yield tryParsingJson(event.data)
+            }
         }
-        if (event) {
-            yield tryParsingJson(event.data)
-        }
+    } finally {
+        reader.releaseLock()
     }
 }
 
