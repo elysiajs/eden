@@ -196,7 +196,7 @@ const createProxy = (
 							continue
 						}
 
-						append(key, `${value}`)
+						append(key, JSON.stringify(value))
 					}
 				}
 
