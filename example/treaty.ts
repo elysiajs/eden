@@ -5,7 +5,12 @@ const eden = treaty<Server>('http://localhost:8080')
 
 const a = await eden.products.nendoroid.skadi.get({
     query: {
-        username: 'a'
+        username: 'a',
+        filter: {
+            name: 'b',
+            address: 'c',
+            age: '10'
+        }
     }
 })
 

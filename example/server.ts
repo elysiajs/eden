@@ -64,11 +64,33 @@ const app = new Elysia()
         })
     })
     .get('/sign-in', () => 'ok')
-    .get('/products/nendoroid/skadi', () => 1, {
-        query: t.Object({
-            username: t.String()
-        })
-    })
+    .get(
+        '/products/nendoroid/skadi',
+        ({ query }) => {
+            console.log({ query })
+            return query
+        },
+        {
+            query: t.Object({
+                username: t.String(),
+                filter: t.Object({
+                    name: t.Optional(t.String()),
+                    address: t.Optional(t.String()),
+                    age: t.Optional(t.String())
+                })
+            }),
+            response: {
+                200: t.Object({
+                    username: t.String(),
+                    filter: t.Object({
+                        name: t.Optional(t.String()),
+                        address: t.Optional(t.String()),
+                        age: t.Optional(t.String())
+                    })
+                })
+            }
+        }
+    )
     .post('/products/nendoroid/skadi', () => 1, {
         body: t.Object({
             username: t.String()
