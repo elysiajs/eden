@@ -196,6 +196,12 @@ const createProxy = (
 							continue
 						}
 
+						if (typeof value === 'object') {
+							append(key, JSON.stringify(value))
+							continue
+						}
+							
+				
 						append(key, `${value}`)
 					}
 				}

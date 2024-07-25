@@ -1,13 +1,20 @@
-import { edenTreaty, EdenTreaty } from '../../../src/treaty'
+import { treaty, Treaty } from '../../../src/treaty2'
 import type { Server } from '../../server'
 
-export const client = edenTreaty<Server>('http://localhost:8080')
+export const client = treaty<Server>('http://localhost:8080')
 
 const { data } = await client.products.nendoroid.skadi.get({
-    $query: {
-        username: 'A'
+    query: {
+        username: 'A',
+        filter: {
+            name: 'A',
+            address: 'A',
+            age: 'A'
+        }
     }
 })
+
+await client['sign-in'].get()
 
 // const data = await client.products.nendoroid.skadi.post({
 //     username: 'A'
