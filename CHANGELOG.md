@@ -1,3 +1,7 @@
+# 1.1.2 - 25 Jul 2024
+Feature:
+- [#115](https://github.com/elysiajs/eden/pull/115) Stringify query params to allow the nested object
+
 # 1.1.1 - 17 Jul 2024
 Feature:
 - support conditional value or stream from generator function
