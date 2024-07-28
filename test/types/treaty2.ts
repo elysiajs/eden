@@ -1,5 +1,6 @@
 import { Elysia, t } from 'elysia'
 import { treaty } from '../../src'
+import { EdenFetchError } from '../../src/errors'
 import { expectTypeOf } from 'expect-type'
 
 const plugin = new Elysia({ prefix: '/level' })
@@ -165,10 +166,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -203,10 +201,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -241,10 +236,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -279,10 +271,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -317,10 +306,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -354,10 +340,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -391,10 +374,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -434,10 +414,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -473,10 +450,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -514,10 +488,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -555,10 +526,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -596,10 +564,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -635,14 +600,9 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
         | {
               data: null
               error:
-                  | {
-                        status: 418
-                        value: 'Kirifuji Nagisa'
-                    }
-                  | {
-                        status: 420
-                        value: 'Snoop Dogg'
-                    }
+                  | EdenFetchError<418, 'Kirifuji Nagisa'>
+                  | EdenFetchError<420, 'Snoop Dogg'>
+
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -680,10 +640,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -721,10 +678,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -765,10 +719,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -809,10 +760,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -856,10 +804,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | {
               data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
+              error: EdenFetchError<number, any>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -895,14 +840,8 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
         | {
               data: null
               error:
-                  | {
-                        status: 401
-                        value: 'Himari'
-                    }
-                  | {
-                        status: 418
-                        value: 'Nagisa'
-                    }
+                  | EdenFetchError<401, 'Himari'>
+                  | EdenFetchError<418, 'Nagisa'>
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -934,10 +873,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
                   }
                 | {
                       data: null
-                      error: {
-                          status: unknown
-                          value: unknown
-                      }
+                      error: EdenFetchError<number, any>
                       response: Response
                       status: number
                       headers: HeadersInit | undefined
@@ -962,10 +898,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
                       }
                     | {
                           data: null
-                          error: {
-                              status: unknown
-                              value: unknown
-                          }
+                          error: EdenFetchError<number, any>
                           response: Response
                           status: number
                           headers: HeadersInit | undefined
@@ -992,10 +925,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
                       }
                     | {
                           data: null
-                          error: {
-                              status: unknown
-                              value: unknown
-                          }
+                          error: EdenFetchError<number, any>
                           response: Response
                           status: number
                           headers: HeadersInit | undefined
@@ -1021,10 +951,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
                       }
                     | {
                           data: null
-                          error: {
-                              status: unknown
-                              value: unknown
-                          }
+                          error: EdenFetchError<number, any>
                           response: Response
                           status: number
                           headers: HeadersInit | undefined
@@ -1113,7 +1040,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
 
 // ? Return both actual value and generator if yield and return
 {
-	const app = new Elysia().get('', async function* () {
+    const app = new Elysia().get('', async function* () {
         if (Math.random() > 0.5) return 'a'
 
         yield 1
