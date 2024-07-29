@@ -11,7 +11,7 @@ export default defineConfig({
     },
     format: ['cjs', 'esm', 'iife'],
     globalName: 'Eden',
-    minify: true,
+    minify: false,
     external: ['elysia'],
     dts: true,
     async onSuccess() {
