@@ -7,7 +7,15 @@ export class EdenFetchError<
         public status: Status,
         public passedValue: Value
     ) {
-        super(String((passedValue as any)?.message || passedValue))
+        let message = String((passedValue as any)?.message || '')
+        if (!message) {
+            if (typeof passedValue === 'object') {
+                message = JSON.stringify(passedValue)
+            } else {
+                message = String(passedValue || '')
+            }
+        }
+        super(message)
         this.value = passedValue
     }
 }
