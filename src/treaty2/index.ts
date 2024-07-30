@@ -114,13 +114,6 @@ const processHeaders = (
 	}
 }
 
-interface SSEEvent {
-    event: string;
-    data: any;
-    id?: string;
-}
-
-
 class TextDecoderStream extends TransformStream<Uint8Array, string> {
     constructor() {
         const decoder = new TextDecoder('utf-8', {
@@ -148,7 +141,7 @@ class TextDecoderStream extends TransformStream<Uint8Array, string> {
 
 export async function* streamResponse(
     response: Response
-): AsyncGenerator<SSEEvent> {
+): AsyncGenerator {
     const body = response.body
     if (!body) return
 
