@@ -90,6 +90,16 @@ const app = new Elysia()
 			420: t.Literal('Snoop Dogg')
 		}
 	})
+	// @ts-expect-error
+	.get('/validationError', () => {
+		return 'this errors because validation is wrong'
+	}, {
+		response: {
+			200: t.Object({
+				x: t.String()
+			}),
+		}
+	})
 	.get(
 		'/headers',
 		({ headers: { username, alias } }) => ({ username, alias }),
@@ -511,6 +521,13 @@ describe('Treaty2', () => {
 	it('handle optional params', async () => {
 		const data = await Promise.all([client.id.get(), client.id({ id: 'salty' }).get()])
 		expect(data.map(x => x.data)).toEqual(['unknown', 'salty'])
+	})
+	it('error is not [object Object] when there is a validation error', async () => {
+		const { error } = await client.validationError.get()
+		expect(error?.message).toBeTypeOf('string')
+		expect(error?.message).toBe('Expected object')
+		expect(error?.value).toBeTypeOf('object')
+		expect(error?.value?.message).toBe('Expected object')
 	})
 
 })
