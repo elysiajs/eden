@@ -124,7 +124,6 @@ interface SSEEvent {
 class TextDecoderStream extends TransformStream<Uint8Array, string> {
     constructor() {
         const decoder = new TextDecoder('utf-8', {
-            fatal: true,
             ignoreBOM: true
         })
         super({
