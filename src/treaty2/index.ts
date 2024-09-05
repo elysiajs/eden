@@ -191,6 +191,11 @@ const createProxy = (
 					}
 
 					for (const [key, value] of Object.entries(query)) {
+						if (value === null || value instanceof Date) {
+							append(key, value)
+							continue
+						}
+						
 						if (Array.isArray(value)) {
 							for (const v of value) append(key, v)
 							continue
