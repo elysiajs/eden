@@ -1,3 +1,7 @@
+# 1.1.3 - 5 Sep 2024
+Feature:
+- add provenance publish
+
 # 1.1.2 - 25 Jul 2024
 Feature:
 - [#115](https://github.com/elysiajs/eden/pull/115) Stringify query params to allow the nested object
@@ -82,7 +86,7 @@ Bug fix:
 Feature:
 - support for elysia 1.0.2
 
-# 1.0.0 - 16 Mar 2024 
+# 1.0.0 - 16 Mar 2024
 Feature:
 - treaty2
 
