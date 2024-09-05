@@ -2,6 +2,7 @@
 import type { Elysia } from 'elysia'
 import { EdenWS } from './ws'
 import type { IsNever, Not, Prettify } from '../types'
+import { EdenFetchError } from '../errors'
 
 type Files = File | FileList
 
@@ -198,15 +199,12 @@ export namespace Treaty {
         | {
               data: null
               error: Exclude<keyof Res, 200> extends never
-                  ? {
-                        status: unknown
-                        value: unknown
-                    }
+                  ? EdenFetchError<number, any>
                   : {
-                        [Status in keyof Res]: {
-                            status: Status
-                            value: Res[Status]
-                        }
+                        [Status in keyof Res]: EdenFetchError<
+                            Status,
+                            Res[Status]
+                        >
                     }[Exclude<keyof Res, 200>]
               response: Response
               status: number

@@ -1,8 +1,21 @@
 export class EdenFetchError<
-    Status extends number = number,
-    Value = unknown
+    Status = number,
+    Value extends any = any
 > extends Error {
-    constructor(public status: Status, public value: Value) {
-        super(value + '')
+    value: Value
+    constructor(
+        public status: Status,
+        public passedValue: Value
+    ) {
+        let message = String((passedValue as any)?.message || '')
+        if (!message) {
+            if (typeof passedValue === 'object') {
+                message = JSON.stringify(passedValue)
+            } else {
+                message = String(passedValue || '')
+            }
+        }
+        super(message)
+        this.value = passedValue
     }
 }
