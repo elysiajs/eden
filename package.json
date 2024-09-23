@@ -68,7 +68,7 @@
     "@types/bun": "^1.0.3",
     "@types/node": "^18.15.5",
     "elysia": ">= 1.1.0",
-    "esbuild": "^0.19.3",
+    "esbuild": "^0.24.0",
     "eslint": "^8.26.0",
     "expect-type": "^0.17.3",
     "rimraf": "^4.4.1",
