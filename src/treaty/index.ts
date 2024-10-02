@@ -60,8 +60,8 @@ export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
     ws: WebSocket
     url: string
 
-    constructor(url: string) {
-        this.ws = new WebSocket(url)
+    constructor(url: string, protocols?: string[]) {
+        this.ws = new WebSocket(url, protocols)
         this.url = url
     }
 
@@ -172,7 +172,7 @@ const createProxy = (
                     transform?: EdenTreaty.Transform
                     headers?: Record<string, string>
                     query?: Record<string, string | number>
-                }
+                },
             ] = [{}, {}]
         ) {
             let bodyObj: any =
@@ -223,7 +223,8 @@ const createProxy = (
                     url.replace(
                         /^([^]+):\/\//,
                         url.startsWith('https://') ? 'wss://' : 'ws://'
-                    )
+                    ),
+                    options as unknown as string[],
                 )
 
             const execute = async <T extends EdenTreaty.ExecuteOptions>(

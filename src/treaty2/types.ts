@@ -76,8 +76,8 @@ export namespace Treaty {
                             query: Route['subscribe']['query']
                         }) extends infer Param
                 ? {} extends Param
-                    ? (options?: Param) => EdenWS<Route['subscribe']>
-                    : (options?: Param) => EdenWS<Route['subscribe']>
+                    ? (options?: Param, protocols?: string[]) => EdenWS<Route['subscribe']>
+                    : (options?: Param, protocols?: string[]) => EdenWS<Route['subscribe']>
                 : never
             : Route[K] extends {
                     body: infer Body

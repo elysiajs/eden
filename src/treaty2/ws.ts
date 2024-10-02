@@ -5,8 +5,8 @@ import { parseMessageEvent } from '../utils/parsingUtils'
 export class EdenWS<in out Schema extends InputSchema<any> = {}> {
     ws: WebSocket
 
-    constructor(public url: string) {
-        this.ws = new WebSocket(url)
+    constructor(public url: string, protocols?: string[]) {
+        this.ws = new WebSocket(url, protocols)
     }
 
     send(data: Schema['body'] | Schema['body'][]) {
