@@ -152,6 +152,15 @@ const app = new Elysia()
 			ws.close()
 		}
 	})
+	.ws('/custom-protocol', {
+		headers: t.Object({
+			'sec-websocket-protocol': t.Literal('customprotocol'),
+		}),
+		open: async (ws) => { 
+			ws.send('success');
+			ws.close();
+		},
+	})
 	.get('/stream', function* stream() {
 		yield 'a'
 		yield 'b'
@@ -640,4 +649,16 @@ describe('Treaty2 - Using endpoint URL', () => {
 			done()
 		})
 	})
+
+	it('sends the correct custom protocols', async (done) => {
+		const client = treaty<typeof app>('http://localhost:8080')
+
+		await new Promise<void>(res => {
+			const socket = client['custom-protocol'].subscribe(undefined, ['customprotocol']);
+			
+			socket.subscribe(() => res());
+		}) 
+
+		done()
+	});
 })

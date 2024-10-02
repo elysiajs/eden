@@ -51,6 +51,15 @@ const app = new Elysia()
     .post('/string', ({ body }) => body, {
         body: t.String()
     })
+	.ws('/custom-protocol', {
+        headers: t.Object({
+			'sec-websocket-protocol': t.Literal('customprotocol'),
+		}),
+        open: async (ws) => { 
+			ws.send('success');
+			ws.close();
+		},
+	})
     .listen(8082)
 
 const client = edenTreaty<typeof app>('http://localhost:8082')
@@ -270,4 +279,15 @@ describe('Eden Treaty', () => {
 
         expect(data).toEqual({ body: null })
     })
+
+
+	it('sends the correct custom protocols', async (done) => {
+		await new Promise<void>(res => {
+			const socket = client['custom-protocol'].subscribe(undefined, ['customprotocol']);
+			
+			socket.subscribe(() => res());
+		}) 
+
+		done()
+	});
 })
