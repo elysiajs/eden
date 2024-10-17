@@ -196,6 +196,11 @@ const createProxy = (
 							continue
 						}
 
+						if(value instanceof Date) {
+							append(key, value.toISOString())
+							continue
+						}
+
 						if (typeof value === 'object') {
 							append(key, JSON.stringify(value))
 							continue
