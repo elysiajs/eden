@@ -196,7 +196,7 @@ const createProxy = (
 							continue
 						}
 
-						if(value instanceof Date) {
+						if(value instanceof Date && !isNaN(value.getTime())) {
 							append(key, value.toISOString())
 							continue
 						}
