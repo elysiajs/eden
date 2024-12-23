@@ -1,3 +1,8 @@
+# 1.2.0 - 23 Dec 2024
+Feature:
+- support Elysia 1.2
+- Validation error inference
+
 # 1.1.3 - 5 Sep 2024
 Feature:
 - add provenance publish
