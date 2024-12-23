@@ -63,24 +63,24 @@ export const edenFetch =
                 endpoint = endpoint.replace(`:${key}`, value as string)
             })
 
-        const contentType = options.headers?.['Content-Type']
-
-        if (!contentType || contentType === 'application/json')
-            try {
-                body = JSON.stringify(body)
-            } catch (error) {}
-
         const fetch = config?.fetcher || globalThis.fetch
         const queryStr = query
             ? `?${new URLSearchParams(query).toString()}`
             : ''
         const requestUrl = `${server}${endpoint}${queryStr}`
-        const headers = body
-            ? {
-                  'content-type': 'application/json',
-                  ...options.headers
-              }
-            : options.headers
+        const headers = new Headers(options.headers || {})
+        const contentType = headers.get('content-type')
+        if (
+            !(body instanceof FormData) &&
+            !(body instanceof URLSearchParams) &&
+            (!contentType || contentType === 'application/json')
+        ) {
+            try {
+                body = JSON.stringify(body)
+                if (!contentType) headers.set('content-type', 'application/json')
+            } catch (error) {}
+        }
+
         const init = {
             ...options,
             method: options.method?.toUpperCase() || 'GET',

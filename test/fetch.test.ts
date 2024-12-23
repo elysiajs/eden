@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Elysia, t } from 'elysia'
+import { Elysia, form, t } from 'elysia'
 import { edenFetch } from '../src'
 
 import { describe, expect, it, beforeAll } from 'bun:test'
@@ -13,6 +13,17 @@ const json = {
 const app = new Elysia()
     .get('/', () => 'hi')
     .post('/', () => 'post')
+    .post('/form-data', ({ body }) => {
+        return {
+            file: body.file.name,
+            size: body.file.size
+        }
+    }, {
+        body: t.Object({
+            file: t.File()
+        }),
+        parse: 'formdata'
+    })
     .get('/json', ({ body }) => json)
     .get(
         '/json-utf8',
@@ -137,6 +148,22 @@ describe('Eden Fetch', () => {
         const { data } = await fetch('/false', {})
 
         expect(data).toEqual(false)
+    })
+
+    it('parse form data', async () => {
+        const formData = new FormData();
+        formData.append('file', new File(['test'], 'test.txt', { type: 'text/plain' }))
+
+        const { data } = await fetch('/form-data', {
+            method: 'POST',
+            // @ts-ignore
+            body: formData
+        })
+
+        expect(data).toEqual({
+            file: 'test.txt',
+            size: 4
+        })
     })
 
     // ! FIX ME
