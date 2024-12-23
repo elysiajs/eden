@@ -1,11 +1,20 @@
-import { Elysia } from 'elysia'
+import { Elysia, t } from 'elysia'
 import { treaty } from '../src'
 
 const app = new Elysia()
-	.get('', function* () {
-		return 'a'
+	.get('/error', ({ error }) => error("I'm a teapot", 'Kirifuji Nagisa'), {
+		response: {
+			200: t.Void(),
+			418: t.Literal('Kirifuji Nagisa'),
+			420: t.Literal('Snoop Dogg')
+		}
 	})
+	.listen(3000)
 
-const { data } = await treaty(app).index.get()
+app._routes.error
 
-data
+const a = treaty(app)
+
+const { data, error } = await a.error.get()
+
+console.log(data?.image)

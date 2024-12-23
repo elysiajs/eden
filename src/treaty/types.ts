@@ -16,7 +16,7 @@ type MaybeArray<T> = T | T[]
 
 export namespace EdenTreaty {
     export type Create<
-        App extends Elysia<any, any, any, any, any, any, any, any>
+        App extends Elysia<any, any, any, any, any, any, any>
     > = App extends {
         _routes: infer Schema extends Record<string, unknown>
     }

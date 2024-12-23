@@ -1,4 +1,4 @@
-import { Elysia, t } from 'elysia'
+import { Elysia, form, t } from 'elysia'
 import { treaty } from '../src'
 
 import { describe, expect, it, beforeAll, afterAll, mock } from 'bun:test'
@@ -141,9 +141,11 @@ const app = new Elysia()
 			})
 		}
 	)
-	.get('/formdata', () => ({
-		image: Bun.file('./test/kyuukurarin.mp4')
-	}))
+	.get('/formdata', () =>
+		form({
+			image: Bun.file('./test/kyuukurarin.mp4')
+		})
+	)
 	.ws('/json-serialization-deserialization', {
 		open: async (ws) => {
 			for (const item of websocketPayloads) {
@@ -509,10 +511,12 @@ describe('Treaty2', () => {
 	})
 
 	it('handle optional params', async () => {
-		const data = await Promise.all([client.id.get(), client.id({ id: 'salty' }).get()])
-		expect(data.map(x => x.data)).toEqual(['unknown', 'salty'])
+		const data = await Promise.all([
+			client.id.get(),
+			client.id({ id: 'salty' }).get()
+		])
+		expect(data.map((x) => x.data)).toEqual(['unknown', 'salty'])
 	})
-
 })
 
 describe('Treaty2 - Using endpoint URL', () => {

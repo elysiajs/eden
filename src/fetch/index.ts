@@ -52,7 +52,7 @@ const handleResponse = async (response: Response, retry: () => any) => {
 }
 
 export const edenFetch =
-    <App extends Elysia<any, any, any, any, any, any, any, any>>(
+    <App extends Elysia<any, any, any, any, any, any, any>>(
         server: string,
         config?: EdenFetch.Config
     ): EdenFetch.Create<App> =>

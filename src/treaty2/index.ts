@@ -200,8 +200,8 @@ const createProxy = (
 							append(key, JSON.stringify(value))
 							continue
 						}
-							
-				
+
+
 						append(key, `${value}`)
 					}
 				}
@@ -468,7 +468,7 @@ const createProxy = (
 	}) as any
 
 export const treaty = <
-	const App extends Elysia<any, any, any, any, any, any, any, any>
+	const App extends Elysia<any, any, any, any, any, any, any>
 >(
 	domain: string | App,
 	config: Treaty.Config = {}
