@@ -132,7 +132,9 @@ const app = new Elysia()
     .use(plugin)
 
 const api = treaty(app)
+const throwingApi = treaty(app, { shouldThrow: true })
 type api = typeof api
+type throwingApi = typeof throwingApi
 
 type Result<T extends Function> = T extends (...args: any[]) => infer R
     ? Awaited<R>
@@ -1033,4 +1035,12 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
             }
         }
     >
+}
+
+// ? Throwing api config flag should result in slimmed down result structure
+{
+    type Route = throwingApi['index']['get']
+    type Res = Result<Route>
+
+    expectTypeOf<Res>().toEqualTypeOf<'a'>()
 }

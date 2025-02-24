@@ -358,6 +358,13 @@ const createProxy = (
                         headers: response.headers
                     }
 
+                    if (config.shouldThrow) {
+                        if (result.error) {
+                            throw result.error
+                        }
+                        return result.data
+                    }
+
                     return result
                 })()
             }
@@ -375,10 +382,11 @@ const createProxy = (
     }) as any
 
 export const treaty = <
-    const App extends Elysia<any, any, any, any, any, any, any, any>
+    const App extends Elysia<any, any, any, any, any, any, any, any>,
+    ShouldThrow extends boolean = false
 >(
     domain: string | App,
-    config: Treaty.Config = {}
+    config: Treaty.Config<ShouldThrow> = {}
 ): Treaty.Create<App> => {
     if (typeof domain === 'string') {
         if (!domain.includes('://'))

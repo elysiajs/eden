@@ -111,7 +111,7 @@ export namespace Treaty {
                   Prettify<Sign<Route>>
         : never
 
-    export interface Config {
+    export interface Config<ShouldThrow extends boolean> {
         fetch?: Omit<RequestInit, 'headers' | 'method'>
         fetcher?: typeof fetch
         headers?:
@@ -128,14 +128,15 @@ export namespace Treaty {
                 options: FetchRequestInit
             ) => MaybePromise<FetchRequestInit | void>
         >
-        onResponse?: MaybeArray<(response: Response) => MaybePromise<unknown>>
+        onResponse?: MaybeArray<(response: Response) => MaybePromise<unknown>>,
+        shouldThrow?: ShouldThrow
     }
 
     type UnwrapAwaited<T extends Record<number, unknown>> = {
         [K in keyof T]: Awaited<T[K]>
     }
 
-    type TreatyResponse<Res extends Record<number, unknown>> =
+    type TreatyResponse<Res extends Record<number, unknown>, ShouldThrow extends boolean> = ShouldThrow extends false ?
         | {
               data: Res[200]
               error: null
@@ -159,7 +160,8 @@ export namespace Treaty {
               response: Response
               status: number
               headers: FetchRequestInit['headers']
-          }
+          } : Res[200]
+      
 
     export interface OnMessage<Data = unknown> extends MessageEvent {
         data: Data

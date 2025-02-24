@@ -96,6 +96,7 @@ const app = new Elysia()
     })
 
 const client = treaty(app)
+const throwingClient = treaty(app, { shouldThrow: true })
 
 describe('Treaty2', () => {
     it('get index', async () => {
@@ -381,5 +382,23 @@ describe('Treaty2', () => {
         const { data, error } = await client.date.post({ date: new Date() })
 
         expect(data).toBeInstanceOf(Date)
+    })
+
+    it('return concise response', async () => {
+        const r = await throwingClient.index.get()
+
+        expect(r).toBe('a')
+    })
+
+    it('throw error', async () => {
+        let errorThrown = false
+
+        try {
+            await throwingClient.error.get()
+        } catch (error) {
+            errorThrown = true
+        }
+    
+        expect(errorThrown).toBe(true)
     })
 })
