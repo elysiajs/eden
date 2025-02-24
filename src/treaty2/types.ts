@@ -186,7 +186,25 @@ export namespace Treaty {
 		>
 		onResponse?: MaybeArray<(response: Response) => MaybePromise<unknown>>
 		keepDomain?: boolean,
-		shouldThrow?: ShouldThrow
+		/**
+		 * If set to true the calls made by this client will throw an actual error and will not return a response object
+		 * in case of an unsuccessful request.
+		 * Setting this to true reduces the complexity in usage but increases hides away the details of the request.
+		 * @default false
+		 * 
+		 * @example
+		 * ```ts
+		 * const userResult = await backend.auth["upsert-self"].post();
+		 * if (userResult.error) {
+		 *   throw userResult.error;
+		 * }
+		 * const user = userResult.data;
+		 *
+		 * // becomes
+		 * const user = await backend.auth["upsert-self"].post();
+		 * ```
+		 */
+		throw?: ShouldThrow
 	}
 
 	// type UnwrapAwaited<T extends Record<number, unknown>> = {
