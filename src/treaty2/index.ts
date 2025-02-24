@@ -61,8 +61,8 @@ const createNewFile = (v: File) =>
 				reader.readAsArrayBuffer(v)
 			})
 
-const processHeaders = (
-	h: Treaty.Config['headers'],
+const processHeaders = <ShouldThrow extends boolean>(
+	h: Treaty.Config<ShouldThrow>['headers'],
 	path: string,
 	options: RequestInit = {},
 	headers: Record<string, string> = {}
@@ -134,9 +134,9 @@ export async function* streamResponse(response: Response) {
 	}
 }
 
-const createProxy = (
+const createProxy = <ShouldThrow extends boolean>(
 	domain: string,
-	config: Treaty.Config,
+	config: Treaty.Config<ShouldThrow>,
 	paths: string[] = [],
 	elysia?: Elysia<any, any, any, any, any, any>
 ): any =>
@@ -400,6 +400,7 @@ const createProxy = (
 					}
 
 					if (data !== null) {
+						if(config.shouldThrow) return data
 						return {
 							data,
 							error,
@@ -445,6 +446,13 @@ const createProxy = (
 						data = null
 					}
 
+					if (config.shouldThrow) {
+                        if (error) {
+                            throw error
+                        }
+                        return data
+                    }
+
 					return {
 						data,
 						error,
@@ -468,11 +476,12 @@ const createProxy = (
 	}) as any
 
 export const treaty = <
-	const App extends Elysia<any, any, any, any, any, any, any>
+	const App extends Elysia<any, any, any, any, any, any, any>,
+	ShouldThrow extends boolean = false
 >(
 	domain: string | App,
-	config: Treaty.Config = {}
-): Treaty.Create<App> => {
+	config: Treaty.Config<ShouldThrow> = {}
+): Treaty.Create<App, ShouldThrow> => {
 	if (typeof domain === 'string') {
 		if (!config.keepDomain) {
 			if (!domain.includes('://'))

@@ -173,6 +173,7 @@ const app = new Elysia()
 	.get('/id/:id?', ({ params: { id = 'unknown' } }) => id)
 
 const client = treaty(app)
+const throwingClient = treaty(app, { shouldThrow: true })
 
 describe('Treaty2', () => {
 	it('get index', async () => {
@@ -644,4 +645,22 @@ describe('Treaty2 - Using endpoint URL', () => {
 			done()
 		})
 	})
+
+	it('return concise response', async () => {
+        const r = await throwingClient.index.get()
+
+        expect(r).toBe('a')
+    })
+
+    it('throw error', async () => {
+        let errorThrown = false
+
+        try {
+            await throwingClient.error.get()
+        } catch (error) {
+            errorThrown = true
+        }
+
+        expect(errorThrown).toBe(true)
+    })
 })

@@ -58,14 +58,15 @@ export namespace Treaty {
 	}
 
 	export type Create<
-		App extends Elysia<any, any, any, any, any, any, any>
+		App extends Elysia<any, any, any, any, any, any, any>,
+		ShouldThrow extends boolean
 	> = App extends {
 		_routes: infer Schema extends Record<string, any>
 	}
-		? Prettify<Sign<Schema>>
+		? Prettify<Sign<Schema, ShouldThrow>>
 		: 'Please install Elysia before using Eden'
 
-	export type Sign<in out Route extends Record<string, any>> = {
+	export type Sign<in out Route extends Record<string, any>, ShouldThrow extends boolean> = {
 		[K in keyof Route as K extends `:${string}`
 			? never
 			: K]: K extends 'subscribe' // ? Websocket route
@@ -105,7 +106,7 @@ export namespace Treaty {
 										options?: Prettify<Param & TreatyParam>
 									) => Promise<
 										TreatyResponse<
-											ReplaceGeneratorWithAsyncGenerator<Response>
+											ReplaceGeneratorWithAsyncGenerator<Response>, ShouldThrow
 										>
 									>
 								: (
@@ -113,7 +114,7 @@ export namespace Treaty {
 										options?: Prettify<Param & TreatyParam>
 									) => Promise<
 										TreatyResponse<
-											ReplaceGeneratorWithAsyncGenerator<Response>
+											ReplaceGeneratorWithAsyncGenerator<Response>, ShouldThrow
 										>
 									>
 							: (
@@ -123,7 +124,7 @@ export namespace Treaty {
 									options?: Prettify<Param & TreatyParam>
 								) => Promise<
 									TreatyResponse<
-										ReplaceGeneratorWithAsyncGenerator<Response>
+										ReplaceGeneratorWithAsyncGenerator<Response>, ShouldThrow
 									>
 								>
 						: K extends 'get' | 'head'
@@ -131,7 +132,7 @@ export namespace Treaty {
 									options: Prettify<Param & TreatyParam>
 								) => Promise<
 									TreatyResponse<
-										ReplaceGeneratorWithAsyncGenerator<Response>
+										ReplaceGeneratorWithAsyncGenerator<Response>, ShouldThrow
 									>
 								>
 							: (
@@ -141,17 +142,17 @@ export namespace Treaty {
 									options: Prettify<Param & TreatyParam>
 								) => Promise<
 									TreatyResponse<
-										ReplaceGeneratorWithAsyncGenerator<Response>
+										ReplaceGeneratorWithAsyncGenerator<Response>, ShouldThrow
 									>
 								>
 					: never
-				: CreateParams<Route[K]>
+				: CreateParams<Route[K], ShouldThrow>
 	}
 
-	type CreateParams<Route extends Record<string, any>> =
+	type CreateParams<Route extends Record<string, any>, ShouldThrow extends boolean> =
 		Extract<keyof Route, `:${string}`> extends infer Path extends string
 			? IsNever<Path> extends true
-				? Prettify<Sign<Route>>
+				? Prettify<Sign<Route, ShouldThrow>>
 				: // ! DO NOT USE PRETTIFY ON THIS LINE, OTHERWISE FUNCTION CALLING WILL BE OMITTED
 					(((params: {
 						[param in Path extends `:${infer Param}`
@@ -159,15 +160,15 @@ export namespace Treaty {
 								? Param
 								: Param
 							: never]: string | number
-					}) => Prettify<Sign<Route[Path]>> &
-						CreateParams<Route[Path]>) &
-						Prettify<Sign<Route>>) &
+					}) => Prettify<Sign<Route[Path], ShouldThrow>> &
+						CreateParams<Route[Path], ShouldThrow>) &
+						Prettify<Sign<Route, ShouldThrow>>) &
 						(Path extends `:${string}?`
-							? CreateParams<Route[Path]>
+							? CreateParams<Route[Path], ShouldThrow>
 							: {})
 			: never
 
-	export interface Config {
+	export interface Config<ShouldThrow extends boolean> {
 		fetch?: Omit<RequestInit, 'headers' | 'method'>
 		fetcher?: typeof fetch
 		headers?: MaybeArray<
@@ -184,14 +185,16 @@ export namespace Treaty {
 			) => MaybePromise<FetchRequestInit | void>
 		>
 		onResponse?: MaybeArray<(response: Response) => MaybePromise<unknown>>
-		keepDomain?: boolean
+		keepDomain?: boolean,
+		shouldThrow?: ShouldThrow
 	}
 
 	// type UnwrapAwaited<T extends Record<number, unknown>> = {
 	//     [K in keyof T]: Awaited<T[K]>
 	// }
 
-	export type TreatyResponse<Res extends Record<number, unknown>> =
+	export type TreatyResponse<Res extends Record<number, unknown>, ShouldThrow extends boolean> = ShouldThrow extends false
+	?
 		| {
 				data: Res[200]
 				error: null
@@ -215,7 +218,7 @@ export namespace Treaty {
 				response: Response
 				status: number
 				headers: FetchRequestInit['headers']
-		  }
+		  } : Res[200]
 
 	export interface OnMessage<Data = unknown> extends MessageEvent {
 		data: Data
