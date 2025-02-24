@@ -67,9 +67,9 @@ const createNewFile = (v: File) =>
               reader.readAsArrayBuffer(v)
           })
 
-const createProxy = (
+const createProxy = <ShouldThrow extends boolean>(
     domain: string,
-    config: Treaty.Config,
+    config: Treaty.Config<ShouldThrow>,
     paths: string[] = [],
     elysia?: Elysia<any, any, any, any, any, any>
 ): any =>
@@ -387,7 +387,7 @@ export const treaty = <
 >(
     domain: string | App,
     config: Treaty.Config<ShouldThrow> = {}
-): Treaty.Create<App> => {
+): Treaty.Create<App, ShouldThrow> => {
     if (typeof domain === 'string') {
         if (!domain.includes('://'))
             domain =

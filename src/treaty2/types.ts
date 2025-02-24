@@ -26,14 +26,15 @@ export namespace Treaty {
     }
 
     export type Create<
-        App extends Elysia<any, any, any, any, any, any, any, any>
+        App extends Elysia<any, any, any, any, any, any, any, any>,
+        ShouldThrow extends boolean
     > = App extends {
         _routes: infer Schema extends Record<string, any>
     }
-        ? Prettify<Sign<Schema>>
+        ? Prettify<Sign<Schema, ShouldThrow>>
         : 'Please install Elysia before using Eden'
 
-    export type Sign<in out Route extends Record<string, any>> = {
+    export type Sign<in out Route extends Record<string, any>, ShouldThrow extends boolean> = {
         [K in keyof Route as K extends `:${string}`
             ? never
             : K]: K extends 'subscribe' // ? Websocket route
@@ -71,44 +72,46 @@ export namespace Treaty {
                         ? K extends 'get' | 'head'
                             ? (
                                   options?: Prettify<Param & TreatyParam>
-                              ) => Promise<TreatyResponse<Response>>
+                              ) => Promise<
+                                  TreatyResponse<Response, ShouldThrow>
+                              >
                             : (
                                   body?: Body,
                                   options?: Prettify<Param & TreatyParam>
-                              ) => Promise<TreatyResponse<Response>>
+                              ) => Promise<TreatyResponse<Response, ShouldThrow>>
                         : (
                               body: Body extends Record<string, unknown>
                                   ? ReplaceBlobWithFiles<Body>
                                   : Body,
                               options?: Prettify<Param & TreatyParam>
-                          ) => Promise<TreatyResponse<Response>>
+                          ) => Promise<TreatyResponse<Response, ShouldThrow>>
                     : K extends 'get' | 'head'
                     ? (
                           options: Prettify<Param & TreatyParam>
-                      ) => Promise<TreatyResponse<Response>>
+                      ) => Promise<TreatyResponse<Response, ShouldThrow>>
                     : (
                           body: Body extends Record<string, unknown>
                               ? ReplaceBlobWithFiles<Body>
                               : Body,
                           options: Prettify<Param & TreatyParam>
-                      ) => Promise<TreatyResponse<Response>>
+                      ) => Promise<TreatyResponse<Response, ShouldThrow>>
                 : never
-            : CreateParams<Route[K]>
+            : CreateParams<Route[K], ShouldThrow>
     }
 
-    type CreateParams<Route extends Record<string, any>> = Extract<
+    type CreateParams<Route extends Record<string, any>, ShouldThrow extends boolean> = Extract<
         keyof Route,
         `:${string}`
     > extends infer Path extends string
         ? IsNever<Path> extends true
-            ? Prettify<Sign<Route>>
+            ? Prettify<Sign<Route, ShouldThrow>>
             : // ! DO NOT USE PRETTIFY ON THIS LINE, OTHERWISE FUNCTION CALLING WILL BE OMITTED
               ((params: {
                   [param in Path extends `:${infer Param}` ? Param : never]:
                       | string
                       | number
-              }) => Prettify<Sign<Route[Path]>> & CreateParams<Route[Path]>) &
-                  Prettify<Sign<Route>>
+              }) => Prettify<Sign<Route[Path], ShouldThrow>> & CreateParams<Route[Path], ShouldThrow>) &
+                  Prettify<Sign<Route, ShouldThrow>>
         : never
 
     export interface Config<ShouldThrow extends boolean> {
@@ -128,7 +131,7 @@ export namespace Treaty {
                 options: FetchRequestInit
             ) => MaybePromise<FetchRequestInit | void>
         >
-        onResponse?: MaybeArray<(response: Response) => MaybePromise<unknown>>,
+        onResponse?: MaybeArray<(response: Response) => MaybePromise<unknown>>
         shouldThrow?: ShouldThrow
     }
 
@@ -136,32 +139,36 @@ export namespace Treaty {
         [K in keyof T]: Awaited<T[K]>
     }
 
-    type TreatyResponse<Res extends Record<number, unknown>, ShouldThrow extends boolean> = ShouldThrow extends false ?
-        | {
-              data: Res[200]
-              error: null
-              response: Response
-              status: number
-              headers: FetchRequestInit['headers']
-          }
-        | {
-              data: null
-              error: Exclude<keyof Res, 200> extends never
-                  ? {
-                        status: unknown
-                        value: unknown
-                    }
-                  : {
-                        [Status in keyof Res]: {
-                            status: Status
-                            value: Res[Status]
-                        }
-                    }[Exclude<keyof Res, 200>]
-              response: Response
-              status: number
-              headers: FetchRequestInit['headers']
-          } : Res[200]
-      
+    type TreatyResponse<
+        Res extends Record<number, unknown>,
+        ShouldThrow extends boolean
+    > = ShouldThrow extends false
+        ?
+              | {
+                    data: Res[200]
+                    error: null
+                    response: Response
+                    status: number
+                    headers: FetchRequestInit['headers']
+                }
+              | {
+                    data: null
+                    error: Exclude<keyof Res, 200> extends never
+                        ? {
+                              status: unknown
+                              value: unknown
+                          }
+                        : {
+                              [Status in keyof Res]: {
+                                  status: Status
+                                  value: Res[Status]
+                              }
+                          }[Exclude<keyof Res, 200>]
+                    response: Response
+                    status: number
+                    headers: FetchRequestInit['headers']
+                }
+        : Res[200]
 
     export interface OnMessage<Data = unknown> extends MessageEvent {
         data: Data
