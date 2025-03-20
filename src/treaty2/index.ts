@@ -223,7 +223,7 @@ const createProxy = (
 						path +
 						q
 
-					return new EdenWS(url)
+					return new EdenWS(url, headers['Sec-WebSocket-Protocol'])
 				}
 
 				return (async () => {
