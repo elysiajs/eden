@@ -232,7 +232,7 @@ const createProxy = (
 						body,
 						...conf,
 						headers
-					} satisfies FetchRequestInit
+					} satisfies RequestInit
 
 					fetchInit.headers = {
 						...headers,
