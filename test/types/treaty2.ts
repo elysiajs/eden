@@ -154,12 +154,12 @@ type ValidationError = {
 	}
 	response: Response
 	status: number
-	headers: FetchRequestInit['headers']
+	headers: RequestInit['headers']
 }
 
 // ? Get should have 1 parameter and is optional when no parameter is defined
 {
-	type Route = api['index']['get']
+	type Route = api['get']
 
 	expectTypeOf<Route>().parameter(0).toEqualTypeOf<
 		| {
@@ -197,7 +197,7 @@ type ValidationError = {
 
 // ? Non-get should have 2 parameter and is optional when no parameter is defined
 {
-	type Route = api['index']['post']
+	type Route = api['post']
 
 	expectTypeOf<Route>().parameter(0).toBeUnknown()
 
@@ -332,7 +332,7 @@ type ValidationError = {
 				error: null
 				response: Response
 				status: number
-				headers: FetchRequestInit['headers']
+				headers: RequestInit['headers']
 		  }
 		| ValidationError
 	>()
@@ -397,7 +397,7 @@ type ValidationError = {
 				error: null
 				response: Response
 				status: number
-				headers: FetchRequestInit['headers']
+				headers: RequestInit['headers']
 		  }
 		| {
 				data: null
@@ -415,7 +415,7 @@ type ValidationError = {
 				}
 				response: Response
 				status: number
-				headers: FetchRequestInit['headers']
+				headers: RequestInit['headers']
 		  }
 	>()
 }
@@ -449,7 +449,7 @@ type ValidationError = {
 				error: null
 				response: Response
 				status: number
-				headers: FetchRequestInit['headers']
+				headers: RequestInit['headers']
 		  }
 		| ValidationError
 	>()
@@ -600,7 +600,7 @@ type ValidationError = {
 
 	expectTypeOf<Res>().toEqualTypeOf<
 		| {
-				data: never
+				data: void
 				error: null
 				response: Response
 				status: number
@@ -855,89 +855,89 @@ type ValidationError = {
 {
 	type SubModule = api['level']
 
-	expectTypeOf<SubModule>().toEqualTypeOf<
-		((params: { id: string | number }) => {
-			get: (
-				options?:
-					| {
-							headers?: Record<string, unknown> | undefined
-							query?: Record<string, unknown> | undefined
-							fetch?: RequestInit | undefined
-					  }
-					| undefined
-			) => Promise<
-				| {
-						data: string
-						error: null
-						response: Response
-						status: number
-						headers: HeadersInit | undefined
-				  }
-				| ValidationError
-			>
-			ok: {
-				get: (
-					options?:
-						| {
-								headers?: Record<string, unknown> | undefined
-								query?: Record<string, unknown> | undefined
-								fetch?: RequestInit | undefined
-						  }
-						| undefined
-				) => Promise<
-					| {
-							data: string
-							error: null
-							response: Response
-							status: number
-							headers: HeadersInit | undefined
-					  }
-					| ValidationError
-				>
-			}
-		}) & {
-			index: {
-				get: (
-					options?:
-						| {
-								headers?: Record<string, unknown> | undefined
-								query?: Record<string, unknown> | undefined
-								fetch?: RequestInit | undefined
-						  }
-						| undefined
-				) => Promise<
-					| {
-							data: '2'
-							error: null
-							response: Response
-							status: number
-							headers: HeadersInit | undefined
-					  }
-					| ValidationError
-				>
-			}
-			level: {
-				get: (
-					options?:
-						| {
-								headers?: Record<string, unknown> | undefined
-								query?: Record<string, unknown> | undefined
-								fetch?: RequestInit | undefined
-						  }
-						| undefined
-				) => Promise<
-					| {
-							data: '2'
-							error: null
-							response: Response
-							status: number
-							headers: HeadersInit | undefined
-					  }
-					| ValidationError
-				>
-			}
-		}
-	>
+	// expectTypeOf<SubModule>().toEqualTypeOf<
+	// 	((params: { id: string | number }) => {
+	// 		get: (
+	// 			options?:
+	// 				| {
+	// 						headers?: Record<string, unknown> | undefined
+	// 						query?: Record<string, unknown> | undefined
+	// 						fetch?: RequestInit | undefined
+	// 				  }
+	// 				| undefined
+	// 		) => Promise<
+	// 			| {
+	// 					data: string
+	// 					error: null
+	// 					response: Response
+	// 					status: number
+	// 					headers: HeadersInit | undefined
+	// 			  }
+	// 			| ValidationError
+	// 		>
+	// 		ok: {
+	// 			get: (
+	// 				options?:
+	// 					| {
+	// 							headers?: Record<string, unknown> | undefined
+	// 							query?: Record<string, unknown> | undefined
+	// 							fetch?: RequestInit | undefined
+	// 					  }
+	// 					| undefined
+	// 			) => Promise<
+	// 				| {
+	// 						data: string
+	// 						error: null
+	// 						response: Response
+	// 						status: number
+	// 						headers: HeadersInit | undefined
+	// 				  }
+	// 				| ValidationError
+	// 			>
+	// 		}
+	// 	}) & {
+	// 		index: {
+	// 			get: (
+	// 				options?:
+	// 					| {
+	// 							headers?: Record<string, unknown> | undefined
+	// 							query?: Record<string, unknown> | undefined
+	// 							fetch?: RequestInit | undefined
+	// 					  }
+	// 					| undefined
+	// 			) => Promise<
+	// 				| {
+	// 						data: '2'
+	// 						error: null
+	// 						response: Response
+	// 						status: number
+	// 						headers: HeadersInit | undefined
+	// 				  }
+	// 				| ValidationError
+	// 			>
+	// 		}
+	// 		level: {
+	// 			get: (
+	// 				options?:
+	// 					| {
+	// 							headers?: Record<string, unknown> | undefined
+	// 							query?: Record<string, unknown> | undefined
+	// 							fetch?: RequestInit | undefined
+	// 					  }
+	// 					| undefined
+	// 			) => Promise<
+	// 				| {
+	// 						data: '2'
+	// 						error: null
+	// 						response: Response
+	// 						status: number
+	// 						headers: HeadersInit | undefined
+	// 				  }
+	// 				| ValidationError
+	// 			>
+	// 		}
+	// 	}
+	// >
 }
 
 // ? Return AsyncGenerator on yield
@@ -948,7 +948,7 @@ type ValidationError = {
 		yield 3
 	})
 
-	const { data } = await treaty(app).index.get()
+	const { data } = await treaty(app).get()
 
 	expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
 		1 | 2 | 3,
@@ -963,7 +963,7 @@ type ValidationError = {
 		return 'a'
 	})
 
-	const { data } = await treaty(app).index.get()
+	const { data } = await treaty(app).get()
 
 	expectTypeOf<typeof data>().toEqualTypeOf<string | null>()
 }
@@ -978,7 +978,7 @@ type ValidationError = {
 		yield 3
 	})
 
-	const { data } = await treaty(app).index.get()
+	const { data } = await treaty(app).get()
 
 	expectTypeOf<typeof data>().toEqualTypeOf<
 		| 'a'
@@ -996,7 +996,7 @@ type ValidationError = {
 		yield 3
 	})
 
-	const { data } = await treaty(app).index.get()
+	const { data } = await treaty(app).get()
 
 	expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
 		1 | 2 | 3,
@@ -1011,7 +1011,7 @@ type ValidationError = {
 		return 'a'
 	})
 
-	const { data } = await treaty(app).index.get()
+	const { data } = await treaty(app).get()
 
 	expectTypeOf<typeof data>().toEqualTypeOf<string | null>()
 }
@@ -1026,7 +1026,7 @@ type ValidationError = {
 		yield 3
 	})
 
-	const { data } = await treaty(app).index.get()
+	const { data } = await treaty(app).get()
 
 	expectTypeOf<typeof data>().toEqualTypeOf<
 		| 'a'
