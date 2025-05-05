@@ -1,3 +1,8 @@
+# 1.3.1 - 5 May 2025
+Bug fix:
+- [#193](https://github.com/elysiajs/eden/pull/193) t.Files() upload from server side #124
+- [#185](https://github.com/elysiajs/eden/pull/185) exclude null-ish values from query encoding by @ShuviSchwarze
+
 # 1.3.0 - 5 May 2025
 Feature:
 - support Elysia 1.3
