@@ -64,9 +64,31 @@ const app = new Elysia()
 			username: t.String()
 		})
 	})
+	.get('/query-optional', ({ query }) => query, {
+		query: t.Object({
+			username: t.Optional(t.String()),
+		})
+	})
+	.get('/query-nullable', ({ query }) => query, {
+		query: t.Object({
+			username: t.Nullable(t.String()),
+		})
+	})
 	.get('/queries', ({ query }) => query, {
 		query: t.Object({
 			username: t.String(),
+			alias: t.Literal('Kristen')
+		})
+	})
+	.get('/queries-optional', ({ query }) => query, {
+		query: t.Object({
+			username: t.Optional(t.String()),
+			alias: t.Literal('Kristen')
+		})
+	})
+	.get('/queries-nullable', ({ query }) => query, {
+		query: t.Object({
+			username: t.Nullable(t.Number()),
 			alias: t.Literal('Kristen')
 		})
 	})
@@ -273,6 +295,32 @@ describe('Treaty2', () => {
 		expect(data).toEqual(query)
 	})
 
+	// t.Nullable is impossible to represent with query params
+	// without elysia specifically parsing 'null'
+	it('get null query', async () => {
+		const query = { username: null }
+
+		const { data, error } = await client['query-nullable'].get({
+			query
+		})
+
+		expect(data).toBeNull()
+		expect(error?.status).toBe(422)
+		expect(error?.value.type).toBe("validation")
+	})
+
+	it('get optional query', async () => {
+		const query = { username: undefined }
+
+		const { data } = await client['query-optional'].get({
+			query
+		})
+
+		expect(data).toEqual({
+			username: undefined
+		})
+	})
+
 	it('get queries', async () => {
 		const query = { username: 'A', alias: 'Kristen' } as const
 
@@ -281,6 +329,33 @@ describe('Treaty2', () => {
 		})
 
 		expect(data).toEqual(query)
+	})
+
+	it('get optional queries', async () => {
+		const query = { username: undefined, alias: 'Kristen' } as const
+
+		const { data } = await client['queries-optional'].get({
+			query
+		})
+
+		expect(data).toEqual({
+			username: undefined,
+			alias: 'Kristen'
+		})
+	})
+
+	// t.Nullable is impossible to represent with query params
+	// without elysia specifically parsing 'null'
+	it('get nullable queries', async () => {
+		const query = { username: null, alias: 'Kristen' } as const
+
+		const { data, error } = await client['queries-nullable'].get({
+			query
+		})
+
+		expect(data).toBeNull()
+		expect(error?.status).toBe(422)
+		expect(error?.value.type).toBe("validation")
 	})
 
 	it('post queries', async () => {

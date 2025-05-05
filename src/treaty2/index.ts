@@ -196,12 +196,17 @@ const createProxy = (
 							continue
 						}
 
-						if (typeof value === 'object') {
-							append(key, JSON.stringify(value))
+						// Explicitly exclude null and undefined values from url encoding
+						// to prevent parsing string "null" / string "undefined"
+						if (value === undefined || value === null) {
 							continue
 						}
 
 
+						if (typeof value === 'object') {
+							append(key, JSON.stringify(value))
+							continue
+						}
 						append(key, `${value}`)
 					}
 				}

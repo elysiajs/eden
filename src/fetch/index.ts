@@ -51,8 +51,7 @@ const handleResponse = async (response: Response, retry: () => any) => {
 	}
 }
 
-export const edenFetch =
-	<App extends Elysia<any, any, any, any, any, any, any>>(
+export const edenFetch = <App extends Elysia<any, any, any, any, any, any, any>>(
 		server: string,
 		config?: EdenFetch.Config
 	): EdenFetch.Create<App> =>
@@ -72,9 +71,19 @@ export const edenFetch =
 			} catch (error) {}
 
 		const fetch = config?.fetcher || globalThis.fetch
-		const queryStr = query
-			? `?${new URLSearchParams(query).toString()}`
-			: ''
+
+        const nonNullishQuery = query
+            ? Object.fromEntries(
+                  Object.entries(query).filter(
+                      ([_, val]) => val !== undefined && val !== null
+                  )
+              )
+            : null
+
+        const queryStr = nonNullishQuery
+            ? `?${new URLSearchParams(nonNullishQuery).toString()}`
+            : ''
+
 		const requestUrl = `${server}${endpoint}${queryStr}`
 		const headers = body
 			? {
