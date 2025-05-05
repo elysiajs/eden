@@ -288,6 +288,22 @@ const createProxy = (
 						for (const [key, field] of Object.entries(
 							fetchInit.body
 						)) {
+
+						  if (Array.isArray(field)) {
+								for (let i = 0; i < field.length; i++) {
+									const value = (field as any)[i]
+
+									formData.append(
+										key as any,
+										value instanceof File
+											? await createNewFile(value)
+											: value
+									)
+								}
+
+								continue
+							}
+
 							if (isServer) {
 								formData.append(key, field as any)
 
@@ -309,21 +325,6 @@ const createProxy = (
 										key as any,
 										await createNewFile((field as any)[i])
 									)
-
-								continue
-							}
-
-							if (Array.isArray(field)) {
-								for (let i = 0; i < field.length; i++) {
-									const value = (field as any)[i]
-
-									formData.append(
-										key as any,
-										value instanceof File
-											? await createNewFile(value)
-											: value
-									)
-								}
 
 								continue
 							}

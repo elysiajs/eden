@@ -143,7 +143,7 @@ const app = new Elysia()
 	)
 	.get('/formdata', () =>
 		form({
-			image: Bun.file('./test/kyuukurarin.mp4')
+			image: Bun.file('./test/public/kyuukurarin.mp4')
 		})
 	)
 	.ws('/json-serialization-deserialization', {
@@ -171,6 +171,22 @@ const app = new Elysia()
 		return 'a'
 	})
 	.get('/id/:id?', ({ params: { id = 'unknown' } }) => id)
+	.post(
+    '/files',
+    ({ body: { files } }) => files.map((file) => file.name),
+    {
+      body: t.Object({
+          files: t.Files()
+      })
+    }
+  )
+  .post(
+    '/file',
+    ({ body: { file } }) => file.name, {
+    body: t.Object({
+        file: t.File()
+    })
+  })
 
 const client = treaty(app)
 
@@ -644,4 +660,123 @@ describe('Treaty2 - Using endpoint URL', () => {
 			done()
 		})
 	})
+})
+
+
+describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
+const filePath1 = `${import.meta.dir}/public/aris-yuzu.jpg`
+const filePath2 = `${import.meta.dir}/public/midori.png`
+const filePath3 = `${import.meta.dir}/public/kyuukurarin.mp4`
+
+const bunFile1 = Bun.file(filePath1)
+const bunFile2 = Bun.file(filePath2)
+const bunFile3 = Bun.file(filePath3)
+
+const file1 = new File([await bunFile1.arrayBuffer()], 'cumin.webp', {
+    type: 'image/webp'
+})
+const file2 = new File([await bunFile2.arrayBuffer()], 'curcuma.jpg', {
+    type: 'image/jpeg'
+})
+const file3 = new File([await bunFile3.arrayBuffer()], 'kyuukurarin.mp4', {
+    type: 'video/mp4'
+})
+
+const filesForm = new FormData()
+filesForm.append('files', file1)
+filesForm.append('files', file2)
+filesForm.append('files', file3)
+
+const bunFilesForm = new FormData()
+bunFilesForm.append('files', bunFile1)
+bunFilesForm.append('files', bunFile2)
+bunFilesForm.append('files', bunFile3)
+
+it('accept a single Bun.file', async () => {
+    const { data: files } = await client.files.post({
+        files: bunFile1 as unknown as FileList
+    })
+
+    expect(files).not.toBeNull()
+    expect(files).not.toBeUndefined()
+    expect(files).toEqual([bunFile1.name!])
+
+    const { data: filesbis } = await client.files.post({
+        files: [bunFile1] as unknown as FileList
+    })
+
+    expect(filesbis).not.toBeNull()
+    expect(filesbis).not.toBeUndefined()
+    expect(filesbis).toEqual([bunFile1.name!])
+
+    const { data: file } = await client.file.post({
+        file: bunFile1 as unknown as File
+    })
+
+    expect(file).not.toBeNull()
+    expect(file).not.toBeUndefined()
+    expect(file).toEqual(bunFile1.name!)
+})
+
+it('accept a single regular file', async () => {
+    const { data: files } = await client.files.post({
+        files: file1 as unknown as FileList
+    })
+
+    expect(files).not.toBeNull()
+    expect(files).not.toBeUndefined()
+    expect(files).toEqual([file1.name!])
+
+    const { data: filesbis } = await client.files.post({
+        files: [file1] as unknown as FileList
+    })
+
+    expect(filesbis).not.toBeNull()
+    expect(filesbis).not.toBeUndefined()
+    expect(filesbis).toEqual([file1.name!])
+
+    const { data: file } = await client.file.post({
+        file: file1 as unknown as File
+    })
+
+    expect(file).not.toBeNull()
+    expect(file).not.toBeUndefined()
+    expect(file).toEqual(file1.name!)
+})
+
+it('accept an array of multiple Bun.file', async () => {
+    const { data: files } = await client.files.post({
+        files: [bunFile1, bunFile2, bunFile3] as unknown as FileList
+    })
+
+    expect(files).not.toBeNull()
+    expect(files).not.toBeUndefined()
+    expect(files).toEqual([bunFile1.name!, bunFile2.name!, bunFile3.name!])
+
+    const { data: filesbis } = await client.files.post({
+        files: bunFilesForm.getAll('files') as unknown as FileList
+    })
+
+    expect(filesbis).not.toBeNull()
+    expect(filesbis).not.toBeUndefined()
+    expect(filesbis).toEqual([bunFile1.name!, bunFile2.name!, bunFile3.name!])
+})
+
+it('accept an array of multiple regular file', async () => {
+    const { data: files } = await client.files.post({
+        files: [file1, file2, file3] as unknown as FileList
+    })
+
+    expect(files).not.toBeNull()
+    expect(files).not.toBeUndefined()
+    expect(files).toEqual([file1.name!, file2.name!, file3.name!])
+
+    const { data: filesbis } = await client.files.post({
+        files: filesForm.getAll('files') as unknown as FileList
+    })
+
+    expect(filesbis).not.toBeNull()
+    expect(filesbis).not.toBeUndefined()
+    expect(filesbis).toEqual([file1.name!, file2.name!, file3.name!])
+})
 })

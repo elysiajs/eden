@@ -2,7 +2,7 @@ import { Elysia } from 'elysia'
 import { treaty } from '../src'
 
 const app = new Elysia().get('/', () => ({
-    a: Bun.file('./test/kyuukurarin.mp4')
+    a: Bun.file('./test/public/kyuukurarin.mp4')
 }))
 
 const api = treaty(app)
