@@ -1,3 +1,10 @@
+# 1.3.0 - 5 May 2025
+Feature:
+- support Elysia 1.3
+
+Breaking Change:
+- [Treaty 2] drop the need for `.index()`
+
 # 1.2.0 - 23 Dec 2024
 Feature:
 - support Elysia 1.2

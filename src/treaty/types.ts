@@ -18,7 +18,7 @@ export namespace EdenTreaty {
     export type Create<
         App extends Elysia<any, any, any, any, any, any, any>
     > = App extends {
-        _routes: infer Schema extends Record<string, unknown>
+        '~Routes': infer Schema extends Record<string, unknown>
     }
         ? Prettify<Sign<Schema>>
         : 'Please install Elysia before using Eden'

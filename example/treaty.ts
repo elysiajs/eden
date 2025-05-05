@@ -1,19 +1,19 @@
 import { treaty } from '../src'
 import type { Server } from './server'
 
-const eden = treaty<Server>('http://localhost:8080')
+const api = treaty<Server>('localhost:8080')
 
-const a = await eden.products.nendoroid.skadi.get({
-    query: {
-        username: 'a',
-        filter: {
-            name: 'b',
-            address: 'c',
-            age: '10'
-        }
-    }
+const { data, error } = await api.products.nendoroid.skadi.get({
+	query: {
+		filter: { name: 'skadi' }
+	}
 })
 
-// console.log(a)
+if (error)
+	switch (error.status) {
+		case 422:
+			console.log(error.value.message)
+			throw error
+	}
 
-console.log(await eden.array.post('hi'))
+console.log(data)
