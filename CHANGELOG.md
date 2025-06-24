@@ -1,3 +1,24 @@
+# 1.3.2 - 5 May 2025
+Bug fix:
+- Unwrap FormData
+
+# 1.3.1 - 5 May 2025
+Bug fix:
+- [#193](https://github.com/elysiajs/eden/pull/193) t.Files() upload from server side #124
+- [#185](https://github.com/elysiajs/eden/pull/185) exclude null-ish values from query encoding by @ShuviSchwarze
+
+# 1.3.0 - 5 May 2025
+Feature:
+- support Elysia 1.3
+
+Breaking Change:
+- [Treaty 2] drop the need for `.index()`
+
+# 1.2.0 - 23 Dec 2024
+Feature:
+- support Elysia 1.2
+- Validation error inference
+
 # 1.1.3 - 5 Sep 2024
 Feature:
 - add provenance publish

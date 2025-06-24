@@ -2,10 +2,8 @@ import { Elysia } from 'elysia'
 import { treaty } from '../src'
 
 const app = new Elysia()
-	.get('', function* () {
-		return 'a'
-	})
+	.get('/', () => 'hi')
 
-const { data } = await treaty(app).index.get()
+const api = treaty(app)
 
-data
+await api.get()

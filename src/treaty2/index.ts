@@ -201,12 +201,17 @@ const createProxy = (
 							continue
 						}
 
+						// Explicitly exclude null and undefined values from url encoding
+						// to prevent parsing string "null" / string "undefined"
+						if (value === undefined || value === null) {
+							continue
+						}
+
+
 						if (typeof value === 'object') {
 							append(key, JSON.stringify(value))
 							continue
 						}
-							
-				
 						append(key, `${value}`)
 					}
 				}
@@ -237,7 +242,7 @@ const createProxy = (
 						body,
 						...conf,
 						headers
-					} satisfies FetchRequestInit
+					} satisfies RequestInit
 
 					fetchInit.headers = {
 						...headers,
@@ -293,6 +298,22 @@ const createProxy = (
 						for (const [key, field] of Object.entries(
 							fetchInit.body
 						)) {
+
+						  if (Array.isArray(field)) {
+								for (let i = 0; i < field.length; i++) {
+									const value = (field as any)[i]
+
+									formData.append(
+										key as any,
+										value instanceof File
+											? await createNewFile(value)
+											: value
+									)
+								}
+
+								continue
+							}
+
 							if (isServer) {
 								formData.append(key, field as any)
 
@@ -314,21 +335,6 @@ const createProxy = (
 										key as any,
 										await createNewFile((field as any)[i])
 									)
-
-								continue
-							}
-
-							if (Array.isArray(field)) {
-								for (let i = 0; i < field.length; i++) {
-									const value = (field as any)[i]
-
-									formData.append(
-										key as any,
-										value instanceof File
-											? await createNewFile(value)
-											: value
-									)
-								}
 
 								continue
 							}
@@ -473,7 +479,7 @@ const createProxy = (
 	}) as any
 
 export const treaty = <
-	const App extends Elysia<any, any, any, any, any, any, any, any>
+	const App extends Elysia<any, any, any, any, any, any, any>
 >(
 	domain: string | App,
 	config: Treaty.Config = {}
