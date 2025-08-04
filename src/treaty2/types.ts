@@ -12,12 +12,6 @@ type Files = File | FileList
 //         : RecordType[K]
 // }
 
-type ReplaceBlobWithFiles<in out RecordType extends Record<string, unknown>> = {
-    [K in keyof RecordType]: RecordType[K] extends Blob | Blob[]
-        ? Files
-        : RecordType[K]
-} & {}
-
 type And<A extends boolean, B extends boolean> = A extends true
     ? B extends true
         ? true
@@ -56,7 +50,7 @@ export namespace Treaty {
         App extends {
             '~Routes': infer Schema extends Record<string, any>
         }
-            ? Prettify<Sign<Schema>>
+            ? Prettify<Sign<Schema>> & CreateParams<Schema>
             : 'Please install Elysia before using Eden'
 
     export type Sign<in out Route extends Record<string, any>> = {
@@ -73,9 +67,7 @@ export namespace Treaty {
                       : {
                             query: Route['subscribe']['query']
                         }) extends infer Param
-                ? {} extends Param
-                    ? (options?: Param) => EdenWS<Route['subscribe']>
-                    : (options?: Param) => EdenWS<Route['subscribe']>
+                ? (options?: Param) => EdenWS<Route['subscribe']>
                 : never
             : Route[K] extends {
                     body: infer Body
@@ -97,23 +89,13 @@ export namespace Treaty {
                           ? K extends 'get' | 'head'
                               ? (
                                     options?: Prettify<Param & TreatyParam>
-                                ) => Promise<
-                                    TreatyResponse<
-                                        ReplaceGeneratorWithAsyncGenerator<Response>
-                                    >
-                                >
+                                ) => Promise<TreatyResponse<Response>>
                               : (
                                     body?: Body,
                                     options?: Prettify<Param & TreatyParam>
-                                ) => Promise<
-                                    TreatyResponse<
-                                        ReplaceGeneratorWithAsyncGenerator<Response>
-                                    >
-                                >
+                                ) => Promise<TreatyResponse<Response>>
                           : (
-                                body: Body extends Record<string, unknown>
-                                    ? ReplaceBlobWithFiles<Body>
-                                    : Body,
+                                body: Body,
                                 options?: Prettify<Param & TreatyParam>
                             ) => Promise<
                                 TreatyResponse<
@@ -123,21 +105,11 @@ export namespace Treaty {
                       : K extends 'get' | 'head'
                         ? (
                               options: Prettify<Param & TreatyParam>
-                          ) => Promise<
-                              TreatyResponse<
-                                  ReplaceGeneratorWithAsyncGenerator<Response>
-                              >
-                          >
+                          ) => Promise<TreatyResponse<Response>>
                         : (
-                              body: Body extends Record<string, unknown>
-                                  ? ReplaceBlobWithFiles<Body>
-                                  : Body,
+                              body: Body,
                               options: Prettify<Param & TreatyParam>
-                          ) => Promise<
-                              TreatyResponse<
-                                  ReplaceGeneratorWithAsyncGenerator<Response>
-                              >
-                          >
+                          ) => Promise<TreatyResponse<Response>>
                   : never
               : CreateParams<Route[K]>
     }

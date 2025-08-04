@@ -1,3 +1,7 @@
+# 1.3.3
+Bug fix:
+- [elysia#823](https://github.com/elysiajs/elysia/issues/823) treaty2: not generating for dynamic params at root
+
 # 1.3.2 - 5 May 2025
 Bug fix:
 - Unwrap FormData
