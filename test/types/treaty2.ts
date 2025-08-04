@@ -965,7 +965,11 @@ type ValidationError = {
 
     const { data } = await treaty(app).get()
 
-    expectTypeOf<typeof data>().toEqualTypeOf< AsyncGenerator<never, string, unknown> | null>()
+    expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
+        never,
+        string,
+        unknown
+    > | null>()
 }
 
 // ? Return both actual value and generator if yield and return

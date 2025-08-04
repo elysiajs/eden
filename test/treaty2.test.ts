@@ -851,4 +851,13 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
         expect(filesbis).not.toBeUndefined()
         expect(filesbis).toEqual([file1.name!, file2.name!, file3.name!])
     })
+
+    it('handle root dynamic parameter', async () => {
+        const app = new Elysia().get('/:id', ({ params: { id } }) => id)
+
+        const api = treaty(app)
+        const { data } = await api({ id: '1' }).get()
+
+        expect(data).toBe(1)
+    })
 })
