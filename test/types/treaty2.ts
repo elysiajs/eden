@@ -965,7 +965,7 @@ type ValidationError = {
 
     const { data } = await treaty(app).get()
 
-    expectTypeOf<typeof data>().toEqualTypeOf<string | null>()
+    expectTypeOf<typeof data>().toEqualTypeOf< AsyncGenerator<never, string, unknown> | null>()
 }
 
 // ? Return both actual value and generator if yield and return
@@ -980,12 +980,11 @@ type ValidationError = {
 
     const { data } = await treaty(app).get()
 
-    expectTypeOf<typeof data>().toEqualTypeOf<
-        | 'a'
-        | AsyncGenerator<1 | 2 | 3, 'a' | undefined, unknown>
-        | null
-        | undefined
-    >()
+    expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
+        1 | 2 | 3,
+        'a' | undefined,
+        unknown
+    > | null>()
 }
 
 // ? Return AsyncGenerator on yield
@@ -1013,7 +1012,11 @@ type ValidationError = {
 
     const { data } = await treaty(app).get()
 
-    expectTypeOf<typeof data>().toEqualTypeOf<string | null>()
+    expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
+        never,
+        string,
+        unknown
+    > | null>()
 }
 
 // ? Return both actual value and generator if yield and return
@@ -1028,12 +1031,11 @@ type ValidationError = {
 
     const { data } = await treaty(app).get()
 
-    expectTypeOf<typeof data>().toEqualTypeOf<
-        | 'a'
-        | AsyncGenerator<1 | 2 | 3, 'a' | undefined, unknown>
-        | null
-        | undefined
-    >()
+    expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
+        1 | 2 | 3,
+        'a' | undefined,
+        unknown
+    > | null>()
 }
 
 {
@@ -1046,4 +1048,15 @@ type ValidationError = {
     const { data } = await treaty(app).formdata.get()
 
     expectTypeOf(data!.image).toEqualTypeOf<File>()
+}
+
+// Handle dynamic parameter at root
+{
+    const app = new Elysia().get('/:id', () => null)
+
+    type App = typeof app
+
+    const edenClient = treaty<App>('http://localhost:3000')
+
+    edenClient({ id: '1' }).get()
 }
