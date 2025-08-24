@@ -200,4 +200,17 @@ export namespace Treaty {
         K extends keyof WebSocketEventMap,
         Data = unknown
     > = K extends 'message' ? OnMessage<Data> : WebSocketEventMap[K]
+
+    type MaybeFunction<T> = T | ((...a: any) => T)
+    type UnwrapMaybeFunction<T> = T extends (...a: any) => infer R ? R : T
+
+    type MaybePromise<T> = T | Promise<T>
+
+    export type Data<
+        Response extends MaybeFunction<MaybePromise<Treaty.TreatyResponse<{}>>>
+    > = NonNullable<Awaited<UnwrapMaybeFunction<Response>>['data']>
+
+    export type Error<
+        Response extends MaybeFunction<MaybePromise<Treaty.TreatyResponse<{}>>>
+    > = NonNullable<Awaited<UnwrapMaybeFunction<Response>>['error']>
 }

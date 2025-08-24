@@ -1,5 +1,5 @@
-import { Elysia, form, t } from 'elysia'
-import { treaty } from '../src'
+import { Elysia, form, sse, t } from 'elysia'
+import { Treaty, treaty } from '../src'
 
 import { describe, expect, it, beforeAll, afterAll, mock } from 'bun:test'
 
@@ -239,7 +239,7 @@ describe('Treaty2', () => {
         expect(data).toEqual(false)
     })
 
-    it.todo('parse object with date', async () => {
+    it('parse object with date', async () => {
         const { data } = await client.dateObject.get()
 
         expect(data?.date).toBeInstanceOf(Date)
@@ -853,11 +853,57 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
     })
 
     it('handle root dynamic parameter', async () => {
-        const app = new Elysia().get('/:id', ({ params: { id } }) => id)
+        const app = new Elysia().get('/:id', ({ params: { id } }) => id, {
+            params: t.Object({
+                id: t.Number()
+            })
+        })
 
         const api = treaty(app)
         const { data } = await api({ id: '1' }).get()
 
         expect(data).toBe(1)
+    })
+
+    it('handle Server-Sent Event', async () => {
+        const app = new Elysia().get('/test', function* () {
+            yield sse({
+                event: 'start'
+            })
+            yield sse({
+                event: 'message',
+                data: 'Hi, this is Yae Miko from Grand Narukami Shrine'
+            })
+            yield sse({
+                event: 'message',
+                data: 'Would you interested in some novels about Raiden Shogun?'
+            })
+            yield sse({
+                event: 'end'
+            })
+        })
+
+        const client = treaty(app)
+
+        const response = await client.test.get()
+
+        const events = <any[]>[]
+
+        type A = typeof client.test.get
+
+        for await (const a of response.data!) events.push(a)
+
+        expect(events).toEqual([
+            { event: 'start' },
+            {
+                event: 'message',
+                data: 'Hi, this is Yae Miko from Grand Narukami Shrine'
+            },
+            {
+                event: 'message',
+                data: 'Would you interested in some novels about Raiden Shogun?'
+            },
+            { event: 'end' }
+        ])
     })
 })

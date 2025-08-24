@@ -1,18 +1,14 @@
-import { edenFetch, edenTreaty, treaty } from '../src'
-import Elysia from 'elysia'
+import { Elysia } from 'elysia'
+import { treaty } from '../src'
 
-const app = new Elysia().get('/:id', () => null)
+const app = new Elysia().get('/test', () => {
+	return {
+		a: new Date()
+	}
+})
 
-type App = typeof app
+const client = treaty(app)
 
-const edenClient = treaty<App>('http://localhost:3000')
+const { data } = await client.test.get()
 
-//    ^? {}
-// This doesn't work:
-edenClient({ id: '1' }).get() // This expression is not callable. Type '{}' has no call signatures.
-
-const fetch = edenFetch<App>('http://localhost:3000')
-fetch('/:id', { params: { id: '1' } }) // Works
-
-const edenTreaty1Client = edenTreaty<App>('http://localhost:3000')
-edenTreaty1Client[':id'].get() // Works
+console.log(data)

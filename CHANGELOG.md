@@ -1,6 +1,12 @@
-# 1.3.3
+# 1.3.3 - 24 Aug 2025
 Bug fix:
 - [elysia#823](https://github.com/elysiajs/elysia/issues/823) treaty2: not generating for dynamic params at root
+- treaty2: support type safe Server-Sent Events (SSE)
+- treaty2: add utility type `Treaty.Data`, `Treaty.Error` to extract data and error type from a route
+- treaty2: parse Date in object
+
+Change:
+- minimum Elysia version is set to 1.3.18
 
 # 1.3.2 - 5 May 2025
 Bug fix:
