@@ -393,6 +393,10 @@ const createProxy = (
                         }
                     }
 
+                    if (options?.headers['content-type'])
+                        fetchInit.headers['content-type'] =
+                            options?.headers['content-type']
+
                     const url = domain + path + q
                     const response = await (elysia?.handle(
                         new Request(url, fetchInit)

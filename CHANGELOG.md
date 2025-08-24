@@ -4,6 +4,7 @@ Bug fix:
 - treaty2: support type safe Server-Sent Events (SSE)
 - treaty2: add utility type `Treaty.Data`, `Treaty.Error` to extract data and error type from a route
 - treaty2: parse Date in object
+- treaty2: [#196](https://github.com/elysiajs/eden/issues/196) allow custom content-type
 
 Change:
 - minimum Elysia version is set to 1.3.18
