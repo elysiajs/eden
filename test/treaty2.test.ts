@@ -729,6 +729,68 @@ describe('Treaty2 - Using endpoint URL', () => {
             done()
         })
     })
+
+    it('handle Server-Sent Event', async () => {
+        const app = new Elysia().get('/test', function* () {
+            yield sse({
+                event: 'start'
+            })
+            yield sse({
+                event: 'message',
+                data: 'Hi, this is Yae Miko from Grand Narukami Shrine'
+            })
+            yield sse({
+                event: 'message',
+                data: 'Would you interested in some novels about Raiden Shogun?'
+            })
+            yield sse({
+                event: 'end'
+            })
+        })
+
+        const client = treaty(app)
+
+        const response = await client.test.get()
+
+        const events = <any[]>[]
+
+        type A = typeof client.test.get
+
+        for await (const a of response.data!) events.push(a)
+
+        expect(events).toEqual([
+            { event: 'start' },
+            {
+                event: 'message',
+                data: 'Hi, this is Yae Miko from Grand Narukami Shrine'
+            },
+            {
+                event: 'message',
+                data: 'Would you interested in some novels about Raiden Shogun?'
+            },
+            { event: 'end' }
+        ])
+    })
+
+    it('use custom content-type', async () => {
+        const app = new Elysia().post(
+            '/',
+            ({ headers }) => headers['content-type']
+        )
+
+        const client = treaty(app)
+
+        const { data } = await client.post(
+            {},
+            {
+                headers: {
+                    'content-type': 'application/json!'
+                }
+            }
+        )
+
+        expect(data).toBe('application/json!' as any)
+    })
 })
 
 describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
@@ -863,47 +925,5 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
         const { data } = await api({ id: '1' }).get()
 
         expect(data).toBe(1)
-    })
-
-    it('handle Server-Sent Event', async () => {
-        const app = new Elysia().get('/test', function* () {
-            yield sse({
-                event: 'start'
-            })
-            yield sse({
-                event: 'message',
-                data: 'Hi, this is Yae Miko from Grand Narukami Shrine'
-            })
-            yield sse({
-                event: 'message',
-                data: 'Would you interested in some novels about Raiden Shogun?'
-            })
-            yield sse({
-                event: 'end'
-            })
-        })
-
-        const client = treaty(app)
-
-        const response = await client.test.get()
-
-        const events = <any[]>[]
-
-        type A = typeof client.test.get
-
-        for await (const a of response.data!) events.push(a)
-
-        expect(events).toEqual([
-            { event: 'start' },
-            {
-                event: 'message',
-                data: 'Hi, this is Yae Miko from Grand Narukami Shrine'
-            },
-            {
-                event: 'message',
-                data: 'Would you interested in some novels about Raiden Shogun?'
-            },
-            { event: 'end' }
-        ])
     })
 })

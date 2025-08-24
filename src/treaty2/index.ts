@@ -393,7 +393,7 @@ const createProxy = (
                         }
                     }
 
-                    if (options?.headers['content-type'])
+                    if (options?.headers?.['content-type'])
                         fetchInit.headers['content-type'] =
                             options?.headers['content-type']
 
