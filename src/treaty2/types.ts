@@ -157,13 +157,24 @@ export namespace Treaty {
     //     [K in keyof T]: Awaited<T[K]>
     // }
 
+    type SingleDigit = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9
+
+    type SuccessKeys<R extends Record<number, unknown>> =
+    { [K in keyof R]:
+        K extends number
+          ? `${K}` extends `2${SingleDigit}${SingleDigit}`
+            ? K
+            : never
+          : never
+    }[keyof R];
+
     export type TreatyResponse<Res extends Record<number, unknown>> =
         | {
-              data: Res[200] extends {
+              data: Res[SuccessKeys<Res>] extends {
                   [ELYSIA_FORM_DATA]: infer Data
               }
                   ? Data
-                  : Res[200]
+                  : Res[SuccessKeys<Res>]
               error: null
               response: Response
               status: number
@@ -171,7 +182,7 @@ export namespace Treaty {
           }
         | {
               data: null
-              error: Exclude<keyof Res, 200> extends never
+              error: Exclude<keyof Res, SuccessKeys<Res>> extends never
                   ? {
                         status: unknown
                         value: unknown
@@ -185,7 +196,7 @@ export namespace Treaty {
                                 ? Data
                                 : Res[Status]
                         }
-                    }[Exclude<keyof Res, 200>]
+                    }[Exclude<keyof Res, SuccessKeys<Res>>]
               response: Response
               status: number
               headers: RequestInit['headers']
