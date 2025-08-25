@@ -36,7 +36,7 @@ const app = edenTreaty<App>('http://localhost:8080')
 const { data: pong } = app.index.get()
 
 // data: 1895
-const { data: id } = client.id.1895.get()
+const { data: id } = app.id.1895.get()
 
 // data: { id: 1895, name: 'Skadi' }
 const { data: nendoroid } = app.mirror.post({
