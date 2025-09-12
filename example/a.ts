@@ -1,18 +1,17 @@
 import { Elysia } from 'elysia'
 import { treaty } from '../src'
 
-const app = new Elysia().post('/test', () => {
-    return {
-        a: new Date()
-    }
+const app = new Elysia().get('/test', function* a() {
+	yield 'a'
+	yield 'b'
 })
 
 const client = treaty(app)
 
-const { data } = await client.test.post({}, {
-    headers: {
-        'content-type': 'application/json!'
-    }
-})
+const { data } = await client.test.get()
+
+for await (const d of data!) {
+
+}
 
 console.log(data)

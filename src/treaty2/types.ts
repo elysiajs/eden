@@ -1,10 +1,10 @@
 /// <reference lib="dom" />
 import type { Elysia, ELYSIA_FORM_DATA } from 'elysia'
+
 import { EdenWS } from './ws'
 import type { IsNever, Not, Prettify } from '../types'
-import { ElysiaFormData } from 'elysia/dist/utils'
 
-type Files = File | FileList
+// type Files = File | FileList
 
 // type Replace<RecordType, TargetType, GenericType> = {
 //     [K in keyof RecordType]: RecordType[K] extends TargetType
@@ -35,7 +35,9 @@ type ReplaceGeneratorWithAsyncGenerator<
                 : And<IsNever<A>, void extends B ? false : true> extends true
                   ? B
                   : AsyncGenerator<A, B, C> | B
-            : RecordType[K]
+            : RecordType[K] extends ReadableStream<infer A>
+              ? AsyncGenerator<A, void, unknown>
+              : RecordType[K]
 } & {}
 
 type MaybeArray<T> = T | T[]
@@ -74,7 +76,7 @@ export namespace Treaty {
                     headers: infer Headers
                     params: any
                     query: infer Query
-                    response: infer Response extends Record<number, unknown>
+                    response: infer Res extends Record<number, unknown>
                 }
               ? (undefined extends Headers
                     ? { headers?: Record<string, unknown> }
@@ -89,27 +91,43 @@ export namespace Treaty {
                           ? K extends 'get' | 'head'
                               ? (
                                     options?: Prettify<Param & TreatyParam>
-                                ) => Promise<TreatyResponse<Response>>
+                                ) => Promise<
+                                    TreatyResponse<
+                                        ReplaceGeneratorWithAsyncGenerator<Res>
+                                    >
+                                >
                               : (
                                     body?: Body,
                                     options?: Prettify<Param & TreatyParam>
-                                ) => Promise<TreatyResponse<Response>>
+                                ) => Promise<
+                                    TreatyResponse<
+                                        ReplaceGeneratorWithAsyncGenerator<Res>
+                                    >
+                                >
                           : (
                                 body: Body,
                                 options?: Prettify<Param & TreatyParam>
                             ) => Promise<
                                 TreatyResponse<
-                                    ReplaceGeneratorWithAsyncGenerator<Response>
+                                    ReplaceGeneratorWithAsyncGenerator<Res>
                                 >
                             >
                       : K extends 'get' | 'head'
                         ? (
                               options: Prettify<Param & TreatyParam>
-                          ) => Promise<TreatyResponse<Response>>
+                          ) => Promise<
+                              TreatyResponse<
+                                  ReplaceGeneratorWithAsyncGenerator<Res>
+                              >
+                          >
                         : (
                               body: Body,
                               options: Prettify<Param & TreatyParam>
-                          ) => Promise<TreatyResponse<Response>>
+                          ) => Promise<
+                              TreatyResponse<
+                                  ReplaceGeneratorWithAsyncGenerator<Res>
+                              >
+                          >
                   : never
               : CreateParams<Route[K]>
     }

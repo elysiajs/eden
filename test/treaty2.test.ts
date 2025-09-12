@@ -104,8 +104,10 @@ const app = new Elysia()
             alias: t.Literal('Kristen')
         })
     })
-    .group('/nested', (app) => app.guard((app) => app.get('/data', () => 'hi')))
-    .get('/error', ({ error }) => error("I'm a teapot", 'Kirifuji Nagisa'), {
+    .group('/nested', (app) =>
+        app.guard({}, (app) => app.get('/data', () => 'hi'))
+    )
+    .get('/error', ({ status }) => status("I'm a teapot", 'Kirifuji Nagisa'), {
         response: {
             200: t.Void(),
             418: t.Literal('Kirifuji Nagisa'),
@@ -824,7 +826,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
 
     it('accept a single Bun.file', async () => {
         const { data: files } = await client.files.post({
-            files: bunFile1 as unknown as FileList
+            files: bunFile1 as unknown as File[]
         })
 
         expect(files).not.toBeNull()
@@ -832,7 +834,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
         expect(files).toEqual([bunFile1.name!])
 
         const { data: filesbis } = await client.files.post({
-            files: [bunFile1] as unknown as FileList
+            files: [bunFile1] as unknown as File[]
         })
 
         expect(filesbis).not.toBeNull()
@@ -850,7 +852,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
 
     it('accept a single regular file', async () => {
         const { data: files } = await client.files.post({
-            files: file1 as unknown as FileList
+            files: file1 as unknown as File[]
         })
 
         expect(files).not.toBeNull()
@@ -858,7 +860,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
         expect(files).toEqual([file1.name!])
 
         const { data: filesbis } = await client.files.post({
-            files: [file1] as unknown as FileList
+            files: [file1] as unknown as File[]
         })
 
         expect(filesbis).not.toBeNull()
@@ -876,7 +878,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
 
     it('accept an array of multiple Bun.file', async () => {
         const { data: files } = await client.files.post({
-            files: [bunFile1, bunFile2, bunFile3] as unknown as FileList
+            files: [bunFile1, bunFile2, bunFile3] as unknown as File[]
         })
 
         expect(files).not.toBeNull()
@@ -884,7 +886,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
         expect(files).toEqual([bunFile1.name!, bunFile2.name!, bunFile3.name!])
 
         const { data: filesbis } = await client.files.post({
-            files: bunFilesForm.getAll('files') as unknown as FileList
+            files: bunFilesForm.getAll('files') as unknown as File[]
         })
 
         expect(filesbis).not.toBeNull()
@@ -898,7 +900,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
 
     it('accept an array of multiple regular file', async () => {
         const { data: files } = await client.files.post({
-            files: [file1, file2, file3] as unknown as FileList
+            files: [file1, file2, file3] as unknown as File[]
         })
 
         expect(files).not.toBeNull()
@@ -906,7 +908,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
         expect(files).toEqual([file1.name!, file2.name!, file3.name!])
 
         const { data: filesbis } = await client.files.post({
-            files: filesForm.getAll('files') as unknown as FileList
+            files: filesForm.getAll('files') as unknown as File[]
         })
 
         expect(filesbis).not.toBeNull()
