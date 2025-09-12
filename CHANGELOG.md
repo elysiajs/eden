@@ -1,3 +1,7 @@
+# 1.4.0 - 13 Sep 2025
+Improvement:
+- support Elysia 1.4
+
 # 1.3.3 - 24 Aug 2025
 Feature:
 - treaty2: support type safe Server-Sent Events (SSE)
