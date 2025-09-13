@@ -1,3 +1,8 @@
+# 1.4.1 - 14 Sep 2025
+Bug fix:
+- inline object value / Elysia file cause type error
+- macro should not mark property as required
+
 # 1.4.0 - 13 Sep 2025
 Improvement:
 - support Elysia 1.4

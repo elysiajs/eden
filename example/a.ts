@@ -1,17 +1,24 @@
 import { Elysia } from 'elysia'
 import { treaty } from '../src'
 
-const app = new Elysia().get('/test', function* a() {
-	yield 'a'
-	yield 'b'
+const authMacro = new Elysia().macro({
+    auth: {
+        async resolve() {
+            return { newProperty: 'Macro added property' }
+        }
+    }
 })
 
-const client = treaty(app)
+const routerWithMacro = new Elysia()
+    .use(authMacro)
+    .get('/bug', 'Problem', { auth: true })
 
-const { data } = await client.test.get()
+const routerWithoutMacro = new Elysia().get('/noBug', 'No Problem')
 
-for await (const d of data!) {
+const app = new Elysia().use(routerWithMacro).use(routerWithoutMacro)
 
-}
+const api = treaty<typeof app>('localhost:3000')
 
-console.log(data)
+api.noBug.get()
+
+api.bug.get()

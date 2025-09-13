@@ -59,16 +59,20 @@ export namespace Treaty {
         [K in keyof Route as K extends `:${string}`
             ? never
             : K]: K extends 'subscribe' // ? Websocket route
-            ? (undefined extends Route['subscribe']['headers']
+            ? ({} extends Route['subscribe']['headers']
                   ? { headers?: Record<string, unknown> }
-                  : {
-                        headers: Route['subscribe']['headers']
-                    }) &
-                  (undefined extends Route['subscribe']['query']
+                  : undefined extends Route['subscribe']['headers']
+                    ? { headers?: Record<string, unknown> }
+                    : {
+                          headers: Route['subscribe']['headers']
+                      }) &
+                  ({} extends Route['subscribe']['query']
                       ? { query?: Record<string, unknown> }
-                      : {
-                            query: Route['subscribe']['query']
-                        }) extends infer Param
+                      : undefined extends Route['subscribe']['query']
+                        ? { query?: Record<string, unknown> }
+                        : {
+                              query: Route['subscribe']['query']
+                          }) extends infer Param
                 ? (options?: Param) => EdenWS<Route['subscribe']>
                 : never
             : Route[K] extends {
@@ -78,14 +82,22 @@ export namespace Treaty {
                     query: infer Query
                     response: infer Res extends Record<number, unknown>
                 }
-              ? (undefined extends Headers
-                    ? { headers?: Record<string, unknown> }
-                    : {
-                          headers: Headers
-                      }) &
-                    (undefined extends Query
-                        ? { query?: Record<string, unknown> }
-                        : { query: Query }) extends infer Param
+              ? ({} extends Headers
+                    ? {
+                          headers?: Record<string, unknown>
+                      }
+                    : undefined extends Headers
+                      ? { headers?: Record<string, unknown> }
+                      : {
+                            headers: Headers
+                        }) &
+                    ({} extends Query
+                        ? {
+                              query?: Record<string, unknown>
+                          }
+                        : undefined extends Query
+                          ? { query?: Record<string, unknown> }
+                          : { query: Query }) extends infer Param
                   ? {} extends Param
                       ? undefined extends Body
                           ? K extends 'get' | 'head'
@@ -104,14 +116,23 @@ export namespace Treaty {
                                         ReplaceGeneratorWithAsyncGenerator<Res>
                                     >
                                 >
-                          : (
-                                body: Body,
-                                options?: Prettify<Param & TreatyParam>
-                            ) => Promise<
-                                TreatyResponse<
-                                    ReplaceGeneratorWithAsyncGenerator<Res>
-                                >
-                            >
+                          : {} extends Body
+                            ? (
+                                  body?: Body,
+                                  options?: Prettify<Param & TreatyParam>
+                              ) => Promise<
+                                  TreatyResponse<
+                                      ReplaceGeneratorWithAsyncGenerator<Res>
+                                  >
+                              >
+                            : (
+                                  body: Body,
+                                  options?: Prettify<Param & TreatyParam>
+                              ) => Promise<
+                                  TreatyResponse<
+                                      ReplaceGeneratorWithAsyncGenerator<Res>
+                                  >
+                              >
                       : K extends 'get' | 'head'
                         ? (
                               options: Prettify<Param & TreatyParam>
