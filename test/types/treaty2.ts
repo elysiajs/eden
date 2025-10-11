@@ -1,4 +1,4 @@
-import { Elysia, file, form, t } from 'elysia'
+import { Elysia, file, form, status, t } from 'elysia'
 import { treaty } from '../../src'
 import { expectTypeOf } from 'expect-type'
 
@@ -1093,4 +1093,69 @@ type ValidationError = {
 
     api.noBug.get()
     api.bug.get()
+}
+
+{
+    const app = new Elysia().get("/", () => status(199, "yay"))
+
+    type App = typeof app
+
+    const edenClient = treaty<App>('http://localhost:3000')
+
+    const { data, error } = await edenClient.get()
+
+    expectTypeOf(data).toEqualTypeOf<unknown>()
+    expectTypeOf(error).toEqualTypeOf<{ status: 199; value: "yay"; } | null>()
+}
+
+{
+    const app = new Elysia().get("/", () => status(200, "yay"))
+
+    type App = typeof app
+
+    const edenClient = treaty<App>('http://localhost:3000')
+
+    const { data, error } = await edenClient.get()
+
+    expectTypeOf(data).toEqualTypeOf<"yay" | null>()
+    expectTypeOf(error).toEqualTypeOf<{ status: unknown; value: unknown; } | null>()
+}
+
+{
+    const app = new Elysia().get("/", () => status(201, "yay"))
+
+    type App = typeof app
+
+    const edenClient = treaty<App>('http://localhost:3000')
+
+    const { data, error } = await edenClient.get()
+
+    expectTypeOf(data).toEqualTypeOf<"yay" | null>()
+    expectTypeOf(error).toEqualTypeOf<{ status: unknown; value: unknown; } | null>()
+}
+
+{
+    const app = new Elysia().get("/", () => status(299, "yay"))
+
+    type App = typeof app
+
+    const edenClient = treaty<App>('http://localhost:3000')
+
+    const { data, error } = await edenClient.get()
+
+    expectTypeOf(data).toEqualTypeOf<"yay" | null>()
+    expectTypeOf(error).toEqualTypeOf<{ status: unknown; value: unknown; } | null>()
+}
+
+{
+    const app = new Elysia().get("/", () => status(300, "yay"))
+
+    type App = typeof app
+
+    const edenClient = treaty<App>('http://localhost:3000')
+
+    const { data, error } = await edenClient.get()
+
+    expectTypeOf(data).toEqualTypeOf<unknown>()
+    expectTypeOf(error).toEqualTypeOf<{ status: 300; value: "yay"; } | null>()
 }

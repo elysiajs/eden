@@ -40,6 +40,14 @@ type ReplaceGeneratorWithAsyncGenerator<
               : RecordType[K]
 } & {}
 
+type Enumerate<N extends number, Acc extends number[] = []> =
+        Acc['length'] extends N ? Acc[number] : Enumerate<N, [...Acc, Acc['length']]>;
+
+type IntegerRange<F extends number, T extends number> = Exclude<Enumerate<T>, Enumerate<F>>;
+
+type SuccessCodeRange = IntegerRange<200, 300>;
+type IsSuccessCode<S extends number> = S extends SuccessCodeRange ? true : false;
+
 type MaybeArray<T> = T | T[]
 type MaybePromise<T> = T | Promise<T>
 
@@ -198,11 +206,11 @@ export namespace Treaty {
 
     export type TreatyResponse<Res extends Record<number, unknown>> =
         | {
-              data: Res[200] extends {
+              data: Res[Extract<keyof Res, SuccessCodeRange>] extends {
                   [ELYSIA_FORM_DATA]: infer Data
               }
                   ? Data
-                  : Res[200]
+                  : Res[Extract<keyof Res, SuccessCodeRange>]
               error: null
               response: Response
               status: number
@@ -210,7 +218,7 @@ export namespace Treaty {
           }
         | {
               data: null
-              error: Exclude<keyof Res, 200> extends never
+              error: Exclude<keyof Res, SuccessCodeRange> extends never
                   ? {
                         status: unknown
                         value: unknown
@@ -224,7 +232,7 @@ export namespace Treaty {
                                 ? Data
                                 : Res[Status]
                         }
-                    }[Exclude<keyof Res, 200>]
+                    }[Exclude<keyof Res, SuccessCodeRange>]
               response: Response
               status: number
               headers: RequestInit['headers']
