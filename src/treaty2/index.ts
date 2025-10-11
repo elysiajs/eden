@@ -131,7 +131,7 @@ export async function* streamResponse(response: Response) {
             const data =
                 typeof value === 'string' ? value : decoder.decode(value)
 
-            if (data.endsWith('\n\n')) yield parseServerSentEvent(data)
+            if (data.includes('\n\n')) yield* parseServerSentEvent(data)
             else yield parseStringifiedValue(data)
         }
     } finally {
@@ -139,20 +139,30 @@ export async function* streamResponse(response: Response) {
     }
 }
 
-const parseServerSentEvent = (data: string) => {
-    const lines = data.split('\n')
-    const event: Record<string, string> = {}
+function* parseServerSentEvent(data: string) {
+    const chunks = data.split('\n\n')
 
-    for (const line of lines) {
-        const index = line.indexOf(':')
-        if (index > 0) {
-            const key = line.slice(0, index).trim()
-            const value = line.slice(index + 1).trim()
-            event[key] = parseStringifiedValue(value)
+    for (const chunk of chunks) {
+        if (chunk.indexOf(':') <= 0) {
+            if (chunk) yield parseStringifiedValue(chunk)
+            continue
         }
-    }
 
-    return event
+        const lines = chunk.split('\n')
+
+        const event: Record<string, string> = {}
+
+        for (const line of lines) {
+            const index = line.indexOf(':')
+            if (index > 0) {
+                const key = line.slice(0, index).trim()
+                const value = line.slice(index + 1).trim()
+                event[key] = parseStringifiedValue(value)
+            }
+        }
+
+        yield event
+    }
 }
 
 const createProxy = (

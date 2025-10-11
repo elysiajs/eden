@@ -774,6 +774,86 @@ describe('Treaty2 - Using endpoint URL', () => {
         ])
     })
 
+    it('handle multiple sse in same tick', async () => {
+        const app = new Elysia()
+            .get('/chunk', async function* () {
+                const chunks = ['chunk1', 'chunk2']
+
+                for (const chunk of chunks) {
+                    yield sse({
+                        event: 'data',
+                        data: { text: chunk, attempt: 1 }
+                    })
+
+                    yield 1
+
+                    yield sse({
+                        event: 'data',
+                        data: { text: chunk, attempt: 2 }
+                    })
+                }
+
+                yield sse({
+                    event: 'complete',
+                    data: { message: 'done' }
+                })
+            })
+            .listen(3000)
+
+        const client = treaty(app)
+
+        const response = await client.chunk.get()
+
+        const events = <any[]>[]
+
+        type A = typeof client.chunk.get
+
+        for await (const a of response.data!) events.push(a)
+
+        expect(events).toEqual([
+            {
+                event: 'data',
+                data: {
+                    text: 'chunk1',
+                    attempt: 1
+                }
+            },
+            {
+                data: 1
+            },
+            {
+                event: 'data',
+                data: {
+                    text: 'chunk1',
+                    attempt: 2
+                }
+            },
+            {
+                event: 'data',
+                data: {
+                    text: 'chunk2',
+                    attempt: 1
+                }
+            },
+            {
+                data: 1
+            },
+            {
+                event: 'data',
+                data: {
+                    text: 'chunk2',
+                    attempt: 2
+                }
+            },
+            {
+                event: 'complete',
+                data: {
+                    message: 'done'
+                }
+            }
+        ])
+    })
+
     it('use custom content-type', async () => {
         const app = new Elysia().post(
             '/',

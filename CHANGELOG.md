@@ -1,3 +1,7 @@
+# 1.4.2 - 12 Oct 2025
+Bug fix:
+- [elysia#1466](https://github.com/elysiajs/elysia/issues/1466) / treaty2: unpack multiple SSE chunk
+
 # 1.4.1 - 14 Sep 2025
 Bug fix:
 - inline object value / Elysia file cause type error

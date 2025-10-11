@@ -1,6 +1,6 @@
 {
 	"name": "@elysiajs/eden",
-	"version": "1.4.1",
+	"version": "1.4.2",
 	"description": "Fully type-safe Elysia client",
 	"author": {
 		"name": "saltyAom",
@@ -59,7 +59,7 @@
 		"@elysiajs/cors": "1.3.3",
 		"@types/bun": "^1.2.20",
 		"@types/node": "^24.3.0",
-		"elysia": "1.4.0-exp.18",
+		"elysia": "^1.4.10",
 		"esbuild": "^0.25.9",
 		"eslint": "^9.34.0",
 		"expect-type": "^1.2.2",

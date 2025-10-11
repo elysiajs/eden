@@ -1,24 +1,36 @@
-import { Elysia } from 'elysia'
+import { Elysia, sse } from 'elysia'
 import { treaty } from '../src'
+import { lifeCycleToArray } from 'elysia/utils'
 
-const authMacro = new Elysia().macro({
-    auth: {
-        async resolve() {
-            return { newProperty: 'Macro added property' }
+export const app = new Elysia()
+    .get('/chunk', async function* () {
+        const chunks = ['chunk1', 'chunk2']
+
+        for (const chunk of chunks) {
+            yield sse({
+                event: 'data',
+                data: { text: chunk, attempt: 1 }
+            })
+
+            yield 1
+
+            yield sse({
+                event: 'data',
+                data: { text: chunk, attempt: 2 }
+            })
         }
-    }
-})
 
-const routerWithMacro = new Elysia()
-    .use(authMacro)
-    .get('/bug', 'Problem', { auth: true })
+        yield sse({
+            event: 'complete',
+            data: { message: 'done' }
+        })
+    })
+    .listen(3000)
 
-const routerWithoutMacro = new Elysia().get('/noBug', 'No Problem')
+const api = treaty(app)
 
-const app = new Elysia().use(routerWithMacro).use(routerWithoutMacro)
+const { data } = await api.chunk.get()
 
-const api = treaty<typeof app>('localhost:3000')
-
-api.noBug.get()
-
-api.bug.get()
+for await (const datum of data!) {
+	console.log(datum)
+}
