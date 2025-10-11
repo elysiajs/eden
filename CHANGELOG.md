@@ -1,4 +1,4 @@
-# 1.4.2 - 12 Oct 2025
+# 1.4.3 - 12 Oct 2025
 Bug fix:
 - [elysia#1466](https://github.com/elysiajs/elysia/issues/1466) / treaty2: unpack multiple SSE chunk
 - [#213](https://github.com/elysiajs/eden/pull/213), [#214](https://github.com/elysiajs/eden/pull/214) stream response on `transfer-encoding: chunked`
