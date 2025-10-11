@@ -1,6 +1,11 @@
 # 1.4.2 - 12 Oct 2025
 Bug fix:
 - [elysia#1466](https://github.com/elysiajs/elysia/issues/1466) / treaty2: unpack multiple SSE chunk
+- [#213](https://github.com/elysiajs/eden/pull/213), [#214](https://github.com/elysiajs/eden/pull/214) stream response on `transfer-encoding: chunked`
+- [#201](https://github.com/elysiajs/eden/pull/201), [#203](https://github.com/elysiajs/eden/pull/203) error codes returned in middleware are not inferred by Eden Treaty
+- [#179](https://github.com/elysiajs/eden/pull/179) formdata post, wrong inference of json payload
+- [#124](https://github.com/elysiajs/eden/pull/124) array file upload bug on server
+- [#122](https://github.com/elysiajs/eden/pull/122) ws response data type
 
 # 1.4.1 - 14 Sep 2025
 Bug fix:
