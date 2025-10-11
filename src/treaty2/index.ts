@@ -337,7 +337,10 @@ const createProxy = (
                             }
 
                             if (isServer) {
-                                formData.append(key, field as any)
+                                if (Array.isArray(field))
+                                    for (const f of field)
+                                        formData.append(key, f)
+                                else formData.append(key, field as any)
 
                                 continue
                             }
