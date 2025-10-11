@@ -79,6 +79,32 @@ const app = new Elysia()
             })
         }
     )
+    .get(
+        '/with-query-undefined',
+        ({ query }) => {
+            return {
+                query
+            }
+        },
+        {
+            query: t.Object({
+                q: t.Undefined(t.String())
+            })
+        }
+    )
+    .get(
+        '/with-query-nullish',
+        ({ query }) => {
+            return {
+                query
+            }
+        },
+        {
+            query: t.Object({
+                q: t.Nullable(t.String())
+            })
+        }
+    )
     .listen(8081)
 
 const fetch = edenFetch<typeof app>('http://localhost:8081')
@@ -196,5 +222,28 @@ describe('Eden Fetch', () => {
             }
         })
         expect(data?.query.q).toBe('A')
+    })
+
+    it('send undefined query', async () => {
+        const { data, error } = await fetch('/with-query-undefined', {
+            query: {
+                q: undefined
+            }
+        })
+        expect(data?.query.q).toBeUndefined()
+        expect(error).toBeNull()
+    })
+
+    // t.Nullable is impossible to represent with query params
+    // without elysia specifically parsing 'null'
+    it('send null query', async () => {
+        const { data, error } = await fetch('/with-query-nullish', {
+            query: {
+                q: null
+            }
+        })
+        expect(data?.query.q).toBeUndefined()
+        expect(error?.status).toBe(422)
+        expect(error?.value.type).toBe("validation")
     })
 })

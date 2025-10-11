@@ -1,20 +1,36 @@
-import { Elysia, t } from 'elysia'
+import { Elysia, sse } from 'elysia'
 import { treaty } from '../src'
+import { lifeCycleToArray } from 'elysia/utils'
 
-const app = new Elysia()
-	.get('/error', ({ error }) => error("I'm a teapot", 'Kirifuji Nagisa'), {
-		response: {
-			200: t.Void(),
-			418: t.Literal('Kirifuji Nagisa'),
-			420: t.Literal('Snoop Dogg')
-		}
-	})
-	.listen(3000)
+export const app = new Elysia()
+    .get('/chunk', async function* () {
+        const chunks = ['chunk1', 'chunk2']
 
-app._routes.error
+        for (const chunk of chunks) {
+            yield sse({
+                event: 'data',
+                data: { text: chunk, attempt: 1 }
+            })
 
-const a = treaty(app)
+            yield 1
 
-const { data, error } = await a.error.get()
+            yield sse({
+                event: 'data',
+                data: { text: chunk, attempt: 2 }
+            })
+        }
 
-console.log(data?.image)
+        yield sse({
+            event: 'complete',
+            data: { message: 'done' }
+        })
+    })
+    .listen(3000)
+
+const api = treaty(app)
+
+const { data } = await api.chunk.get()
+
+for await (const datum of data!) {
+	console.log(datum)
+}
