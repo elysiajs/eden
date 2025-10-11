@@ -49,8 +49,10 @@ const app = new Elysia()
             alias: t.Literal('Kristen')
         })
     })
-    .group('/nested', (app) => app.guard((app) => app.get('/data', () => 'hi')))
-    .get('/error', ({ error }) => error("I'm a teapot", 'Kirifuji Nagisa'), {
+    .group('/nested', (app) =>
+        app.guard({}, (app) => app.get('/data', () => 'hi'))
+    )
+    .get('/error', ({ status }) => status("I'm a teapot", 'Kirifuji Nagisa'), {
         response: {
             200: t.Void(),
             418: t.Literal('Kirifuji Nagisa'),
@@ -123,9 +125,9 @@ const app = new Elysia()
             })
         }
     )
-    .get('/async', async ({ error }) => {
-        if (Math.random() > 0.5) return error(418, 'Nagisa')
-        if (Math.random() > 0.5) return error(401, 'Himari')
+    .get('/async', async ({ status }) => {
+        if (Math.random() > 0.5) return status(418, 'Nagisa')
+        if (Math.random() > 0.5) return status(401, 'Himari')
 
         return 'Hifumi'
     })
@@ -965,11 +967,7 @@ type ValidationError = {
 
     const { data } = await treaty(app).get()
 
-    expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
-        never,
-        string,
-        unknown
-    > | null>()
+    expectTypeOf<typeof data>().toEqualTypeOf<string | null>()
 }
 
 // ? Return both actual value and generator if yield and return
@@ -984,11 +982,12 @@ type ValidationError = {
 
     const { data } = await treaty(app).get()
 
-    expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
-        1 | 2 | 3,
-        'a' | undefined,
-        unknown
-    > | null>()
+    expectTypeOf<typeof data>().toEqualTypeOf<
+        | 'a'
+        | AsyncGenerator<1 | 2 | 3, 'a' | undefined, unknown>
+        | null
+        | undefined
+    >()
 }
 
 // ? Return AsyncGenerator on yield
@@ -1004,40 +1003,6 @@ type ValidationError = {
     expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
         1 | 2 | 3,
         void,
-        unknown
-    > | null>()
-}
-
-// ? Return actual value on generator if not yield
-{
-    const app = new Elysia().get('', async function* () {
-        return 'a'
-    })
-
-    const { data } = await treaty(app).get()
-
-    expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
-        never,
-        string,
-        unknown
-    > | null>()
-}
-
-// ? Return both actual value and generator if yield and return
-{
-    const app = new Elysia().get('', async function* () {
-        if (Math.random() > 0.5) return 'a'
-
-        yield 1
-        yield 2
-        yield 3
-    })
-
-    const { data } = await treaty(app).get()
-
-    expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
-        1 | 2 | 3,
-        'a' | undefined,
         unknown
     > | null>()
 }
@@ -1063,6 +1028,71 @@ type ValidationError = {
     const edenClient = treaty<App>('http://localhost:3000')
 
     edenClient({ id: '1' }).get()
+}
+
+// Turn Generator to AsyncGenerator
+{
+    const app = new Elysia().get('/test', function* a() {
+        yield 'a'
+        yield 'b'
+    })
+
+    const client = treaty(app)
+
+    const { data } = await client.test.get()
+
+    expectTypeOf(data).toEqualTypeOf<AsyncGenerator<
+        'a' | 'b',
+        void,
+        unknown
+    > | null>()
+}
+
+// Turn ReadableStream to AsyncGenerator
+{
+    const app = new Elysia().get(
+        '/test',
+        () =>
+            new ReadableStream<'a' | 'b'>({
+                start(controller) {
+                    controller.enqueue('a')
+                    controller.enqueue('b')
+                }
+            })
+    )
+
+    const client = treaty(app)
+
+    const { data } = await client.test.get()
+
+    expectTypeOf(data).toEqualTypeOf<AsyncGenerator<
+        'a' | 'b',
+        void,
+        unknown
+    > | null>()
+}
+
+// macro should not mark property as required
+{
+    const authMacro = new Elysia().macro({
+        auth: {
+            async resolve() {
+                return { newProperty: 'Macro added property' }
+            }
+        }
+    })
+
+    const routerWithMacro = new Elysia()
+        .use(authMacro)
+        .get('/bug', 'Problem', { auth: true })
+
+    const routerWithoutMacro = new Elysia().get('/noBug', 'No Problem')
+
+    const app = new Elysia().use(routerWithMacro).use(routerWithoutMacro)
+    const api = treaty<typeof app>('localhost:3000')
+
+    api.noBug.get()
+    api.bug.get()
 }
 
 {

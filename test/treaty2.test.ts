@@ -1,5 +1,5 @@
-import { Elysia, form, t } from 'elysia'
-import { treaty } from '../src'
+import { Elysia, form, sse, t } from 'elysia'
+import { Treaty, treaty } from '../src'
 
 import { describe, expect, it, beforeAll, afterAll, mock } from 'bun:test'
 
@@ -104,8 +104,10 @@ const app = new Elysia()
             alias: t.Literal('Kristen')
         })
     })
-    .group('/nested', (app) => app.guard((app) => app.get('/data', () => 'hi')))
-    .get('/error', ({ error }) => error("I'm a teapot", 'Kirifuji Nagisa'), {
+    .group('/nested', (app) =>
+        app.guard({}, (app) => app.get('/data', () => 'hi'))
+    )
+    .get('/error', ({ status }) => status("I'm a teapot", 'Kirifuji Nagisa'), {
         response: {
             200: t.Void(),
             418: t.Literal('Kirifuji Nagisa'),
@@ -239,7 +241,7 @@ describe('Treaty2', () => {
         expect(data).toEqual(false)
     })
 
-    it.todo('parse object with date', async () => {
+    it('parse object with date', async () => {
         const { data } = await client.dateObject.get()
 
         expect(data?.date).toBeInstanceOf(Date)
@@ -729,6 +731,148 @@ describe('Treaty2 - Using endpoint URL', () => {
             done()
         })
     })
+
+    it('handle Server-Sent Event', async () => {
+        const app = new Elysia().get('/test', function* () {
+            yield sse({
+                event: 'start'
+            })
+            yield sse({
+                event: 'message',
+                data: 'Hi, this is Yae Miko from Grand Narukami Shrine'
+            })
+            yield sse({
+                event: 'message',
+                data: 'Would you interested in some novels about Raiden Shogun?'
+            })
+            yield sse({
+                event: 'end'
+            })
+        })
+
+        const client = treaty(app)
+
+        const response = await client.test.get()
+
+        const events = <any[]>[]
+
+        type A = typeof client.test.get
+
+        for await (const a of response.data!) events.push(a)
+
+        expect(events).toEqual([
+            { event: 'start' },
+            {
+                event: 'message',
+                data: 'Hi, this is Yae Miko from Grand Narukami Shrine'
+            },
+            {
+                event: 'message',
+                data: 'Would you interested in some novels about Raiden Shogun?'
+            },
+            { event: 'end' }
+        ])
+    })
+
+    it('handle multiple sse in same tick', async () => {
+        const app = new Elysia()
+            .get('/chunk', async function* () {
+                const chunks = ['chunk1', 'chunk2']
+
+                for (const chunk of chunks) {
+                    yield sse({
+                        event: 'data',
+                        data: { text: chunk, attempt: 1 }
+                    })
+
+                    yield 1
+
+                    yield sse({
+                        event: 'data',
+                        data: { text: chunk, attempt: 2 }
+                    })
+                }
+
+                yield sse({
+                    event: 'complete',
+                    data: { message: 'done' }
+                })
+            })
+            .listen(3000)
+
+        const client = treaty(app)
+
+        const response = await client.chunk.get()
+
+        const events = <any[]>[]
+
+        type A = typeof client.chunk.get
+
+        for await (const a of response.data!) events.push(a)
+
+        expect(events).toEqual([
+            {
+                event: 'data',
+                data: {
+                    text: 'chunk1',
+                    attempt: 1
+                }
+            },
+            {
+                data: 1
+            },
+            {
+                event: 'data',
+                data: {
+                    text: 'chunk1',
+                    attempt: 2
+                }
+            },
+            {
+                event: 'data',
+                data: {
+                    text: 'chunk2',
+                    attempt: 1
+                }
+            },
+            {
+                data: 1
+            },
+            {
+                event: 'data',
+                data: {
+                    text: 'chunk2',
+                    attempt: 2
+                }
+            },
+            {
+                event: 'complete',
+                data: {
+                    message: 'done'
+                }
+            }
+        ])
+    })
+
+    it('use custom content-type', async () => {
+        const app = new Elysia().post(
+            '/',
+            ({ headers }) => headers['content-type']
+        )
+
+        const client = treaty(app)
+
+        const { data } = await client.post(
+            {},
+            {
+                headers: {
+                    'content-type': 'application/json!'
+                }
+            }
+        )
+
+        expect(data).toBe('application/json!' as any)
+    })
 })
 
 describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
@@ -762,7 +906,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
 
     it('accept a single Bun.file', async () => {
         const { data: files } = await client.files.post({
-            files: bunFile1 as unknown as FileList
+            files: bunFile1 as unknown as File[]
         })
 
         expect(files).not.toBeNull()
@@ -770,7 +914,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
         expect(files).toEqual([bunFile1.name!])
 
         const { data: filesbis } = await client.files.post({
-            files: [bunFile1] as unknown as FileList
+            files: [bunFile1] as unknown as File[]
         })
 
         expect(filesbis).not.toBeNull()
@@ -788,7 +932,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
 
     it('accept a single regular file', async () => {
         const { data: files } = await client.files.post({
-            files: file1 as unknown as FileList
+            files: file1 as unknown as File[]
         })
 
         expect(files).not.toBeNull()
@@ -796,7 +940,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
         expect(files).toEqual([file1.name!])
 
         const { data: filesbis } = await client.files.post({
-            files: [file1] as unknown as FileList
+            files: [file1] as unknown as File[]
         })
 
         expect(filesbis).not.toBeNull()
@@ -814,7 +958,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
 
     it('accept an array of multiple Bun.file', async () => {
         const { data: files } = await client.files.post({
-            files: [bunFile1, bunFile2, bunFile3] as unknown as FileList
+            files: [bunFile1, bunFile2, bunFile3] as unknown as File[]
         })
 
         expect(files).not.toBeNull()
@@ -822,7 +966,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
         expect(files).toEqual([bunFile1.name!, bunFile2.name!, bunFile3.name!])
 
         const { data: filesbis } = await client.files.post({
-            files: bunFilesForm.getAll('files') as unknown as FileList
+            files: bunFilesForm.getAll('files') as unknown as File[]
         })
 
         expect(filesbis).not.toBeNull()
@@ -836,7 +980,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
 
     it('accept an array of multiple regular file', async () => {
         const { data: files } = await client.files.post({
-            files: [file1, file2, file3] as unknown as FileList
+            files: [file1, file2, file3] as unknown as File[]
         })
 
         expect(files).not.toBeNull()
@@ -844,7 +988,7 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
         expect(files).toEqual([file1.name!, file2.name!, file3.name!])
 
         const { data: filesbis } = await client.files.post({
-            files: filesForm.getAll('files') as unknown as FileList
+            files: filesForm.getAll('files') as unknown as File[]
         })
 
         expect(filesbis).not.toBeNull()
@@ -853,7 +997,11 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
     })
 
     it('handle root dynamic parameter', async () => {
-        const app = new Elysia().get('/:id', ({ params: { id } }) => id)
+        const app = new Elysia().get('/:id', ({ params: { id } }) => id, {
+            params: t.Object({
+                id: t.Number()
+            })
+        })
 
         const api = treaty(app)
         const { data } = await api({ id: '1' }).get()

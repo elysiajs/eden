@@ -1,10 +1,10 @@
 /// <reference lib="dom" />
 import type { Elysia, ELYSIA_FORM_DATA } from 'elysia'
+
 import { EdenWS } from './ws'
 import type { IsNever, Not, Prettify } from '../types'
-import { ElysiaFormData } from 'elysia/dist/utils'
 
-type Files = File | FileList
+// type Files = File | FileList
 
 // type Replace<RecordType, TargetType, GenericType> = {
 //     [K in keyof RecordType]: RecordType[K] extends TargetType
@@ -35,7 +35,9 @@ type ReplaceGeneratorWithAsyncGenerator<
                 : And<IsNever<A>, void extends B ? false : true> extends true
                   ? B
                   : AsyncGenerator<A, B, C> | B
-            : RecordType[K]
+            : RecordType[K] extends ReadableStream<infer A>
+              ? AsyncGenerator<A, void, unknown>
+              : RecordType[K]
 } & {}
 
 type Enumerate<N extends number, Acc extends number[] = []> =
@@ -65,16 +67,20 @@ export namespace Treaty {
         [K in keyof Route as K extends `:${string}`
             ? never
             : K]: K extends 'subscribe' // ? Websocket route
-            ? (undefined extends Route['subscribe']['headers']
+            ? ({} extends Route['subscribe']['headers']
                   ? { headers?: Record<string, unknown> }
-                  : {
-                        headers: Route['subscribe']['headers']
-                    }) &
-                  (undefined extends Route['subscribe']['query']
+                  : undefined extends Route['subscribe']['headers']
+                    ? { headers?: Record<string, unknown> }
+                    : {
+                          headers: Route['subscribe']['headers']
+                      }) &
+                  ({} extends Route['subscribe']['query']
                       ? { query?: Record<string, unknown> }
-                      : {
-                            query: Route['subscribe']['query']
-                        }) extends infer Param
+                      : undefined extends Route['subscribe']['query']
+                        ? { query?: Record<string, unknown> }
+                        : {
+                              query: Route['subscribe']['query']
+                          }) extends infer Param
                 ? (options?: Param) => EdenWS<Route['subscribe']>
                 : never
             : Route[K] extends {
@@ -82,42 +88,75 @@ export namespace Treaty {
                     headers: infer Headers
                     params: any
                     query: infer Query
-                    response: infer Response extends Record<number, unknown>
+                    response: infer Res extends Record<number, unknown>
                 }
-              ? (undefined extends Headers
-                    ? { headers?: Record<string, unknown> }
-                    : {
-                          headers: Headers
-                      }) &
-                    (undefined extends Query
-                        ? { query?: Record<string, unknown> }
-                        : { query: Query }) extends infer Param
+              ? ({} extends Headers
+                    ? {
+                          headers?: Record<string, unknown>
+                      }
+                    : undefined extends Headers
+                      ? { headers?: Record<string, unknown> }
+                      : {
+                            headers: Headers
+                        }) &
+                    ({} extends Query
+                        ? {
+                              query?: Record<string, unknown>
+                          }
+                        : undefined extends Query
+                          ? { query?: Record<string, unknown> }
+                          : { query: Query }) extends infer Param
                   ? {} extends Param
                       ? undefined extends Body
                           ? K extends 'get' | 'head'
                               ? (
                                     options?: Prettify<Param & TreatyParam>
-                                ) => Promise<TreatyResponse<Response>>
+                                ) => Promise<
+                                    TreatyResponse<
+                                        ReplaceGeneratorWithAsyncGenerator<Res>
+                                    >
+                                >
                               : (
                                     body?: Body,
                                     options?: Prettify<Param & TreatyParam>
-                                ) => Promise<TreatyResponse<Response>>
-                          : (
-                                body: Body,
-                                options?: Prettify<Param & TreatyParam>
-                            ) => Promise<
-                                TreatyResponse<
-                                    ReplaceGeneratorWithAsyncGenerator<Response>
+                                ) => Promise<
+                                    TreatyResponse<
+                                        ReplaceGeneratorWithAsyncGenerator<Res>
+                                    >
                                 >
-                            >
+                          : {} extends Body
+                            ? (
+                                  body?: Body,
+                                  options?: Prettify<Param & TreatyParam>
+                              ) => Promise<
+                                  TreatyResponse<
+                                      ReplaceGeneratorWithAsyncGenerator<Res>
+                                  >
+                              >
+                            : (
+                                  body: Body,
+                                  options?: Prettify<Param & TreatyParam>
+                              ) => Promise<
+                                  TreatyResponse<
+                                      ReplaceGeneratorWithAsyncGenerator<Res>
+                                  >
+                              >
                       : K extends 'get' | 'head'
                         ? (
                               options: Prettify<Param & TreatyParam>
-                          ) => Promise<TreatyResponse<Response>>
+                          ) => Promise<
+                              TreatyResponse<
+                                  ReplaceGeneratorWithAsyncGenerator<Res>
+                              >
+                          >
                         : (
                               body: Body,
                               options: Prettify<Param & TreatyParam>
-                          ) => Promise<TreatyResponse<Response>>
+                          ) => Promise<
+                              TreatyResponse<
+                                  ReplaceGeneratorWithAsyncGenerator<Res>
+                              >
+                          >
                   : never
               : CreateParams<Route[K]>
     }
@@ -208,4 +247,17 @@ export namespace Treaty {
         K extends keyof WebSocketEventMap,
         Data = unknown
     > = K extends 'message' ? OnMessage<Data> : WebSocketEventMap[K]
+
+    type MaybeFunction<T> = T | ((...a: any) => T)
+    type UnwrapMaybeFunction<T> = T extends (...a: any) => infer R ? R : T
+
+    type MaybePromise<T> = T | Promise<T>
+
+    export type Data<
+        Response extends MaybeFunction<MaybePromise<Treaty.TreatyResponse<{}>>>
+    > = NonNullable<Awaited<UnwrapMaybeFunction<Response>>['data']>
+
+    export type Error<
+        Response extends MaybeFunction<MaybePromise<Treaty.TreatyResponse<{}>>>
+    > = NonNullable<Awaited<UnwrapMaybeFunction<Response>>['error']>
 }

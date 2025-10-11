@@ -1,18 +1,36 @@
-import { edenFetch, edenTreaty, treaty } from '../src'
-import Elysia from 'elysia'
+import { Elysia, sse } from 'elysia'
+import { treaty } from '../src'
+import { lifeCycleToArray } from 'elysia/utils'
 
-const app = new Elysia().get('/:id', () => null)
+export const app = new Elysia()
+    .get('/chunk', async function* () {
+        const chunks = ['chunk1', 'chunk2']
 
-type App = typeof app
+        for (const chunk of chunks) {
+            yield sse({
+                event: 'data',
+                data: { text: chunk, attempt: 1 }
+            })
 
-const edenClient = treaty<App>('http://localhost:3000')
+            yield 1
 
-//    ^? {}
-// This doesn't work:
-edenClient({ id: '1' }).get() // This expression is not callable. Type '{}' has no call signatures.
+            yield sse({
+                event: 'data',
+                data: { text: chunk, attempt: 2 }
+            })
+        }
 
-const fetch = edenFetch<App>('http://localhost:3000')
-fetch('/:id', { params: { id: '1' } }) // Works
+        yield sse({
+            event: 'complete',
+            data: { message: 'done' }
+        })
+    })
+    .listen(3000)
 
-const edenTreaty1Client = edenTreaty<App>('http://localhost:3000')
-edenTreaty1Client[':id'].get() // Works
+const api = treaty(app)
+
+const { data } = await api.chunk.get()
+
+for await (const datum of data!) {
+	console.log(datum)
+}
