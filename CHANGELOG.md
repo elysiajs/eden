@@ -1,3 +1,54 @@
+# 1.4.2 - 12 Oct 2025
+Bug fix:
+- [elysia#1466](https://github.com/elysiajs/elysia/issues/1466) / treaty2: unpack multiple SSE chunk
+
+# 1.4.1 - 14 Sep 2025
+Bug fix:
+- inline object value / Elysia file cause type error
+- macro should not mark property as required
+
+# 1.4.0 - 13 Sep 2025
+Improvement:
+- support Elysia 1.4
+
+# 1.3.3 - 24 Aug 2025
+Feature:
+- treaty2: support type safe Server-Sent Events (SSE)
+- treaty2: add utility type `Treaty.Data`, `Treaty.Error` to extract data and error type from a route
+
+Bug fix:
+- [elysia#823](https://github.com/elysiajs/elysia/issues/823) treaty2: not generating for dynamic params at root
+- treaty2: parse Date in object
+- treaty2: [#196](https://github.com/elysiajs/eden/issues/196) allow custom content-type
+
+Change:
+- minimum Elysia version is set to 1.3.18
+
+# 1.3.2 - 5 May 2025
+Bug fix:
+- Unwrap FormData
+
+# 1.3.1 - 5 May 2025
+Bug fix:
+- [#193](https://github.com/elysiajs/eden/pull/193) t.Files() upload from server side #124
+- [#185](https://github.com/elysiajs/eden/pull/185) exclude null-ish values from query encoding by @ShuviSchwarze
+
+# 1.3.0 - 5 May 2025
+Feature:
+- support Elysia 1.3
+
+Breaking Change:
+- treaty2: drop the need for `.index()`
+
+# 1.2.0 - 23 Dec 2024
+Feature:
+- support Elysia 1.2
+- Validation error inference
+
+# 1.1.3 - 5 Sep 2024
+Feature:
+- add provenance publish
+
 # 1.1.2 - 25 Jul 2024
 Feature:
 - [#115](https://github.com/elysiajs/eden/pull/115) Stringify query params to allow the nested object
@@ -82,7 +133,7 @@ Bug fix:
 Feature:
 - support for elysia 1.0.2
 
-# 1.0.0 - 16 Mar 2024 
+# 1.0.0 - 16 Mar 2024
 Feature:
 - treaty2
 

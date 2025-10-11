@@ -61,13 +61,13 @@ beforeEach(() => {
 
 describe('Eden Treaty', () => {
     it('get index', async () => {
-        const { data } = await client.index.get()
+        const { data } = await client.get()
 
         expect(data).toBe('hi')
     })
 
     it('post index', async () => {
-        const { data } = await client.index.get()
+        const { data } = await client.get()
 
         expect(data).toBe('hi')
     })

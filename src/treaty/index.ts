@@ -352,7 +352,7 @@ const createProxy = (
     }) as unknown as Record<string, unknown>
 
 export const edenTreaty = <
-    App extends Elysia<any, any, any, any, any, any, any, any>
+    App extends Elysia<any, any, any, any, any, any, any>
 >(
     domain: string,
     config: EdenTreaty.Config = {

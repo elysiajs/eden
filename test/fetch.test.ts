@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { Elysia, t } from 'elysia'
+import { Elysia, form, t } from 'elysia'
 import { edenFetch } from '../src'
 
 import { describe, expect, it, beforeAll } from 'bun:test'
@@ -13,6 +13,17 @@ const json = {
 const app = new Elysia()
     .get('/', () => 'hi')
     .post('/', () => 'post')
+    .post('/form-data', ({ body }) => {
+        return {
+            file: body.file.name,
+            size: body.file.size
+        }
+    }, {
+        body: t.Object({
+            file: t.File()
+        }),
+        parse: 'formdata'
+    })
     .get('/json', ({ body }) => json)
     .get(
         '/json-utf8',
@@ -65,6 +76,32 @@ const app = new Elysia()
         {
             query: t.Object({
                 q: t.String()
+            })
+        }
+    )
+    .get(
+        '/with-query-undefined',
+        ({ query }) => {
+            return {
+                query
+            }
+        },
+        {
+            query: t.Object({
+                q: t.Undefined(t.String())
+            })
+        }
+    )
+    .get(
+        '/with-query-nullish',
+        ({ query }) => {
+            return {
+                query
+            }
+        },
+        {
+            query: t.Object({
+                q: t.Nullable(t.String())
             })
         }
     )
@@ -139,6 +176,22 @@ describe('Eden Fetch', () => {
         expect(data).toEqual(false)
     })
 
+    it('parse form data', async () => {
+        const formData = new FormData();
+        formData.append('file', new File(['test'], 'test.txt', { type: 'text/plain' }))
+
+        const { data } = await fetch('/form-data', {
+            method: 'POST',
+            // @ts-ignore
+            body: formData
+        })
+
+        expect(data).toEqual({
+            file: 'test.txt',
+            size: 4
+        })
+    })
+
     // ! FIX ME
     // it('handle throw error', async () => {
     //     const { data, error } = await fetch('/throw-error', {
@@ -169,5 +222,28 @@ describe('Eden Fetch', () => {
             }
         })
         expect(data?.query.q).toBe('A')
+    })
+
+    it('send undefined query', async () => {
+        const { data, error } = await fetch('/with-query-undefined', {
+            query: {
+                q: undefined
+            }
+        })
+        expect(data?.query.q).toBeUndefined()
+        expect(error).toBeNull()
+    })
+
+    // t.Nullable is impossible to represent with query params
+    // without elysia specifically parsing 'null'
+    it('send null query', async () => {
+        const { data, error } = await fetch('/with-query-nullish', {
+            query: {
+                q: null
+            }
+        })
+        expect(data?.query.q).toBeUndefined()
+        expect(error?.status).toBe(422)
+        expect(error?.value.type).toBe("validation")
     })
 })

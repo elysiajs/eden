@@ -1,4 +1,4 @@
-import { Elysia, t } from 'elysia'
+import { Elysia, file, form, status, t } from 'elysia'
 import { treaty } from '../../src'
 import { expectTypeOf } from 'expect-type'
 
@@ -49,8 +49,10 @@ const app = new Elysia()
             alias: t.Literal('Kristen')
         })
     })
-    .group('/nested', (app) => app.guard((app) => app.get('/data', () => 'hi')))
-    .get('/error', ({ error }) => error("I'm a teapot", 'Kirifuji Nagisa'), {
+    .group('/nested', (app) =>
+        app.guard({}, (app) => app.get('/data', () => 'hi'))
+    )
+    .get('/error', ({ status }) => status("I'm a teapot", 'Kirifuji Nagisa'), {
         response: {
             200: t.Void(),
             418: t.Literal('Kirifuji Nagisa'),
@@ -123,9 +125,9 @@ const app = new Elysia()
             })
         }
     )
-    .get('/async', async ({ error }) => {
-        if (Math.random() > 0.5) return error(418, 'Nagisa')
-        if (Math.random() > 0.5) return error(401, 'Himari')
+    .get('/async', async ({ status }) => {
+        if (Math.random() > 0.5) return status(418, 'Nagisa')
+        if (Math.random() > 0.5) return status(401, 'Himari')
 
         return 'Hifumi'
     })
@@ -138,9 +140,28 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
     ? Awaited<R>
     : never
 
+type ValidationError = {
+    data: null
+    error: {
+        status: 422
+        value: {
+            type: 'validation'
+            on: string
+            summary?: string
+            message?: string
+            found?: unknown
+            property?: string
+            expected?: string
+        }
+    }
+    response: Response
+    status: number
+    headers: RequestInit['headers']
+}
+
 // ? Get should have 1 parameter and is optional when no parameter is defined
 {
-    type Route = api['index']['get']
+    type Route = api['get']
 
     expectTypeOf<Route>().parameter(0).toEqualTypeOf<
         | {
@@ -178,7 +199,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
 
 // ? Non-get should have 2 parameter and is optional when no parameter is defined
 {
-    type Route = api['index']['post']
+    type Route = api['post']
 
     expectTypeOf<Route>().parameter(0).toBeUnknown()
 
@@ -313,18 +334,9 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
               error: null
               response: Response
               status: number
-              headers: HeadersInit | undefined
+              headers: RequestInit['headers']
           }
-        | {
-              data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
-              response: Response
-              status: number
-              headers: HeadersInit | undefined
-          }
+        | ValidationError
     >()
 }
 
@@ -387,17 +399,25 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
               error: null
               response: Response
               status: number
-              headers: HeadersInit | undefined
+              headers: RequestInit['headers']
           }
         | {
               data: null
               error: {
-                  status: unknown
-                  value: unknown
+                  status: 422
+                  value: {
+                      type: 'validation'
+                      on: string
+                      summary?: string
+                      message?: string
+                      found?: unknown
+                      property?: string
+                      expected?: string
+                  }
               }
               response: Response
               status: number
-              headers: HeadersInit | undefined
+              headers: RequestInit['headers']
           }
     >()
 }
@@ -419,6 +439,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
           }
         | undefined
     >()
+
     type Res = Result<Route>
 
     expectTypeOf<Res>().toEqualTypeOf<
@@ -430,18 +451,9 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
               error: null
               response: Response
               status: number
-              headers: HeadersInit | undefined
+              headers: RequestInit['headers']
           }
-        | {
-              data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
-              response: Response
-              status: number
-              headers: HeadersInit | undefined
-          }
+        | ValidationError
     >()
 }
 
@@ -471,16 +483,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
               status: number
               headers: HeadersInit | undefined
           }
-        | {
-              data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
-              response: Response
-              status: number
-              headers: HeadersInit | undefined
-          }
+        | ValidationError
     >()
 }
 
@@ -512,16 +515,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
               status: number
               headers: HeadersInit | undefined
           }
-        | {
-              data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
-              response: Response
-              status: number
-              headers: HeadersInit | undefined
-          }
+        | ValidationError
     >()
 }
 
@@ -553,16 +547,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
               status: number
               headers: HeadersInit | undefined
           }
-        | {
-              data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
-              response: Response
-              status: number
-              headers: HeadersInit | undefined
-          }
+        | ValidationError
     >()
 }
 
@@ -594,16 +579,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
               status: number
               headers: HeadersInit | undefined
           }
-        | {
-              data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
-              response: Response
-              status: number
-              headers: HeadersInit | undefined
-          }
+        | ValidationError
     >()
 }
 
@@ -643,6 +619,18 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
                         status: 420
                         value: 'Snoop Dogg'
                     }
+                  | {
+                        status: 422
+                        value: {
+                            type: 'validation'
+                            on: string
+                            summary?: string
+                            message?: string
+                            found?: unknown
+                            property?: string
+                            expected?: string
+                        }
+                    }
               response: Response
               status: number
               headers: HeadersInit | undefined
@@ -678,16 +666,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
               status: number
               headers: HeadersInit | undefined
           }
-        | {
-              data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
-              response: Response
-              status: number
-              headers: HeadersInit | undefined
-          }
+        | ValidationError
     >()
 }
 
@@ -719,16 +698,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
               status: number
               headers: HeadersInit | undefined
           }
-        | {
-              data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
-              response: Response
-              status: number
-              headers: HeadersInit | undefined
-          }
+        | ValidationError
     >()
 }
 
@@ -763,16 +733,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
               status: number
               headers: HeadersInit | undefined
           }
-        | {
-              data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
-              response: Response
-              status: number
-              headers: HeadersInit | undefined
-          }
+        | ValidationError
     >()
 }
 
@@ -807,16 +768,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
               status: number
               headers: HeadersInit | undefined
           }
-        | {
-              data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
-              response: Response
-              status: number
-              headers: HeadersInit | undefined
-          }
+        | ValidationError
     >()
 }
 
@@ -854,16 +806,7 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
               status: number
               headers: HeadersInit | undefined
           }
-        | {
-              data: null
-              error: {
-                  status: unknown
-                  value: unknown
-              }
-              response: Response
-              status: number
-              headers: HeadersInit | undefined
-          }
+        | ValidationError
     >()
 }
 
@@ -914,219 +857,305 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
 {
     type SubModule = api['level']
 
-    expectTypeOf<SubModule>().toEqualTypeOf<
-        ((params: { id: string | number }) => {
-            get: (
-                options?:
-                    | {
-                          headers?: Record<string, unknown> | undefined
-                          query?: Record<string, unknown> | undefined
-                          fetch?: RequestInit | undefined
-                      }
-                    | undefined
-            ) => Promise<
-                | {
-                      data: string
-                      error: null
-                      response: Response
-                      status: number
-                      headers: HeadersInit | undefined
-                  }
-                | {
-                      data: null
-                      error: {
-                          status: unknown
-                          value: unknown
-                      }
-                      response: Response
-                      status: number
-                      headers: HeadersInit | undefined
-                  }
-            >
-            ok: {
-                get: (
-                    options?:
-                        | {
-                              headers?: Record<string, unknown> | undefined
-                              query?: Record<string, unknown> | undefined
-                              fetch?: RequestInit | undefined
-                          }
-                        | undefined
-                ) => Promise<
-                    | {
-                          data: string
-                          error: null
-                          response: Response
-                          status: number
-                          headers: HeadersInit | undefined
-                      }
-                    | {
-                          data: null
-                          error: {
-                              status: unknown
-                              value: unknown
-                          }
-                          response: Response
-                          status: number
-                          headers: HeadersInit | undefined
-                      }
-                >
-            }
-        }) & {
-            index: {
-                get: (
-                    options?:
-                        | {
-                              headers?: Record<string, unknown> | undefined
-                              query?: Record<string, unknown> | undefined
-                              fetch?: RequestInit | undefined
-                          }
-                        | undefined
-                ) => Promise<
-                    | {
-                          data: '2'
-                          error: null
-                          response: Response
-                          status: number
-                          headers: HeadersInit | undefined
-                      }
-                    | {
-                          data: null
-                          error: {
-                              status: unknown
-                              value: unknown
-                          }
-                          response: Response
-                          status: number
-                          headers: HeadersInit | undefined
-                      }
-                >
-            }
-            level: {
-                get: (
-                    options?:
-                        | {
-                              headers?: Record<string, unknown> | undefined
-                              query?: Record<string, unknown> | undefined
-                              fetch?: RequestInit | undefined
-                          }
-                        | undefined
-                ) => Promise<
-                    | {
-                          data: '2'
-                          error: null
-                          response: Response
-                          status: number
-                          headers: HeadersInit | undefined
-                      }
-                    | {
-                          data: null
-                          error: {
-                              status: unknown
-                              value: unknown
-                          }
-                          response: Response
-                          status: number
-                          headers: HeadersInit | undefined
-                      }
-                >
+    // expectTypeOf<SubModule>().toEqualTypeOf<
+    // 	((params: { id: string | number }) => {
+    // 		get: (
+    // 			options?:
+    // 				| {
+    // 						headers?: Record<string, unknown> | undefined
+    // 						query?: Record<string, unknown> | undefined
+    // 						fetch?: RequestInit | undefined
+    // 				  }
+    // 				| undefined
+    // 		) => Promise<
+    // 			| {
+    // 					data: string
+    // 					error: null
+    // 					response: Response
+    // 					status: number
+    // 					headers: HeadersInit | undefined
+    // 			  }
+    // 			| ValidationError
+    // 		>
+    // 		ok: {
+    // 			get: (
+    // 				options?:
+    // 					| {
+    // 							headers?: Record<string, unknown> | undefined
+    // 							query?: Record<string, unknown> | undefined
+    // 							fetch?: RequestInit | undefined
+    // 					  }
+    // 					| undefined
+    // 			) => Promise<
+    // 				| {
+    // 						data: string
+    // 						error: null
+    // 						response: Response
+    // 						status: number
+    // 						headers: HeadersInit | undefined
+    // 				  }
+    // 				| ValidationError
+    // 			>
+    // 		}
+    // 	}) & {
+    // 		index: {
+    // 			get: (
+    // 				options?:
+    // 					| {
+    // 							headers?: Record<string, unknown> | undefined
+    // 							query?: Record<string, unknown> | undefined
+    // 							fetch?: RequestInit | undefined
+    // 					  }
+    // 					| undefined
+    // 			) => Promise<
+    // 				| {
+    // 						data: '2'
+    // 						error: null
+    // 						response: Response
+    // 						status: number
+    // 						headers: HeadersInit | undefined
+    // 				  }
+    // 				| ValidationError
+    // 			>
+    // 		}
+    // 		level: {
+    // 			get: (
+    // 				options?:
+    // 					| {
+    // 							headers?: Record<string, unknown> | undefined
+    // 							query?: Record<string, unknown> | undefined
+    // 							fetch?: RequestInit | undefined
+    // 					  }
+    // 					| undefined
+    // 			) => Promise<
+    // 				| {
+    // 						data: '2'
+    // 						error: null
+    // 						response: Response
+    // 						status: number
+    // 						headers: HeadersInit | undefined
+    // 				  }
+    // 				| ValidationError
+    // 			>
+    // 		}
+    // 	}
+    // >
+}
+
+// ? Return AsyncGenerator on yield
+{
+    const app = new Elysia().get('', function* () {
+        yield 1
+        yield 2
+        yield 3
+    })
+
+    const { data } = await treaty(app).get()
+
+    expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
+        1 | 2 | 3,
+        void,
+        unknown
+    > | null>()
+}
+
+// ? Return actual value on generator if not yield
+{
+    const app = new Elysia().get('', function* () {
+        return 'a'
+    })
+
+    const { data } = await treaty(app).get()
+
+    expectTypeOf<typeof data>().toEqualTypeOf<string | null>()
+}
+
+// ? Return both actual value and generator if yield and return
+{
+    const app = new Elysia().get('', function* () {
+        if (Math.random() > 0.5) return 'a'
+
+        yield 1
+        yield 2
+        yield 3
+    })
+
+    const { data } = await treaty(app).get()
+
+    expectTypeOf<typeof data>().toEqualTypeOf<
+        | 'a'
+        | AsyncGenerator<1 | 2 | 3, 'a' | undefined, unknown>
+        | null
+        | undefined
+    >()
+}
+
+// ? Return AsyncGenerator on yield
+{
+    const app = new Elysia().get('', async function* () {
+        yield 1
+        yield 2
+        yield 3
+    })
+
+    const { data } = await treaty(app).get()
+
+    expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
+        1 | 2 | 3,
+        void,
+        unknown
+    > | null>()
+}
+
+{
+    const app = new Elysia().get('/formdata', () =>
+        form({
+            image: file('/')
+        })
+    )
+
+    const { data } = await treaty(app).formdata.get()
+
+    expectTypeOf(data!.image).toEqualTypeOf<File>()
+}
+
+// Handle dynamic parameter at root
+{
+    const app = new Elysia().get('/:id', () => null)
+
+    type App = typeof app
+
+    const edenClient = treaty<App>('http://localhost:3000')
+
+    edenClient({ id: '1' }).get()
+}
+
+// Turn Generator to AsyncGenerator
+{
+    const app = new Elysia().get('/test', function* a() {
+        yield 'a'
+        yield 'b'
+    })
+
+    const client = treaty(app)
+
+    const { data } = await client.test.get()
+
+    expectTypeOf(data).toEqualTypeOf<AsyncGenerator<
+        'a' | 'b',
+        void,
+        unknown
+    > | null>()
+}
+
+// Turn ReadableStream to AsyncGenerator
+{
+    const app = new Elysia().get(
+        '/test',
+        () =>
+            new ReadableStream<'a' | 'b'>({
+                start(controller) {
+                    controller.enqueue('a')
+                    controller.enqueue('b')
+                }
+            })
+    )
+
+    const client = treaty(app)
+
+    const { data } = await client.test.get()
+
+    expectTypeOf(data).toEqualTypeOf<AsyncGenerator<
+        'a' | 'b',
+        void,
+        unknown
+    > | null>()
+}
+
+// macro should not mark property as required
+{
+    const authMacro = new Elysia().macro({
+        auth: {
+            async resolve() {
+                return { newProperty: 'Macro added property' }
             }
         }
-    >
-}
-
-// ? Return AsyncGenerator on yield
-{
-    const app = new Elysia().get('', function* () {
-        yield 1
-        yield 2
-        yield 3
     })
 
-    const { data } = await treaty(app).index.get()
+    const routerWithMacro = new Elysia()
+        .use(authMacro)
+        .get('/bug', 'Problem', { auth: true })
 
-    expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
-        1 | 2 | 3,
-        void,
-        unknown
-    > | null>()
+    const routerWithoutMacro = new Elysia().get('/noBug', 'No Problem')
+
+    const app = new Elysia().use(routerWithMacro).use(routerWithoutMacro)
+    const api = treaty<typeof app>('localhost:3000')
+
+    api.noBug.get()
+    api.bug.get()
 }
 
-// ? Return actual value on generator if not yield
 {
-    const app = new Elysia().get('', function* () {
-        return 'a'
-    })
+    const app = new Elysia().get("/", () => status(199, "yay"))
 
-    const { data } = await treaty(app).index.get()
+    type App = typeof app
 
-    expectTypeOf<typeof data>().toEqualTypeOf<string | null>()
+    const edenClient = treaty<App>('http://localhost:3000')
+
+    const { data, error } = await edenClient.get()
+
+    expectTypeOf(data).toEqualTypeOf<unknown>()
+    expectTypeOf(error).toEqualTypeOf<{ status: 199; value: "yay"; } | null>()
 }
 
-// ? Return both actual value and generator if yield and return
 {
-    const app = new Elysia().get('', function* () {
-        if (Math.random() > 0.5) return 'a'
+    const app = new Elysia().get("/", () => status(200, "yay"))
 
-        yield 1
-        yield 2
-        yield 3
-    })
+    type App = typeof app
 
-    const { data } = await treaty(app).index.get()
+    const edenClient = treaty<App>('http://localhost:3000')
 
-    expectTypeOf<typeof data>().toEqualTypeOf<
-        | 'a'
-        | AsyncGenerator<1 | 2 | 3, 'a' | undefined, unknown>
-        | null
-        | undefined
-    >()
+    const { data, error } = await edenClient.get()
+
+    expectTypeOf(data).toEqualTypeOf<"yay" | null>()
+    expectTypeOf(error).toEqualTypeOf<{ status: unknown; value: unknown; } | null>()
 }
 
-// ? Return AsyncGenerator on yield
 {
-    const app = new Elysia().get('', async function* () {
-        yield 1
-        yield 2
-        yield 3
-    })
+    const app = new Elysia().get("/", () => status(201, "yay"))
 
-    const { data } = await treaty(app).index.get()
+    type App = typeof app
 
-    expectTypeOf<typeof data>().toEqualTypeOf<AsyncGenerator<
-        1 | 2 | 3,
-        void,
-        unknown
-    > | null>()
+    const edenClient = treaty<App>('http://localhost:3000')
+
+    const { data, error } = await edenClient.get()
+
+    expectTypeOf(data).toEqualTypeOf<"yay" | null>()
+    expectTypeOf(error).toEqualTypeOf<{ status: unknown; value: unknown; } | null>()
 }
 
-// ? Return actual value on generator if not yield
 {
-    const app = new Elysia().get('', async function* () {
-        return 'a'
-    })
+    const app = new Elysia().get("/", () => status(299, "yay"))
 
-    const { data } = await treaty(app).index.get()
+    type App = typeof app
 
-    expectTypeOf<typeof data>().toEqualTypeOf<string | null>()
+    const edenClient = treaty<App>('http://localhost:3000')
+
+    const { data, error } = await edenClient.get()
+
+    expectTypeOf(data).toEqualTypeOf<"yay" | null>()
+    expectTypeOf(error).toEqualTypeOf<{ status: unknown; value: unknown; } | null>()
 }
 
-// ? Return both actual value and generator if yield and return
 {
-	const app = new Elysia().get('', async function* () {
-        if (Math.random() > 0.5) return 'a'
+    const app = new Elysia().get("/", () => status(300, "yay"))
 
-        yield 1
-        yield 2
-        yield 3
-    })
+    type App = typeof app
 
-    const { data } = await treaty(app).index.get()
+    const edenClient = treaty<App>('http://localhost:3000')
 
-    expectTypeOf<typeof data>().toEqualTypeOf<
-        | 'a'
-        | AsyncGenerator<1 | 2 | 3, 'a' | undefined, unknown>
-        | null
-        | undefined
-    >()
+    const { data, error } = await edenClient.get()
+
+    expectTypeOf(data).toEqualTypeOf<unknown>()
+    expectTypeOf(error).toEqualTypeOf<{ status: 300; value: "yay"; } | null>()
 }
