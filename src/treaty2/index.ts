@@ -449,51 +449,42 @@ const createProxy = (
                         }
                     }
 
-                    if (
-                        response.headers.get('Transfer-Encoding') === 'chunked'
+                    switch (
+                        response.headers.get('Content-Type')?.split(';')[0]
                     ) {
-                        data = streamResponse(response)
-                    } else {
-                        switch (
-                            response.headers.get('Content-Type')?.split(';')[0]
-                        ) {
-                            case 'text/event-stream':
-                                data = streamResponse(response)
-                                break
+                        case 'text/event-stream':
+                            data = streamResponse(response)
+                            break
 
-                            case 'application/json':
-                                data = JSON.parse(
-                                    await response.text(),
-                                    (k, v) => {
-                                        if (typeof v !== 'string') return v
+                        case 'application/json':
+                            data = JSON.parse(await response.text(), (k, v) => {
+                                if (typeof v !== 'string') return v
 
-                                        const date = parseStringifiedDate(v)
-                                        if (date) return date
+                                const date = parseStringifiedDate(v)
+                                if (date) return date
 
-                                        return v
-                                    }
-                                )
-                                break
-                            case 'application/octet-stream':
-                                data = await response.arrayBuffer()
-                                break
+                                return v
+                            })
+                            break
+                        case 'application/octet-stream':
+                            data = await response.arrayBuffer()
+                            break
 
-                            case 'multipart/form-data':
-                                const temp = await response.formData()
+                        case 'multipart/form-data':
+                            const temp = await response.formData()
 
-                                data = {}
-                                temp.forEach((value, key) => {
-                                    // @ts-ignore
-                                    data[key] = value
-                                })
+                            data = {}
+                            temp.forEach((value, key) => {
+                                // @ts-ignore
+                                data[key] = value
+                            })
 
-                                break
+                            break
 
-                            default:
-                                data = await response
-                                    .text()
-                                    .then(parseStringifiedValue)
-                        }
+                        default:
+                            data = await response
+                                .text()
+                                .then(parseStringifiedValue)
                     }
 
                     if (response.status >= 300 || response.status < 200) {

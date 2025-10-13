@@ -1,3 +1,7 @@
+# 1.4.4 - 13 Oct 2025
+Bug fix:
+- revert streaming transferEncoding chunked
+
 # 1.4.3 - 12 Oct 2025
 Bug fix:
 - [elysia#1466](https://github.com/elysiajs/elysia/issues/1466) / treaty2: unpack multiple SSE chunk
