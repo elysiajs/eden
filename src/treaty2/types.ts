@@ -90,21 +90,17 @@ export namespace Treaty {
                     query: infer Query
                     response: infer Res extends Record<number, unknown>
                 }
-              ? ({} extends Headers
-                    ? {
-                          headers?: Record<string, unknown>
-                      }
-                    : undefined extends Headers
-                      ? { headers?: Record<string, unknown> }
+              ? (undefined extends Headers
+                    ? { headers?: Record<string, unknown> }
+                    : {} extends Headers
+                      ? { headers?: Headers & Record<string, unknown> }
                       : {
                             headers: Headers
                         }) &
-                    ({} extends Query
-                        ? {
-                              query?: Record<string, unknown>
-                          }
-                        : undefined extends Query
-                          ? { query?: Record<string, unknown> }
+                    (undefined extends Query
+                        ? { query?: Record<string, unknown> }
+                        : {} extends Query
+                          ? { query?: Query & Record<string, unknown> }
                           : { query: Query }) extends infer Param
                   ? {} extends Param
                       ? undefined extends Body
