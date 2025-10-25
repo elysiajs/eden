@@ -24,20 +24,20 @@ type ReplaceGeneratorWithAsyncGenerator<
     [K in keyof RecordType]: IsNever<RecordType[K]> extends true
         ? RecordType[K]
         : RecordType[K] extends Generator<infer A, infer B, infer C>
-        ? void extends B
-            ? AsyncGenerator<A, B, C>
-            : And<IsNever<A>, void extends B ? false : true> extends true
-            ? B
-            : AsyncGenerator<A, B, C> | B
-        : RecordType[K] extends AsyncGenerator<infer A, infer B, infer C>
-        ? And<Not<IsNever<A>>, void extends B ? true : false> extends true
-            ? AsyncGenerator<A, B, C>
-            : And<IsNever<A>, void extends B ? false : true> extends true
-            ? B
-            : AsyncGenerator<A, B, C> | B
-        : RecordType[K] extends ReadableStream<infer A>
-        ? AsyncGenerator<A, void, unknown>
-        : RecordType[K]
+          ? void extends B
+              ? AsyncGenerator<A, B, C>
+              : And<IsNever<A>, void extends B ? false : true> extends true
+                ? B
+                : AsyncGenerator<A, B, C> | B
+          : RecordType[K] extends AsyncGenerator<infer A, infer B, infer C>
+            ? And<Not<IsNever<A>>, void extends B ? true : false> extends true
+                ? AsyncGenerator<A, B, C>
+                : And<IsNever<A>, void extends B ? false : true> extends true
+                  ? B
+                  : AsyncGenerator<A, B, C> | B
+            : RecordType[K] extends ReadableStream<infer A>
+              ? AsyncGenerator<A, void, unknown>
+              : RecordType[K]
 } & {}
 
 type Enumerate<N extends number, Acc extends number[] = []> =
@@ -80,17 +80,26 @@ export namespace Treaty {
               }
             ? MaybeEmptyObject<Headers, 'headers'> &
                   MaybeEmptyObject<Query, 'query'> extends infer Param
-                ? {} extends Param
-                    ? undefined extends Body
-                        ? K extends 'get' | 'head'
+                  ? {} extends Param
+                      ? undefined extends Body
+                          ? K extends 'get' | 'head'
+                              ? (
+                                    options?: Prettify<Param & TreatyParam>
+                                ) => Promise<
+                                    TreatyResponse<
+                                        ReplaceGeneratorWithAsyncGenerator<Res>
+                                    >
+                                >
+                              : (
+                                    body?: Body,
+                                    options?: Prettify<Param & TreatyParam>
+                                ) => Promise<
+                                    TreatyResponse<
+                                        ReplaceGeneratorWithAsyncGenerator<Res>
+                                    >
+                                >
+                          : {} extends Body
                             ? (
-                                  options?: Prettify<Param & TreatyParam>
-                              ) => Promise<
-                                  TreatyResponse<
-                                      ReplaceGeneratorWithAsyncGenerator<Res>
-                                  >
-                              >
-                            : (
                                   body?: Body,
                                   options?: Prettify<Param & TreatyParam>
                               ) => Promise<
@@ -98,10 +107,17 @@ export namespace Treaty {
                                       ReplaceGeneratorWithAsyncGenerator<Res>
                                   >
                               >
-                        : {} extends Body
+                            : (
+                                  body: Body,
+                                  options?: Prettify<Param & TreatyParam>
+                              ) => Promise<
+                                  TreatyResponse<
+                                      ReplaceGeneratorWithAsyncGenerator<Res>
+                                  >
+                              >
+                      : K extends 'get' | 'head'
                         ? (
-                              body?: Body,
-                              options?: Prettify<Param & TreatyParam>
+                              options: Prettify<Param & TreatyParam>
                           ) => Promise<
                               TreatyResponse<
                                   ReplaceGeneratorWithAsyncGenerator<Res>
@@ -109,50 +125,34 @@ export namespace Treaty {
                           >
                         : (
                               body: Body,
-                              options?: Prettify<Param & TreatyParam>
+                              options: Prettify<Param & TreatyParam>
                           ) => Promise<
                               TreatyResponse<
                                   ReplaceGeneratorWithAsyncGenerator<Res>
                               >
                           >
-                    : K extends 'get' | 'head'
-                    ? (
-                          options: Prettify<Param & TreatyParam>
-                      ) => Promise<
-                          TreatyResponse<
-                              ReplaceGeneratorWithAsyncGenerator<Res>
-                          >
-                      >
-                    : (
-                          body: Body,
-                          options: Prettify<Param & TreatyParam>
-                      ) => Promise<
-                          TreatyResponse<
-                              ReplaceGeneratorWithAsyncGenerator<Res>
-                          >
-                      >
-                : never
-            : CreateParams<Route[K]>
+                  : never
+              : CreateParams<Route[K]>
     }
 
     type CreateParams<Route extends Record<string, any>> =
         Extract<keyof Route, `:${string}`> extends infer Path extends string
-        ? IsNever<Path> extends true
-            ? Prettify<Sign<Route>>
-            : // ! DO NOT USE PRETTIFY ON THIS LINE, OTHERWISE FUNCTION CALLING WILL BE OMITTED
-              (((params: {
-                  [param in Path extends `:${infer Param}`
-                      ? Param extends `${infer Param}?`
-                          ? Param
-                          : Param
-                      : never]: string | number
+            ? IsNever<Path> extends true
+                ? Prettify<Sign<Route>>
+                : // ! DO NOT USE PRETTIFY ON THIS LINE, OTHERWISE FUNCTION CALLING WILL BE OMITTED
+                  (((params: {
+                      [param in Path extends `:${infer Param}`
+                          ? Param extends `${infer Param}?`
+                              ? Param
+                              : Param
+                          : never]: string | number
                   }) => Prettify<Sign<Route[Path]>> &
                       CreateParams<Route[Path]>) &
-                  Prettify<Sign<Route>>) &
+                      Prettify<Sign<Route>>) &
                       (Path extends `:${string}?`
                           ? CreateParams<Route[Path]>
                           : {})
-        : never
+            : never
 
     export interface Config {
         fetch?: Omit<RequestInit, 'headers' | 'method'>
