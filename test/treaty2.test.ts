@@ -1,7 +1,7 @@
 import { Elysia, form, sse, t } from 'elysia'
 import { Treaty, treaty } from '../src'
 
-import { describe, expect, it, beforeAll, afterAll, mock } from 'bun:test'
+import { describe, expect, it, beforeAll, afterAll, mock, test } from 'bun:test'
 
 const randomObject = {
     a: 'a',
@@ -92,6 +92,44 @@ const app = new Elysia()
             alias: t.Literal('Kristen')
         })
     })
+    .group('/empty-test', (g) => g
+        .get('/with-maybe-empty', ({ query, headers }) => ({ query, headers }), {
+            query: t.MaybeEmpty(t.Object({ alias: t.String() })),
+            headers: t.MaybeEmpty(t.Object({ username: t.String() }))
+        })
+        .get('/with-unknown', ({ query, headers }) => ({ query, headers }), {
+            query: t.Unknown(),
+            headers: t.Unknown(),
+        })
+        .get('/with-empty-record', ({ query, headers }) => ({ query, headers }), {
+            query: t.Record(t.String(), t.Never()),
+            headers: t.Record(t.String(), t.Never()),
+        })
+        .get('/with-empty-obj', ({ query, headers }) => ({ query, headers }), {
+            query: t.Object({}),
+            headers: t.Object({}),
+        })
+        .get('/with-partial', ({ query, headers }) => ({ query, headers }), {
+            query: t.Partial(t.Object({ alias: t.String() })),
+            headers: t.Partial(t.Object({ username: t.String() })),
+        })
+        .get('/with-optional', ({ query, headers }) => ({ query, headers }), {
+            query: t.Optional(t.Object({ alias: t.String() })),
+            headers: t.Optional(t.Object({ username: t.String() })),
+        })
+        .get('/with-union-undefined', ({ query, headers }) => ({ query, headers }), {
+            query: t.Union([t.Object({ alias: t.String() }), t.Undefined()]),
+            headers: t.Union([t.Object({ username: t.String() }), t.Undefined()])
+        })
+        .get('/with-union-empty-obj', ({ query, headers }) => ({ query, headers }), {
+            query: t.Union([t.Object({ alias: t.String() }), t.Object({})]),
+            headers: t.Union([t.Object({ username: t.String() }), t.Object({})]),
+        })
+        .get('/with-union-empty-record', ({ query, headers }) => ({ query, headers }), {
+            query: t.Union([t.Object({ alias: t.String() }), t.Record(t.String(), t.Never())]),
+            headers: t.Union([t.Object({ username: t.String() }), t.Record(t.String(), t.Never())]),
+        })
+    )
     .post('/queries', ({ query }) => query, {
         query: t.Object({
             username: t.String(),
@@ -352,6 +390,22 @@ describe('Treaty2', () => {
         expect(data).toBeNull()
         expect(error?.status).toBe(422)
         expect(error?.value.type).toBe('validation')
+    })
+
+    test.each([
+        'with-empty-obj',
+        'with-partial',
+        'with-unknown',
+        'with-empty-record',
+        'with-union-empty-obj',
+        'with-union-empty-record',
+        // 'with-maybe-empty',
+        // 'with-optional',
+        // 'with-union-undefined',
+    ] as const)('type test for case: %s', async (caseName) => {
+        const { data, error } = await client['empty-test'][caseName].get()
+        expect(error, JSON.stringify(error, null, 2)).toBeNull()
+        expect(data).toEqual({ query: {}, headers: {} })
     })
 
     it('post queries', async () => {

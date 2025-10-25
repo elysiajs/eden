@@ -131,6 +131,18 @@ const app = new Elysia()
 
         return 'Hifumi'
     })
+    .get('/maybe-empty', () => 'test', {
+        query: t.MaybeEmpty(t.Object({ alias: t.String() })),
+        headers: t.MaybeEmpty(t.Object({ username: t.String() }))
+    })
+    .get('/unknown-or-obj', () => 'test', {
+        query: t.Unknown(),
+        headers: t.Object({}),
+    })
+    .get('/partial-or-optional', () => 'test', {
+        query: t.Partial(t.Object({ alias: t.String() })),
+        headers: t.Optional(t.Object({ username: t.String() })),
+    })
     .use(plugin)
 
 const api = treaty(app)
@@ -1158,4 +1170,55 @@ type ValidationError = {
 
     expectTypeOf(data).toEqualTypeOf<unknown>()
     expectTypeOf(error).toEqualTypeOf<{ status: 300; value: "yay"; } | null>()
+}
+
+// Handle maybe empty query and headers
+{
+    type Route = api['maybe-empty']['get']
+    type RouteOptions = Parameters<Route>[0]
+
+    expectTypeOf<RouteOptions>().toBeNullable()
+
+    type Query = NonNullable<RouteOptions>['query']
+    type Headers = NonNullable<RouteOptions>['headers']
+
+    expectTypeOf<Query>().toBeNullable()
+    expectTypeOf<Headers>().toBeNullable()
+
+    expectTypeOf<NonNullable<Query>>().toEqualTypeOf<{ alias: string }>()
+    expectTypeOf<NonNullable<Headers>>().toEqualTypeOf<{ username: string }>()
+}
+
+// Handle unknown and empty object query and headers
+{
+    type Route = api['unknown-or-obj']['get']
+    type RouteOptions = Parameters<Route>[0]
+
+    expectTypeOf<RouteOptions>().toBeNullable()
+
+    type Query = NonNullable<RouteOptions>['query']
+    type Headers = NonNullable<RouteOptions>['headers']
+
+    expectTypeOf<Query>().toBeNullable()
+    expectTypeOf<Headers>().toBeNullable()
+
+    expectTypeOf<NonNullable<Query>>().toEqualTypeOf<Record<string, unknown>>()
+    expectTypeOf<NonNullable<Headers>>().toEqualTypeOf<{}>()
+}
+
+// Handle partial and optional query and headers
+{
+    type Route = api['partial-or-optional']['get']
+    type RouteOptions = Parameters<Route>[0]
+
+    expectTypeOf<RouteOptions>().toBeNullable()
+
+    type Query = NonNullable<RouteOptions>['query']
+    type Headers = NonNullable<RouteOptions>['headers']
+
+    expectTypeOf<Query>().toBeNullable()
+    expectTypeOf<Headers>().toBeNullable()
+
+    expectTypeOf<NonNullable<Query>>().toEqualTypeOf<{ alias?: string }>()
+    expectTypeOf<NonNullable<Headers>>().toEqualTypeOf<{ username?: string }>()
 }
