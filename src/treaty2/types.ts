@@ -2,7 +2,7 @@
 import type { Elysia, ELYSIA_FORM_DATA } from 'elysia'
 
 import { EdenWS } from './ws'
-import type { IsNever, Not, Prettify } from '../types'
+import type { IsNever, MaybeEmptyObject, Not, Prettify } from '../types'
 
 // type Files = File | FileList
 
@@ -67,45 +67,19 @@ export namespace Treaty {
         [K in keyof Route as K extends `:${string}`
             ? never
             : K]: K extends 'subscribe' // ? Websocket route
-            ? ({} extends Route['subscribe']['headers']
-                  ? { headers?: Record<string, unknown> }
-                  : undefined extends Route['subscribe']['headers']
-                    ? { headers?: Record<string, unknown> }
-                    : {
-                          headers: Route['subscribe']['headers']
-                      }) &
-                  ({} extends Route['subscribe']['query']
-                      ? { query?: Record<string, unknown> }
-                      : undefined extends Route['subscribe']['query']
-                        ? { query?: Record<string, unknown> }
-                        : {
-                              query: Route['subscribe']['query']
-                          }) extends infer Param
+            ? MaybeEmptyObject<Route['subscribe']['headers'], 'headers'> &
+                  MaybeEmptyObject<Route['subscribe']['query'], 'query'> extends infer Param
                 ? (options?: Param) => EdenWS<Route['subscribe']>
                 : never
             : Route[K] extends {
-                    body: infer Body
-                    headers: infer Headers
-                    params: any
-                    query: infer Query
-                    response: infer Res extends Record<number, unknown>
-                }
-              ? ({} extends Headers
-                    ? {
-                          headers?: Record<string, unknown>
-                      }
-                    : undefined extends Headers
-                      ? { headers?: Record<string, unknown> }
-                      : {
-                            headers: Headers
-                        }) &
-                    ({} extends Query
-                        ? {
-                              query?: Record<string, unknown>
-                          }
-                        : undefined extends Query
-                          ? { query?: Record<string, unknown> }
-                          : { query: Query }) extends infer Param
+                  body: infer Body
+                  headers: infer Headers
+                  params: any
+                  query: infer Query
+                  response: infer Res extends Record<number, unknown>
+              }
+            ? MaybeEmptyObject<Headers, 'headers'> &
+                  MaybeEmptyObject<Query, 'query'> extends infer Param
                   ? {} extends Param
                       ? undefined extends Body
                           ? K extends 'get' | 'head'
