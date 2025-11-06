@@ -58,12 +58,12 @@ export namespace Treaty {
 
     export type Create<App extends Elysia<any, any, any, any, any, any, any>> =
         App extends {
-            '~Routes': infer Schema extends Record<string, any>
+            '~Routes': infer Schema extends Record<any, any>
         }
-            ? Prettify<Sign<Schema>> & CreateParams<Schema>
+            ? Prettify<Sign<Schema> & CreateParams<Schema>>
             : 'Please install Elysia before using Eden'
 
-    export type Sign<in out Route extends Record<string, any>> = {
+    export type Sign<in out Route extends Record<any, any>> = {
         [K in keyof Route as K extends `:${string}`
             ? never
             : K]: K extends 'subscribe' // ? Websocket route
