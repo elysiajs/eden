@@ -40,13 +40,20 @@ type ReplaceGeneratorWithAsyncGenerator<
               : RecordType[K]
 } & {}
 
-type Enumerate<N extends number, Acc extends number[] = []> =
-        Acc['length'] extends N ? Acc[number] : Enumerate<N, [...Acc, Acc['length']]>;
+type Enumerate<
+    N extends number,
+    Acc extends number[] = []
+> = Acc['length'] extends N
+    ? Acc[number]
+    : Enumerate<N, [...Acc, Acc['length']]>
 
-type IntegerRange<F extends number, T extends number> = Exclude<Enumerate<T>, Enumerate<F>>;
+type IntegerRange<F extends number, T extends number> = Exclude<
+    Enumerate<T>,
+    Enumerate<F>
+>
 
-type SuccessCodeRange = IntegerRange<200, 300>;
-type IsSuccessCode<S extends number> = S extends SuccessCodeRange ? true : false;
+type SuccessCodeRange = IntegerRange<200, 300>
+type IsSuccessCode<S extends number> = S extends SuccessCodeRange ? true : false
 
 type MaybeArray<T> = T | T[]
 type MaybePromise<T> = T | Promise<T>
@@ -60,7 +67,7 @@ export namespace Treaty {
         App extends {
             '~Routes': infer Schema extends Record<any, any>
         }
-            ? Prettify<Sign<Schema> & CreateParams<Schema>>
+            ? Prettify<Sign<Schema>> & CreateParams<Schema>
             : 'Please install Elysia before using Eden'
 
     export type Sign<in out Route extends Record<any, any>> = {
@@ -68,18 +75,21 @@ export namespace Treaty {
             ? never
             : K]: K extends 'subscribe' // ? Websocket route
             ? MaybeEmptyObject<Route['subscribe']['headers'], 'headers'> &
-                  MaybeEmptyObject<Route['subscribe']['query'], 'query'> extends infer Param
+                  MaybeEmptyObject<
+                      Route['subscribe']['query'],
+                      'query'
+                  > extends infer Param
                 ? (options?: Param) => EdenWS<Route['subscribe']>
                 : never
             : Route[K] extends {
-                  body: infer Body
-                  headers: infer Headers
-                  params: any
-                  query: infer Query
-                  response: infer Res extends Record<number, unknown>
-              }
-            ? MaybeEmptyObject<Headers, 'headers'> &
-                  MaybeEmptyObject<Query, 'query'> extends infer Param
+                    body: infer Body
+                    headers: infer Headers
+                    params: any
+                    query: infer Query
+                    response: infer Res extends Record<number, unknown>
+                }
+              ? MaybeEmptyObject<Headers, 'headers'> &
+                    MaybeEmptyObject<Query, 'query'> extends infer Param
                   ? {} extends Param
                       ? undefined extends Body
                           ? K extends 'get' | 'head'
@@ -98,23 +108,31 @@ export namespace Treaty {
                                         ReplaceGeneratorWithAsyncGenerator<Res>
                                     >
                                 >
-                          : {} extends Body
+                          : K extends 'get' | 'head'
                             ? (
-                                  body?: Body,
                                   options?: Prettify<Param & TreatyParam>
                               ) => Promise<
                                   TreatyResponse<
                                       ReplaceGeneratorWithAsyncGenerator<Res>
                                   >
                               >
-                            : (
-                                  body: Body,
-                                  options?: Prettify<Param & TreatyParam>
-                              ) => Promise<
-                                  TreatyResponse<
-                                      ReplaceGeneratorWithAsyncGenerator<Res>
-                                  >
-                              >
+                            : {} extends Body
+                              ? (
+                                    body?: Body,
+                                    options?: Prettify<Param & TreatyParam>
+                                ) => Promise<
+                                    TreatyResponse<
+                                        ReplaceGeneratorWithAsyncGenerator<Res>
+                                    >
+                                >
+                              : (
+                                    body: Body,
+                                    options?: Prettify<Param & TreatyParam>
+                                ) => Promise<
+                                    TreatyResponse<
+                                        ReplaceGeneratorWithAsyncGenerator<Res>
+                                    >
+                                >
                       : K extends 'get' | 'head'
                         ? (
                               options: Prettify<Param & TreatyParam>
@@ -188,7 +206,7 @@ export namespace Treaty {
               error: null
               response: Response
               status: number
-              headers: RequestInit['headers']
+              headers: ResponseInit['headers']
           }
         | {
               data: null
@@ -209,7 +227,7 @@ export namespace Treaty {
                     }[Exclude<keyof Res, SuccessCodeRange>]
               response: Response
               status: number
-              headers: RequestInit['headers']
+              headers: ResponseInit['headers']
           }
 
     export interface OnMessage<Data = unknown> extends MessageEvent {

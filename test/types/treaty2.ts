@@ -137,11 +137,11 @@ const app = new Elysia()
     })
     .get('/unknown-or-obj', () => 'test', {
         query: t.Unknown(),
-        headers: t.Object({}),
+        headers: t.Object({})
     })
     .get('/partial-or-optional', () => 'test', {
         query: t.Partial(t.Object({ alias: t.String() })),
-        headers: t.Optional(t.Object({ username: t.String() })),
+        headers: t.Optional(t.Object({ username: t.String() }))
     })
     .use(plugin)
 
@@ -1033,7 +1033,7 @@ type ValidationError = {
 
 // Handle dynamic parameter at root
 {
-    const app = new Elysia().get('/:id', () => null)
+    const app = new Elysia().get('/:id', () => 'ok')
 
     type App = typeof app
 
@@ -1108,7 +1108,7 @@ type ValidationError = {
 }
 
 {
-    const app = new Elysia().get("/", () => status(199, "yay"))
+    const app = new Elysia().get('/', () => status(199, 'yay'))
 
     type App = typeof app
 
@@ -1117,11 +1117,11 @@ type ValidationError = {
     const { data, error } = await edenClient.get()
 
     expectTypeOf(data).toEqualTypeOf<unknown>()
-    expectTypeOf(error).toEqualTypeOf<{ status: 199; value: "yay"; } | null>()
+    expectTypeOf(error).toEqualTypeOf<{ status: 199; value: 'yay' } | null>()
 }
 
 {
-    const app = new Elysia().get("/", () => status(200, "yay"))
+    const app = new Elysia().get('/', () => status(200, 'yay'))
 
     type App = typeof app
 
@@ -1129,12 +1129,15 @@ type ValidationError = {
 
     const { data, error } = await edenClient.get()
 
-    expectTypeOf(data).toEqualTypeOf<"yay" | null>()
-    expectTypeOf(error).toEqualTypeOf<{ status: unknown; value: unknown; } | null>()
+    expectTypeOf(data).toEqualTypeOf<'yay' | null>()
+    expectTypeOf(error).toEqualTypeOf<{
+        status: unknown
+        value: unknown
+    } | null>()
 }
 
 {
-    const app = new Elysia().get("/", () => status(201, "yay"))
+    const app = new Elysia().get('/', () => status(201, 'yay'))
 
     type App = typeof app
 
@@ -1142,12 +1145,15 @@ type ValidationError = {
 
     const { data, error } = await edenClient.get()
 
-    expectTypeOf(data).toEqualTypeOf<"yay" | null>()
-    expectTypeOf(error).toEqualTypeOf<{ status: unknown; value: unknown; } | null>()
+    expectTypeOf(data).toEqualTypeOf<'yay' | null>()
+    expectTypeOf(error).toEqualTypeOf<{
+        status: unknown
+        value: unknown
+    } | null>()
 }
 
 {
-    const app = new Elysia().get("/", () => status(299, "yay"))
+    const app = new Elysia().get('/', () => status(299, 'yay'))
 
     type App = typeof app
 
@@ -1155,12 +1161,15 @@ type ValidationError = {
 
     const { data, error } = await edenClient.get()
 
-    expectTypeOf(data).toEqualTypeOf<"yay" | null>()
-    expectTypeOf(error).toEqualTypeOf<{ status: unknown; value: unknown; } | null>()
+    expectTypeOf(data).toEqualTypeOf<'yay' | null>()
+    expectTypeOf(error).toEqualTypeOf<{
+        status: unknown
+        value: unknown
+    } | null>()
 }
 
 {
-    const app = new Elysia().get("/", () => status(300, "yay"))
+    const app = new Elysia().get('/', () => status(300, 'yay'))
 
     type App = typeof app
 
@@ -1169,7 +1178,7 @@ type ValidationError = {
     const { data, error } = await edenClient.get()
 
     expectTypeOf(data).toEqualTypeOf<unknown>()
-    expectTypeOf(error).toEqualTypeOf<{ status: 300; value: "yay"; } | null>()
+    expectTypeOf(error).toEqualTypeOf<{ status: 300; value: 'yay' } | null>()
 }
 
 // Handle maybe empty query and headers
@@ -1221,4 +1230,27 @@ type ValidationError = {
 
     expectTypeOf<NonNullable<Query>>().toEqualTypeOf<{ alias?: string }>()
     expectTypeOf<NonNullable<Headers>>().toEqualTypeOf<{ username?: string }>()
+}
+
+// Get should not have body
+{
+    const singleStatusMacro = new Elysia().macro({
+        single: {
+            async resolve({ status }) {
+                return status(403)
+            }
+        }
+    })
+
+    const app = new Elysia()
+        .use(singleStatusMacro)
+        .get('/single', 'Ok', { single: true })
+
+    const api = treaty<typeof app>('localhost:3000')
+
+    type Single = typeof api.single.get
+
+    type Fn = typeof api.single.get
+
+    expectTypeOf<Parameters<Fn>['length']>().toEqualTypeOf<0 | 1>()
 }

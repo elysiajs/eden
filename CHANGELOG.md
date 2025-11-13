@@ -1,3 +1,11 @@
+# 1.4.5 - 13 Nov 2025
+Improvement:
+- export `EdenFetchError`
+
+Bug fix:
+- [#221](https://github.com/elysiajs/eden/pull/221) better handling for empty header and query types
+- use `ResponseInit['headers']` instead of `HeadersInit` for response headers type
+
 # 1.4.4 - 13 Oct 2025
 Bug fix:
 - revert streaming transferEncoding chunked
