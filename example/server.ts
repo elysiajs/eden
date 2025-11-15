@@ -1,6 +1,26 @@
 import { Elysia, t } from 'elysia'
 import { cors } from '@elysiajs/cors'
 
+class Account {
+	constructor(
+		public id: number,
+		public email: string,
+		private password: string // should not be exposed
+	) { }
+
+	deleteAccount() {
+		console.log('Deleting account...')
+	}
+
+	toJSON() {
+		return {
+			id: this.id,
+			email: this.email
+			// password NOT included
+		}
+	}
+}
+
 const app = new Elysia()
 	.use(cors())
 	.get('/something/here', () => 'Elysia')
@@ -67,9 +87,9 @@ const app = new Elysia()
 	.get(
 		'/products/nendoroid/skadi',
 		({ query }) => {
+			const account = new Account(1, 'test@test.com', 'secret123')
 			return {
-				id: 1,
-				name: 'Skadi'
+				account
 			}
 		},
 		{
@@ -92,7 +112,12 @@ const app = new Elysia()
 			username: t.String()
 		})
 	})
-	.post('/products/nendoroid', ({ body }) => body, {
+	.post('/products/nendoroid', ({ body }) => {
+		const account = new Account(1, 'test@test.com', 'secret123')
+		return {
+			account
+		}
+	}, {
 		body: t.Object({
 			id: t.Number(),
 			name: t.String()
