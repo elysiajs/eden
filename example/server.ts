@@ -88,9 +88,9 @@ const app = new Elysia()
 		'/products/nendoroid/skadi',
 		({ query }) => {
 			const account = new Account(1, 'test@test.com', 'secret123')
-			return {
-				account
-			}
+			const account2 = new Account(1, 'test@test.com', 'secret123')
+			const account3 = new Account(1, 'test@test.com', 'secret123')
+			return [account, account2, account3]
 		},
 		{
 			query: t.Partial(
