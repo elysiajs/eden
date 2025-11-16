@@ -5,7 +5,8 @@ import type {
 	IsUnknown,
 	IsNever,
 	Prettify,
-	TreatyToPath
+	TreatyToPath,
+	JSONSerialized
 } from '../types'
 
 export namespace EdenFetch {
@@ -13,11 +14,11 @@ export namespace EdenFetch {
 		App extends {
 			'~Routes': infer Schema extends Record<string, unknown>
 		}
-			? EdenFetch.Fn<
-					// @ts-expect-error
-					TreatyToPath<Schema>
-				>
-			: 'Please install Elysia before using Eden'
+		? EdenFetch.Fn<
+			// @ts-expect-error
+			TreatyToPath<Schema>
+		>
+		: 'Please install Elysia before using Eden'
 
 	export interface Config extends RequestInit {
 		fetcher?: typeof globalThis.fetch
@@ -32,55 +33,55 @@ export namespace EdenFetch {
 		options: Omit<RequestInit, 'body' | 'method' | 'headers'> &
 			('GET' extends Method
 				? {
-						method?: Method
-					}
+					method?: Method
+				}
 				: {
-						method: Method
-					}) &
+					method: Method
+				}) &
 			(IsNever<keyof Route['params']> extends true
 				? {
-						params?: Record<never, string>
-					}
+					params?: Record<never, string>
+				}
 				: {
-						params: Route['params']
-					}) &
+					params: Route['params']
+				}) &
 			(IsNever<keyof Route['query']> extends true
 				? {
-						query?: Record<never, string>
-					}
+					query?: Record<never, string>
+				}
 				: {
-						query: Route['query']
-					}) &
+					query: Route['query']
+				}) &
 			(undefined extends Route['headers']
 				? {
-						headers?: Record<string, string>
-					}
+					headers?: Record<string, string>
+				}
 				: {
-						headers: Route['headers']
-					}) &
+					headers: Route['headers']
+				}) &
 			(IsUnknown<Route['body']> extends false
 				? { body: Route['body'] }
 				: { body?: unknown })
 	) => Promise<
 		Prettify<
 			| {
-					data: Awaited<Route['response'][200]>
-					error: null
-					status: number
-					headers: Record<string, unknown>
-					retry(): Promise<void>
-			  }
+				data: JSONSerialized<Awaited<Route['response'][200]>>
+				error: null
+				status: number
+				headers: Record<string, unknown>
+				retry(): Promise<void>
+			}
 			| {
-					data: null
-					error: MapError<Route['response']> extends infer Errors
-						? IsNever<Errors> extends true
-							? EdenFetchError<number, string>
-							: Errors
-						: EdenFetchError<number, string>
-					status: number
-					headers: Record<string, unknown>
-					retry(): Promise<void>
-			  }
+				data: null
+				error: MapError<Route['response']> extends infer Errors
+				? IsNever<Errors> extends true
+				? EdenFetchError<number, string>
+				: Errors
+				: EdenFetchError<number, string>
+				status: number
+				headers: Record<string, unknown>
+				retry(): Promise<void>
+			}
 		>
 	>
 }
