@@ -21,8 +21,8 @@ export type MapError<T extends Record<number, unknown>> = [
     }[keyof T]
 ] extends [infer A extends number]
     ? {
-          [K in A]: EdenFetchError<K, T[K]>
-      }[A]
+        [K in A]: EdenFetchError<K, T[K]>
+    }[A]
     : false
 
 export type UnionToIntersect<U> = (
@@ -49,16 +49,16 @@ export type IsUnknown<T> = IsAny<T> extends true
 
 type IsExactlyUnknown<T> = [T] extends [unknown]
     ? [unknown] extends [T]
-        ? true
-        : false
+    ? true
+    : false
     : false;
 
 type IsUndefined<T> = [T] extends [undefined] ? true : false
 
 type IsMatchingEmptyObject<T> = [T] extends [{}]
     ? [{}] extends [T]
-        ? true
-        : false
+    ? true
+    : false
     : false
 
 export type MaybeEmptyObject<
@@ -91,14 +91,50 @@ export type Prettify<T> = {
 
 export type TreatyToPath<T, Path extends string = ''> = UnionToIntersect<
     T extends Record<string, unknown>
-        ? {
-              [K in keyof T]: T[K] extends AnyTypedRoute
-                  ? { [path in Path]: { [method in K]: T[K] } }
-                  : unknown extends T[K]
-                  ? { [path in Path]: { [method in K]: T[K] } }
-                  : TreatyToPath<T[K], `${Path}/${K & string}`>
-          }[keyof T]
-        : {}
+    ? {
+        [K in keyof T]: T[K] extends AnyTypedRoute
+        ? { [path in Path]: { [method in K]: T[K] } }
+        : unknown extends T[K]
+        ? { [path in Path]: { [method in K]: T[K] } }
+        : TreatyToPath<T[K], `${Path}/${K & string}`>
+    }[keyof T]
+    : {}
 >
 
 export type Not<T> = T extends true ? false : true
+
+/**
+ * Transforms a type to match its JSON.stringify() serialization behavior.
+ * This handles:
+ * - Objects with .toJSON() methods (e.g., DDD domain instances)
+ * - Date objects (converted to string)
+ * - Arrays (recursively serialized)
+ * - Objects (recursively serialized, excluding functions)
+ * - Primitives (unchanged)
+ *
+ * Special types like AsyncGenerator, Generator, ReadableStream, File, and Blob
+ * are preserved as-is since they're handled by other transformations or runtime.
+ */
+export type JSONSerialized<T> = T extends { toJSON(): infer R }
+    ? R extends () => infer U
+    ? JSONSerialized<U>
+    : JSONSerialized<R>
+    : T extends Date
+    ? string
+    : T extends Function
+    ? never
+    : T extends AsyncGenerator<infer A, infer B, infer C>
+    ? AsyncGenerator<A, B, C>
+    : T extends Generator<infer A, infer B, infer C>
+    ? Generator<A, B, C>
+    : T extends ReadableStream<infer R>
+    ? ReadableStream<R>
+    : T extends File
+    ? File
+    : T extends Blob
+    ? Blob
+    : T extends Array<infer U>
+    ? Array<JSONSerialized<U>>
+    : T extends object
+    ? { [K in keyof T as T[K] extends Function ? never : K]: JSONSerialized<T[K]> }
+    : T
