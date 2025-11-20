@@ -31,6 +31,11 @@ const app = new Elysia()
             username: t.String()
         })
     })
+    .get('/date/query', ({ query }) => query, {
+        query: t.Object({
+            since: t.Date()
+        })
+    })
     .get('/queries', ({ query }) => query, {
         query: t.Object({
             username: t.String(),
@@ -489,6 +494,36 @@ type ValidationError = {
         | {
               data: {
                   username: string
+              }
+              error: null
+              response: Response
+              status: number
+              headers: HeadersInit | undefined
+          }
+        | ValidationError
+    >()
+}
+
+// ? Get should have 1 parameter with type string (for the underlying `t.Date` in the schema)
+{
+    type Route = api['date']['query']['get']
+
+    expectTypeOf<Route>().parameter(0).toEqualTypeOf<{
+        headers?: Record<string, unknown> | undefined
+        query: {
+            since: string
+        }
+        fetch?: RequestInit | undefined
+    }>()
+
+    expectTypeOf<Route>().parameter(1).toBeUndefined()
+
+    type Res = Result<Route>
+
+    expectTypeOf<Res>().toEqualTypeOf<
+        | {
+              data: {
+                  since: Date
               }
               error: null
               response: Response

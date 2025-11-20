@@ -58,6 +58,16 @@ type IsSuccessCode<S extends number> = S extends SuccessCodeRange ? true : false
 type MaybeArray<T> = T | T[]
 type MaybePromise<T> = T | Promise<T>
 
+type SerializeQueryParams<T> = T extends Record<string, any>
+  ? {
+      [K in keyof T]: T[K] extends Date
+        ? string
+        : T[K] extends Date | undefined
+          ? string | undefined
+          : T[K]
+    }
+  : T
+
 export namespace Treaty {
     interface TreatyParam {
         fetch?: RequestInit
@@ -76,7 +86,7 @@ export namespace Treaty {
             : K]: K extends 'subscribe' // ? Websocket route
             ? MaybeEmptyObject<Route['subscribe']['headers'], 'headers'> &
                   MaybeEmptyObject<
-                      Route['subscribe']['query'],
+                      SerializeQueryParams<Route['subscribe']['query']>,
                       'query'
                   > extends infer Param
                 ? (options?: Param) => EdenWS<Route['subscribe']>
@@ -89,7 +99,7 @@ export namespace Treaty {
                     response: infer Res extends Record<number, unknown>
                 }
               ? MaybeEmptyObject<Headers, 'headers'> &
-                    MaybeEmptyObject<Query, 'query'> extends infer Param
+                    MaybeEmptyObject<SerializeQueryParams<Query>, 'query'> extends infer Param
                   ? {} extends Param
                       ? undefined extends Body
                           ? K extends 'get' | 'head'
