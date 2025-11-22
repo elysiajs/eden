@@ -317,20 +317,63 @@ const createProxy = (
                     if (hasFile(body)) {
                         const formData = new FormData()
 
+                        const shouldStringify = (value: any): boolean => {
+                            if (typeof value === 'string') return false
+                            if (isFile(value)) return false
+
+                            // Objects and Arrays should be stringified
+                            if (typeof value === 'object' && value !== null) {
+                                return true
+                            }
+
+                            return false
+                        }
+
+                        const prepareValue = async (value: any): Promise<any> => {
+                            if (value instanceof File) {
+                                return await createNewFile(value)
+                            }
+
+                            if (shouldStringify(value)) {
+                                return JSON.stringify(value)
+                            }
+
+                            return value
+                        }
+
                         // FormData is 1 level deep
                         for (const [key, field] of Object.entries(
                             fetchInit.body
                         )) {
                             if (Array.isArray(field)) {
-                                for (let i = 0; i < field.length; i++) {
-                                    const value = (field as any)[i]
+                                // Check if array contains non-file objects
+                                // If so, stringify the entire array (for t.ArrayString())
+                                // Otherwise, append each element separately (for t.Files())
+                                const hasNonFileObjects = field.some(
+                                    (item) =>
+                                        typeof item === 'object' &&
+                                        item !== null &&
+                                        !isFile(item)
+                                )
 
+                                if (hasNonFileObjects) {
+                                    // ArrayString case: stringify the whole array
                                     formData.append(
                                         key as any,
-                                        value instanceof File
-                                            ? await createNewFile(value)
-                                            : value
+                                        JSON.stringify(field)
                                     )
+                                } else {
+                                    // Files case: append each element separately
+                                    for (let i = 0; i < field.length; i++) {
+                                        const value = (field as any)[i]
+                                        const preparedValue =
+                                            await prepareValue(value)
+
+                                        formData.append(
+                                            key as any,
+                                            preparedValue
+                                        )
+                                    }
                                 }
 
                                 continue
@@ -338,9 +381,17 @@ const createProxy = (
 
                             if (isServer) {
                                 if (Array.isArray(field))
-                                    for (const f of field)
-                                        formData.append(key, f)
-                                else formData.append(key, field as any)
+                                    for (const f of field) {
+                                        formData.append(
+                                            key,
+                                            await prepareValue(f)
+                                        )
+                                    }
+                                else
+                                    formData.append(
+                                        key,
+                                        await prepareValue(field)
+                                    )
 
                                 continue
                             }
@@ -364,7 +415,7 @@ const createProxy = (
                                 continue
                             }
 
-                            formData.append(key, field as string)
+                            formData.append(key, await prepareValue(field))
                         }
 
                         // We don't do this because we need to let the browser set the content type with the correct boundary

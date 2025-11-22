@@ -3,6 +3,7 @@ import type { Elysia, ELYSIA_FORM_DATA } from 'elysia'
 
 import { EdenWS } from './ws'
 import type { IsNever, MaybeEmptyObject, Not, Prettify } from '../types'
+import { BunFile } from 'bun'
 
 // type Files = File | FileList
 
@@ -58,6 +59,15 @@ type IsSuccessCode<S extends number> = S extends SuccessCodeRange ? true : false
 type MaybeArray<T> = T | T[]
 type MaybePromise<T> = T | Promise<T>
 
+type MaybeArrayFile<T> = T extends (File | BunFile)[] ? T | File | BunFile : T
+
+type RelaxFileArrays<T> =
+    T extends Record<string, unknown>
+        ? {
+              [K in keyof T]: MaybeArrayFile<T[K]>
+          }
+        : T
+
 export namespace Treaty {
     interface TreatyParam {
         fetch?: RequestInit
@@ -101,7 +111,7 @@ export namespace Treaty {
                                     >
                                 >
                               : (
-                                    body?: Body,
+                                    body?: RelaxFileArrays<Body>,
                                     options?: Prettify<Param & TreatyParam>
                                 ) => Promise<
                                     TreatyResponse<
@@ -118,7 +128,7 @@ export namespace Treaty {
                               >
                             : {} extends Body
                               ? (
-                                    body?: Body,
+                                    body?: RelaxFileArrays<Body>,
                                     options?: Prettify<Param & TreatyParam>
                                 ) => Promise<
                                     TreatyResponse<
@@ -126,7 +136,7 @@ export namespace Treaty {
                                     >
                                 >
                               : (
-                                    body: Body,
+                                    body: RelaxFileArrays<Body>,
                                     options?: Prettify<Param & TreatyParam>
                                 ) => Promise<
                                     TreatyResponse<
@@ -142,7 +152,7 @@ export namespace Treaty {
                               >
                           >
                         : (
-                              body: Body,
+                              body: RelaxFileArrays<Body>,
                               options: Prettify<Param & TreatyParam>
                           ) => Promise<
                               TreatyResponse<
