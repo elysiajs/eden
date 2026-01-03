@@ -1222,3 +1222,36 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
         expect(data).toBe(1)
     })
 })
+
+describe('Treaty 2 - Using URL Method', () => {
+    const app = new Elysia()
+        .get('/ping', () => 'pong')
+        .get('/user/:id', ({ params: { id } }) => id)
+        .post('/data', ({ body }) => body, {
+            query: t.Object({
+                name: t.String()
+            })
+        })
+
+    const client = treaty(app)
+
+    it('should return base URL', () => {
+        expect(client.ping.url()).toBe('http://e.ly/ping')
+    })
+
+    it('should return URL with path parameters', () => {
+        expect(client.user({ id: 1 }).url()).toBe('http://e.ly/user/1')
+    })
+
+    it('should return URL with query parameters', () => {
+        expect(client.data.url({ query: { name: 'eden' } })).toBe('http://e.ly/data?name=eden')
+    })
+
+    it('should return URL from method proxy', () => {
+        expect(client.ping.get.url()).toBe('http://e.ly/ping')
+    })
+
+    it('should remove method name from URL when calling from method', () => {
+        expect(client.user({ id: 2 }).get.url()).toBe('http://e.ly/user/2')
+    })
+})

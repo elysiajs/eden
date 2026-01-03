@@ -95,86 +95,96 @@ export namespace Treaty {
             : 'Please install Elysia before using Eden'
 
     export type Sign<in out Route extends Record<any, any>> = {
-        [K in keyof Route as K extends `:${string}`
+        [K in keyof Route | 'url' as K extends `:${string}`
             ? never
-            : K]: K extends 'subscribe' // ? Websocket route
-            ? MaybeEmptyObject<Route['subscribe']['headers'], 'headers'> &
-                  MaybeEmptyObject<
-                      SerializeQueryParams<Route['subscribe']['query']>,
-                      'query'
-                  > extends infer Param
-                ? (options?: Param) => EdenWS<Route['subscribe']>
-                : never
-            : Route[K] extends {
-                    body: infer Body
-                    headers: infer Headers
-                    params: any
-                    query: infer Query
-                    response: infer Res extends Record<number, unknown>
-                }
-              ? MaybeEmptyObject<Headers, 'headers'> &
-                    MaybeEmptyObject<SerializeQueryParams<Query>, 'query'> extends infer Param
-                  ? {} extends Param
-                      ? undefined extends Body
-                          ? K extends 'get' | 'head'
-                              ? (
-                                    options?: Prettify<Param & TreatyParam>
-                                ) => Promise<
-                                    TreatyResponse<
-                                        ReplaceGeneratorWithAsyncGenerator<Res>
+            : K]: K extends 'url'
+            ? (options?: { query?: Record<string, any> }) => string
+            : K extends keyof Route
+            ? K extends 'subscribe' // ? Websocket route
+                ? (MaybeEmptyObject<Route['subscribe']['headers'], 'headers'> &
+                      MaybeEmptyObject<
+                          SerializeQueryParams<Route['subscribe']['query']>,
+                          'query'
+                      > extends infer Param
+                    ? (options?: Param) => EdenWS<Route['subscribe']>
+                    : never) & {
+                      url: (options?: {
+                          query?: SerializeQueryParams<Route['subscribe']['query']>
+                      }) => string
+                  }
+                : Route[K] extends {
+                        body: infer Body
+                        headers: infer Headers
+                        params: any
+                        query: infer Query
+                        response: infer Res extends Record<number, unknown>
+                    }
+                  ? (MaybeEmptyObject<Headers, 'headers'> &
+                        MaybeEmptyObject<SerializeQueryParams<Query>, 'query'> extends infer Param
+                      ? {} extends Param
+                          ? undefined extends Body
+                              ? K extends 'get' | 'head'
+                                  ? (
+                                        options?: Prettify<Param & TreatyParam>
+                                    ) => Promise<
+                                        TreatyResponse<
+                                            ReplaceGeneratorWithAsyncGenerator<Res>
+                                        >
                                     >
-                                >
-                              : (
-                                    body?: RelaxFileArrays<Body>,
-                                    options?: Prettify<Param & TreatyParam>
-                                ) => Promise<
-                                    TreatyResponse<
-                                        ReplaceGeneratorWithAsyncGenerator<Res>
+                                  : (
+                                        body?: RelaxFileArrays<Body>,
+                                        options?: Prettify<Param & TreatyParam>
+                                    ) => Promise<
+                                        TreatyResponse<
+                                            ReplaceGeneratorWithAsyncGenerator<Res>
+                                        >
                                     >
-                                >
+                              : K extends 'get' | 'head'
+                                ? (
+                                      options?: Prettify<Param & TreatyParam>
+                                  ) => Promise<
+                                      TreatyResponse<
+                                          ReplaceGeneratorWithAsyncGenerator<Res>
+                                      >
+                                  >
+                                : {} extends Body
+                                  ? (
+                                        body?: RelaxFileArrays<Body>,
+                                        options?: Prettify<Param & TreatyParam>
+                                    ) => Promise<
+                                        TreatyResponse<
+                                            ReplaceGeneratorWithAsyncGenerator<Res>
+                                        >
+                                    >
+                                  : (
+                                        body: RelaxFileArrays<Body>,
+                                        options?: Prettify<Param & TreatyParam>
+                                    ) => Promise<
+                                        TreatyResponse<
+                                            ReplaceGeneratorWithAsyncGenerator<Res>
+                                        >
+                                    >
                           : K extends 'get' | 'head'
                             ? (
-                                  options?: Prettify<Param & TreatyParam>
+                                  options: Prettify<Param & TreatyParam>
                               ) => Promise<
                                   TreatyResponse<
                                       ReplaceGeneratorWithAsyncGenerator<Res>
                                   >
                               >
-                            : {} extends Body
-                              ? (
-                                    body?: RelaxFileArrays<Body>,
-                                    options?: Prettify<Param & TreatyParam>
-                                ) => Promise<
-                                    TreatyResponse<
-                                        ReplaceGeneratorWithAsyncGenerator<Res>
-                                    >
-                                >
-                              : (
-                                    body: RelaxFileArrays<Body>,
-                                    options?: Prettify<Param & TreatyParam>
-                                ) => Promise<
-                                    TreatyResponse<
-                                        ReplaceGeneratorWithAsyncGenerator<Res>
-                                    >
-                                >
-                      : K extends 'get' | 'head'
-                        ? (
-                              options: Prettify<Param & TreatyParam>
-                          ) => Promise<
-                              TreatyResponse<
-                                  ReplaceGeneratorWithAsyncGenerator<Res>
+                            : (
+                                  body: RelaxFileArrays<Body>,
+                                  options: Prettify<Param & TreatyParam>
+                              ) => Promise<
+                                  TreatyResponse<
+                                      ReplaceGeneratorWithAsyncGenerator<Res>
+                                  >
                               >
-                          >
-                        : (
-                              body: RelaxFileArrays<Body>,
-                              options: Prettify<Param & TreatyParam>
-                          ) => Promise<
-                              TreatyResponse<
-                                  ReplaceGeneratorWithAsyncGenerator<Res>
-                              >
-                          >
-                  : never
-              : CreateParams<Route[K]>
+                      : never) & {
+                      url: (options?: { query?: SerializeQueryParams<Query> }) => string
+                  }
+                  : CreateParams<Route[K]>
+            : never
     }
 
     type CreateParams<Route extends Record<string, any>> =

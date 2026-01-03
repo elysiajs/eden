@@ -204,6 +204,46 @@ const createProxy = (
 ): any =>
     new Proxy(() => {}, {
         get(_, param: string): any {
+            if (param === 'url') {
+                return (options?: { query?: Record<string, any> }) => {
+                    const methodPaths = [...paths]
+                    if (method.includes(methodPaths.at(-1) as any))
+                        methodPaths.pop()
+
+                    const path = '/' + methodPaths.join('/')
+
+                    const query = options?.query
+
+                    let q = ''
+                    if (query) {
+                        const append = (key: string, value: string) => {
+                            q +=
+                                (q ? '&' : '?') +
+                                `${encodeURIComponent(key)}=${encodeURIComponent(
+                                    value
+                                )}`
+                        }
+
+                        for (const [key, value] of Object.entries(query)) {
+                            if (Array.isArray(value)) {
+                                for (const v of value) append(key, v)
+                                continue
+                            }
+
+                            if (value === undefined || value === null) continue
+
+                            if (typeof value === 'object') {
+                                append(key, JSON.stringify(value))
+                                continue
+                            }
+                            append(key, `${value}`)
+                        }
+                    }
+
+                    return domain + path + q
+                }
+            }
+
             return createProxy(
                 domain,
                 config,
