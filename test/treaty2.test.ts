@@ -1222,3 +1222,91 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
         expect(data).toBe(1)
     })
 })
+
+describe('Treaty2 - parseDates configuration', () => {
+    const dateApp = new Elysia()
+        .get('/json', () => ({
+            date: '01/05/2026',
+            timestamp: '2024-01-15T10:30:00.000Z',
+            name: 'test'
+        }))
+        .get('/sse', function* () {
+            yield sse({
+                event: 'data',
+                data: {
+                    date: '01/05/2026',
+                    timestamp: '2024-01-15T10:30:00.000Z',
+                    name: 'test'
+                }
+            })
+        })
+        .get('/text-date', () => '2024-01-15T10:30:00.000Z')
+
+    it('should parse dates in JSON response by default', async () => {
+        const client = treaty(dateApp)
+        const { data } = await client.json.get()
+
+        expect(data?.date).toBeInstanceOf(Date)
+        expect(data?.timestamp).toBeInstanceOf(Date)
+        expect(data?.name).toBe('test')
+    })
+
+    it('should parse dates in JSON response when parseDates is true', async () => {
+        const client = treaty(dateApp, { parseDates: true })
+        const { data } = await client.json.get()
+
+        expect(data?.date).toBeInstanceOf(Date)
+        expect(data?.timestamp).toBeInstanceOf(Date)
+    })
+
+    it('should NOT parse dates in JSON response when parseDates is false', async () => {
+        const client = treaty(dateApp, { parseDates: false })
+        const { data } = await client.json.get()
+
+        expect(data?.date).toBe('01/05/2026')
+        expect(data?.timestamp).toBe('2024-01-15T10:30:00.000Z')
+        expect(data?.name).toBe('test')
+    })
+
+    it('should parse dates in SSE response by default', async () => {
+        const client = treaty(dateApp)
+        const response = await client.sse.get()
+
+        const events: any[] = []
+        for await (const event of response.data!) {
+            events.push(event)
+        }
+
+        expect(events[0].data.date).toBeInstanceOf(Date)
+        expect(events[0].data.timestamp).toBeInstanceOf(Date)
+        expect(events[0].data.name).toBe('test')
+    })
+
+    it('should NOT parse dates in SSE response when parseDates is false', async () => {
+        const client = treaty(dateApp, { parseDates: false })
+        const response = await client.sse.get()
+
+        const events: any[] = []
+        for await (const event of response.data!) {
+            events.push(event)
+        }
+
+        expect(events[0].data.date).toBe('01/05/2026')
+        expect(events[0].data.timestamp).toBe('2024-01-15T10:30:00.000Z')
+        expect(events[0].data.name).toBe('test')
+    })
+
+    it('should parse date in text response by default', async () => {
+        const client = treaty(dateApp)
+        const { data } = await client['text-date'].get()
+
+        expect(data).toBeInstanceOf(Date)
+    })
+
+    it('should NOT parse date in text response when parseDates is false', async () => {
+        const client = treaty(dateApp, { parseDates: false })
+        const { data } = await client['text-date'].get()
+
+        expect(data).toBe('2024-01-15T10:30:00.000Z')
+    })
+})

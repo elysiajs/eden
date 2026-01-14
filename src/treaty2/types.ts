@@ -214,6 +214,7 @@ export namespace Treaty {
         >
         onResponse?: MaybeArray<(response: Response) => MaybePromise<unknown>>
         keepDomain?: boolean
+        parseDates?: boolean
     }
 
     // type UnwrapAwaited<T extends Record<number, unknown>> = {
