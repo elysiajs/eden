@@ -8,7 +8,10 @@ const isShortenDate =
 export const isNumericString = (message: string) =>
     message.trim().length !== 0 && !Number.isNaN(Number(message))
 
-export const parseStringifiedDate = (value: any, options?: { parseDates?: boolean }) => {
+export const parseStringifiedDate = (
+    value: any,
+    options?: { parseDates?: boolean }
+) => {
     if (typeof value !== 'string') return null
     if (options?.parseDates === false) return null
 
@@ -35,7 +38,10 @@ export const isStringifiedObject = (value: string) => {
     return (start === 123 && end === 125) || (start === 91 && end === 93)
 }
 
-export const parseStringifiedObject = (data: string, options?: { parseDates?: boolean }) =>
+export const parseStringifiedObject = (
+    data: string,
+    options?: { parseDates?: boolean }
+) =>
     JSON.parse(data, (_, value) => {
         const date = parseStringifiedDate(value, options)
 
@@ -46,7 +52,10 @@ export const parseStringifiedObject = (data: string, options?: { parseDates?: bo
         return value
     })
 
-export const parseStringifiedValue = (value: string, options?: { parseDates?: boolean }) => {
+export const parseStringifiedValue = (
+    value: string,
+    options?: { parseDates?: boolean }
+) => {
     if (!value) return value
     if (isNumericString(value)) return +value
     if (value === 'true') return true
@@ -66,7 +75,10 @@ export const parseStringifiedValue = (value: string, options?: { parseDates?: bo
     return value
 }
 
-export const parseMessageEvent = (event: MessageEvent, options?: { parseDates?: boolean }) => {
+export const parseMessageEvent = (
+    event: MessageEvent,
+    options?: { parseDates?: boolean }
+) => {
     const messageString = event.data.toString()
 
     return messageString === 'null'

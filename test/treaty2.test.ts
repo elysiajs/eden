@@ -1063,13 +1063,14 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
             events.push(event)
         }
 
-        expect(events).toEqual([
-            { event: 'message', data: 'hello world' }
-        ])
+        expect(events).toEqual([{ event: 'message', data: 'hello world' }])
     })
 
     it('handles SSE event split at newline boundary', async () => {
-        const chunks = ['event: start\ndata: hel', 'lo\n\nevent: end\ndata: world\n\n']
+        const chunks = [
+            'event: start\ndata: hel',
+            'lo\n\nevent: end\ndata: world\n\n'
+        ]
         const response = createChunkedSSEResponse(chunks)
 
         const events: Array<unknown> = []
@@ -1102,11 +1103,7 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
     })
 
     it('handles event split across three chunks', async () => {
-        const chunks = [
-            'event: ',
-            'message\ndata: {"te',
-            'xt":"hello"}\n\n'
-        ]
+        const chunks = ['event: ', 'message\ndata: {"te', 'xt":"hello"}\n\n']
         const response = createChunkedSSEResponse(chunks)
 
         const events: Array<unknown> = []
@@ -1114,9 +1111,7 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
             events.push(event)
         }
 
-        expect(events).toEqual([
-            { event: 'message', data: { text: 'hello' } }
-        ])
+        expect(events).toEqual([{ event: 'message', data: { text: 'hello' } }])
     })
 
     it('handles UTF-8 multibyte character split across chunks', async () => {
@@ -1185,9 +1180,7 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
             events.push(event)
         }
 
-        expect(events).toEqual([
-            { id: 123, event: 'update', data: 'test' }
-        ])
+        expect(events).toEqual([{ id: 123, event: 'update', data: 'test' }])
     })
 
     it('handles mixed complete and split events', async () => {

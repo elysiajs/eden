@@ -115,7 +115,10 @@ const processHeaders = async (
     }
 }
 
-function parseSSEBlock(block: string, options?: { parseDates?: boolean }): Record<string, unknown> | null {
+function parseSSEBlock(
+    block: string,
+    options?: { parseDates?: boolean }
+): Record<string, unknown> | null {
     const lines = block.split('\n')
     const result: Record<string, unknown> = {}
 
@@ -139,9 +142,12 @@ function parseSSEBlock(block: string, options?: { parseDates?: boolean }): Recor
  * Extracts complete SSE events from buffer, yielding parsed events.
  * Mutates bufferRef.value to remove consumed events.
  */
-function* extractEvents(bufferRef: {
-    value: string
-}, options?: { parseDates?: boolean }): Generator<Record<string, unknown>> {
+function* extractEvents(
+    bufferRef: {
+        value: string
+    },
+    options?: { parseDates?: boolean }
+): Generator<Record<string, unknown>> {
     let eventEnd: number
     while ((eventEnd = bufferRef.value.indexOf('\n\n')) !== -1) {
         const eventBlock = bufferRef.value.slice(0, eventEnd)
@@ -154,7 +160,10 @@ function* extractEvents(bufferRef: {
     }
 }
 
-export async function* streamResponse(response: Response, options?: { parseDates?: boolean }) {
+export async function* streamResponse(
+    response: Response,
+    options?: { parseDates?: boolean }
+) {
     const body = response.body
 
     if (!body) return
@@ -549,14 +558,18 @@ const createProxy = (
                         response.headers.get('Content-Type')?.split(';')[0]
                     ) {
                         case 'text/event-stream':
-                            data = streamResponse(response, { parseDates: config.parseDates })
+                            data = streamResponse(response, {
+                                parseDates: config.parseDates
+                            })
                             break
 
                         case 'application/json':
                             data = JSON.parse(await response.text(), (k, v) => {
                                 if (typeof v !== 'string') return v
 
-                                const date = parseStringifiedDate(v, { parseDates: config.parseDates })
+                                const date = parseStringifiedDate(v, {
+                                    parseDates: config.parseDates
+                                })
                                 if (date) return date
 
                                 return v
@@ -578,9 +591,11 @@ const createProxy = (
                             break
 
                         default:
-                            data = await response
-                                .text()
-                                .then((text) => parseStringifiedValue(text, { parseDates: config.parseDates }))
+                            data = await response.text().then((text) =>
+                                parseStringifiedValue(text, {
+                                    parseDates: config.parseDates
+                                })
+                            )
                     }
 
                     if (response.status >= 300 || response.status < 200) {
