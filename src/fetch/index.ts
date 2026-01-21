@@ -46,7 +46,7 @@ const handleResponse = async (
 ) => {
 	const data = await parseResponse(response)
 
-	if (response.status > 300) {
+	if (response.status >= 300 || response.status < 200) {
 		const error = new EdenFetchError(response.status, data)
 		if (shouldThrow(error, throwHttpErrors)) throw error
 		return {
