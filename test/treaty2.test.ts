@@ -768,6 +768,61 @@ describe('Treaty2 - Server offline', () => {
     })
 })
 
+describe('Treaty2 - throwHttpErrors', () => {
+    // Config-level tests
+    it('throws HTTP errors when config throwHttpErrors is true', async () => {
+        const client = treaty(app, { throwHttpErrors: true })
+        expect(client.error.get()).rejects.toBeInstanceOf(EdenFetchError)
+    })
+
+    it('throws network errors when config throwHttpErrors is true', async () => {
+        const client = treaty<typeof app>('http://localhost:59999', { throwHttpErrors: true })
+        expect(client.get()).rejects.toBeInstanceOf(EdenFetchError)
+    })
+
+    it('returns error in result when config throwHttpErrors is false', async () => {
+        const client = treaty(app, { throwHttpErrors: false })
+        const { error } = await client.error.get()
+        expect(error?.status).toBe(418)
+    })
+
+    it('throws selectively when config throwHttpErrors is a function', async () => {
+        const client = treaty(app, { throwHttpErrors: (e) => e.status === 418 })
+        await expect(client.error.get()).rejects.toBeInstanceOf(EdenFetchError)
+    })
+
+    it('does not throw when config function returns false', async () => {
+        const client = treaty(app, { throwHttpErrors: (e) => e.status === 500 })
+        const { error } = await client.error.get()
+        expect(error?.status).toBe(418)
+    })
+
+    // Per-request override tests
+    it('per-request true overrides config false', async () => {
+        const client = treaty(app, { throwHttpErrors: false })
+        expect(client.error.get({ throwHttpErrors: true })).rejects.toBeInstanceOf(EdenFetchError)
+    })
+
+    it('per-request false overrides config true', async () => {
+        const client = treaty(app, { throwHttpErrors: true })
+        const { error } = await client.error.get({ throwHttpErrors: false })
+        expect(error?.status).toBe(418)
+    })
+
+    it('per-request function overrides config boolean', async () => {
+        const client = treaty(app, { throwHttpErrors: true })
+        const { error } = await client.error.get({ throwHttpErrors: (e) => e.status === 500 })
+        expect(error?.status).toBe(418)
+    })
+
+    it('per-request override works for POST requests', async () => {
+        const client = treaty<typeof app>('http://localhost:59999', { throwHttpErrors: false })
+        expect(client.mirror.post({ username: 'test', password: 'test' }, {
+            throwHttpErrors: true
+        })).rejects.toBeInstanceOf(EdenFetchError)
+    })
+})
+
 describe('Treaty2 - Using endpoint URL', () => {
     const treatyApp = treaty<typeof app>('http://localhost:8083')
 

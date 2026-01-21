@@ -1,5 +1,7 @@
 import type { EdenFetchError } from './errors'
 
+export type ThrowHttpErrors = boolean | ((error: EdenFetchError<number, unknown>) => boolean)
+
 // https://stackoverflow.com/a/39495173
 type Range<F extends number, T extends number> = Exclude<
     Enumerate<T>,

@@ -10,6 +10,7 @@ import {
     parseStringifiedDate,
     parseStringifiedValue
 } from '../utils/parsingUtils'
+import { ThrowHttpErrors } from '../types'
 
 const method = [
     'get',
@@ -22,6 +23,14 @@ const method = [
     'connect',
     'subscribe'
 ] as const
+
+const shouldThrow = (
+    error: EdenFetchError<number, unknown>,
+    throwHttpErrors?: ThrowHttpErrors
+): boolean => {
+    if (typeof throwHttpErrors === 'function') return throwHttpErrors(error)
+    return throwHttpErrors === true
+}
 
 const locals = ['localhost', '127.0.0.1', '0.0.0.0']
 
@@ -313,6 +322,14 @@ const createProxy = (
                             ? body.fetch
                             : options?.fetch
 
+                    // Per-request throwHttpErrors overrides config
+                    const requestThrowHttpErrors =
+                        isGetOrHead && typeof body === 'object'
+                            ? body.throwHttpErrors
+                            : options?.throwHttpErrors
+                    const resolvedThrowHttpErrors =
+                        requestThrowHttpErrors ?? config.throwHttpErrors
+
                     fetchInit = {
                         ...fetchInit,
                         ...fetchOpts
@@ -502,9 +519,11 @@ const createProxy = (
                             new Request(url, fetchInit)
                         ) ?? fetcher!(url, fetchInit))
                     } catch (err) {
+                        const error = new EdenFetchError(503, err)
+                        if (shouldThrow(error, resolvedThrowHttpErrors)) throw error
                         return {
                             data: null,
-                            error: new EdenFetchError(503, err),
+                            error,
                             response: undefined,
                             status: 503,
                             headers: undefined
@@ -585,6 +604,7 @@ const createProxy = (
 
                     if (response.status >= 300 || response.status < 200) {
                         error = new EdenFetchError(response.status, data)
+                        if (shouldThrow(error, resolvedThrowHttpErrors)) throw error
                         data = null
                     }
 
