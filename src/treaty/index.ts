@@ -19,20 +19,98 @@ const isFile = (v: any) => {
     }
 }
 
-// FormData is 1 level deep
-const hasFile = (obj: Record<string, any>) => {
+// Recursively check if object contains files at any depth
+const hasFile = (obj: Record<string, any>): boolean => {
     if (!obj) return false
 
     for (const key in obj) {
-        if (isFile(obj[key])) return true
-        else if (
-            Array.isArray(obj[key]) &&
-            (obj[key] as unknown[]).find((x) => isFile(x))
+        const value = obj[key]
+        if (isFile(value)) return true
+
+        if (Array.isArray(value)) {
+            for (const item of value) {
+                if (isFile(item)) return true
+                if (
+                    typeof item === 'object' &&
+                    item !== null &&
+                    hasFile(item)
+                )
+                    return true
+            }
+        }
+
+        if (
+            typeof value === 'object' &&
+            value !== null &&
+            !(value instanceof Date) &&
+            hasFile(value)
         )
             return true
     }
 
     return false
+}
+
+/**
+ * Smart flatten: stringify file-less objects, flatten objects with files using dot notation
+ * This provides optimal FormData size for TypeBox users (stringify) while maintaining
+ * universal support for Zod/Valibot users who need dot notation for nested files.
+ */
+const flattenObject = (
+    obj: Record<string, any>,
+    prefix = ''
+): Record<string, any> => {
+    const result: Record<string, any> = {}
+
+    for (const [key, value] of Object.entries(obj)) {
+        const newKey = prefix ? `${prefix}.${key}` : key
+
+        if (isFile(value)) {
+            result[newKey] = value
+        } else if (Array.isArray(value)) {
+            // Check if array contains files
+            const arrayHasFiles = value.some(
+                (item) =>
+                    isFile(item) ||
+                    (typeof item === 'object' && item !== null && hasFile(item))
+            )
+
+            if (arrayHasFiles) {
+                // Flatten array with files using indexed dot notation
+                for (let i = 0; i < value.length; i++) {
+                    const item = value[i]
+                    const indexKey = `${newKey}.${i}`
+                    if (isFile(item)) {
+                        result[indexKey] = item
+                    } else if (typeof item === 'object' && item !== null) {
+                        Object.assign(result, flattenObject(item, indexKey))
+                    } else {
+                        result[indexKey] = item
+                    }
+                }
+            } else {
+                // No files in array - stringify for ArrayString compatibility
+                result[newKey] = JSON.stringify(value)
+            }
+        } else if (
+            typeof value === 'object' &&
+            value !== null &&
+            !(value instanceof Date)
+        ) {
+            // Check if this nested object contains files
+            if (hasFile(value)) {
+                // Has files - must flatten with dot notation
+                Object.assign(result, flattenObject(value, newKey))
+            } else {
+                // No files - stringify for ObjectString compatibility
+                result[newKey] = JSON.stringify(value)
+            }
+        } else {
+            result[newKey] = value
+        }
+    }
+
+    return result
 }
 
 // @ts-ignore
@@ -253,40 +331,34 @@ const createProxy = (
                     if (isFormData) {
                         const newBody = new FormData()
 
-                        // FormData is 1 level deep
-                        for (const [key, field] of Object.entries(body)) {
-                            if (isServer) {
-                                newBody.append(key, field as any)
-                            } else {
+                        // Smart flatten: handles nested files with dot notation,
+                        // stringifies file-less nested objects for TypeBox compatibility
+                        const flattened = flattenObject(body)
+
+                        for (const [key, value] of Object.entries(flattened)) {
+                            if (value instanceof File) {
+                                newBody.append(
+                                    key,
+                                    isServer
+                                        ? value
+                                        : await createNewFile(value)
+                                )
+                            } else if (
+                                !isServer &&
                                 // @ts-ignore
-                                if (field instanceof File)
+                                value instanceof FileList
+                            ) {
+                                // @ts-ignore
+                                for (let i = 0; i < value.length; i++)
                                     newBody.append(
                                         key,
-                                        await createNewFile(field as any)
+                                        await createNewFile(value[i])
                                     )
-                                // @ts-ignore
-                                else if (field instanceof FileList) {
-                                    // @ts-ignore
-                                    for (let i = 0; i < field.length; i++) {
-                                        newBody.append(
-                                            key as any,
-                                            await createNewFile(
-                                                (field as any)[i]
-                                            )
-                                        )
-                                    }
-                                } else if (Array.isArray(field)) {
-                                    for (let i = 0; i < field.length; i++) {
-                                        const value = (field as any)[i]
-
-                                        newBody.append(
-                                            key as any,
-                                            value instanceof File
-                                                ? await createNewFile(value)
-                                                : value
-                                        )
-                                    }
-                                } else newBody.append(key, field as string)
+                            } else if (isFile(value)) {
+                                // Handle Blob (isServer case)
+                                newBody.append(key, value as any)
+                            } else {
+                                newBody.append(key, value as string)
                             }
                         }
 
