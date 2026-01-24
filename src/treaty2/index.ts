@@ -204,6 +204,8 @@ const createProxy = (
 ): any =>
     new Proxy(() => {}, {
         get(_, param: string): any {
+            if (param === 'then') return undefined
+
             return createProxy(
                 domain,
                 config,
