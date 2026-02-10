@@ -12,24 +12,24 @@
 	"exports": {
 		"./package.json": "./package.json",
 		".": {
-			"require": "./dist/index.js",
+			"types": "./dist/index.d.ts",
 			"import": "./dist/index.mjs",
-			"types": "./dist/index.d.ts"
+			"require": "./dist/index.js"
 		},
 		"./treaty": {
-			"require": "./dist/treaty.js",
+			"types": "./dist/treaty/index.d.ts",
 			"import": "./dist/treaty.mjs",
-			"types": "./dist/treaty/index.d.ts"
+			"require": "./dist/treaty.js"
 		},
 		"./treaty2": {
-			"require": "./dist/2.js",
+			"types": "./dist/treaty2/index.d.ts",
 			"import": "./dist/treaty2.mjs",
-			"types": "./dist/treaty2/index.d.ts"
+			"require": "./dist/treaty2.js"
 		},
 		"./fetch": {
-			"require": "./dist/fetch.js",
+			"types": "./dist/fetch/index.d.ts",
 			"import": "./dist/fetch.mjs",
-			"types": "./dist/fetch/index.d.ts"
+			"require": "./dist/fetch.js"
 		}
 	},
 	"types": "./dist/index.d.ts",

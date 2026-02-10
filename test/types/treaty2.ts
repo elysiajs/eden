@@ -1209,7 +1209,7 @@ type ValidationError = {
 }
 
 {
-    const app = new Elysia().get('/', () => status(299, 'yay'))
+    const app = new Elysia().get('/', () => status(201, 'yay'))
 
     type App = typeof app
 
