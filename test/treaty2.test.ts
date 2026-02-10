@@ -776,7 +776,9 @@ describe('Treaty2 - throwHttpErrors', () => {
     })
 
     it('throws network errors when config throwHttpErrors is true', async () => {
-        const client = treaty<typeof app>('http://localhost:59999', { throwHttpErrors: true })
+        const client = treaty<typeof app>('http://localhost:59999', {
+            throwHttpErrors: true
+        })
         expect(client.get()).rejects.toBeInstanceOf(EdenFetchError)
     })
 
@@ -800,7 +802,9 @@ describe('Treaty2 - throwHttpErrors', () => {
     // Per-request override tests
     it('per-request true overrides config false', async () => {
         const client = treaty(app, { throwHttpErrors: false })
-        expect(client.error.get({ throwHttpErrors: true })).rejects.toBeInstanceOf(EdenFetchError)
+        expect(
+            client.error.get({ throwHttpErrors: true })
+        ).rejects.toBeInstanceOf(EdenFetchError)
     })
 
     it('per-request false overrides config true', async () => {
@@ -811,15 +815,24 @@ describe('Treaty2 - throwHttpErrors', () => {
 
     it('per-request function overrides config boolean', async () => {
         const client = treaty(app, { throwHttpErrors: true })
-        const { error } = await client.error.get({ throwHttpErrors: (e) => e.status === 500 })
+        const { error } = await client.error.get({
+            throwHttpErrors: (e) => e.status === 500
+        })
         expect(error?.status).toBe(418)
     })
 
     it('per-request override works for POST requests', async () => {
-        const client = treaty<typeof app>('http://localhost:59999', { throwHttpErrors: false })
-        expect(client.mirror.post({ username: 'test', password: 'test' }, {
-            throwHttpErrors: true
-        })).rejects.toBeInstanceOf(EdenFetchError)
+        const client = treaty<typeof app>('http://localhost:59999', {
+            throwHttpErrors: false
+        })
+        expect(
+            client.mirror.post(
+                { username: 'test', password: 'test' },
+                {
+                    throwHttpErrors: true
+                }
+            )
+        ).rejects.toBeInstanceOf(EdenFetchError)
     })
 })
 
@@ -1118,13 +1131,14 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
             events.push(event)
         }
 
-        expect(events).toEqual([
-            { event: 'message', data: 'hello world' }
-        ])
+        expect(events).toEqual([{ event: 'message', data: 'hello world' }])
     })
 
     it('handles SSE event split at newline boundary', async () => {
-        const chunks = ['event: start\ndata: hel', 'lo\n\nevent: end\ndata: world\n\n']
+        const chunks = [
+            'event: start\ndata: hel',
+            'lo\n\nevent: end\ndata: world\n\n'
+        ]
         const response = createChunkedSSEResponse(chunks)
 
         const events: Array<unknown> = []
@@ -1157,11 +1171,7 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
     })
 
     it('handles event split across three chunks', async () => {
-        const chunks = [
-            'event: ',
-            'message\ndata: {"te',
-            'xt":"hello"}\n\n'
-        ]
+        const chunks = ['event: ', 'message\ndata: {"te', 'xt":"hello"}\n\n']
         const response = createChunkedSSEResponse(chunks)
 
         const events: Array<unknown> = []
@@ -1169,9 +1179,7 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
             events.push(event)
         }
 
-        expect(events).toEqual([
-            { event: 'message', data: { text: 'hello' } }
-        ])
+        expect(events).toEqual([{ event: 'message', data: { text: 'hello' } }])
     })
 
     it('handles UTF-8 multibyte character split across chunks', async () => {
@@ -1240,9 +1248,7 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
             events.push(event)
         }
 
-        expect(events).toEqual([
-            { id: 123, event: 'update', data: 'test' }
-        ])
+        expect(events).toEqual([{ id: 123, event: 'update', data: 'test' }])
     })
 
     it('handles mixed complete and split events', async () => {
@@ -1276,4 +1282,17 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
 
         expect(data).toBe(1)
     })
+
+    it('handle path with "index" in name', async () => {
+        const app = new Elysia().get('/search/index/:indexId/stocks', () => ({
+            data: []
+        }))
+
+        const api = treaty(app)
+        type api = typeof api
+
+		const { status } = await api.search.index({ indexId: 'a' }).stocks.get()
+
+		expect(status).toEqual(200)
+	})
 })

@@ -216,7 +216,7 @@ const createProxy = (
             return createProxy(
                 domain,
                 config,
-                param === 'index' ? paths : [...paths, param],
+                [...paths, param],
                 elysia
             )
         },
@@ -249,7 +249,7 @@ const createProxy = (
                           ?.query
                     : options?.query
 
-                let q = ''
+				let q = ''
                 if (query) {
                     const append = (key: string, value: string) => {
                         q +=
@@ -514,7 +514,7 @@ const createProxy = (
 
                     let response: Response
 
-                    try {
+					try {
                         response = await (elysia?.handle(
                             new Request(url, fetchInit)
                         ) ?? fetcher!(url, fetchInit))
