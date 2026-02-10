@@ -1,3 +1,7 @@
+# 1.4.7
+Bug fix:
+- [#247](https://github.com/elysiajs/eden/pull/247), [#246](https://github.com/elysiajs/eden/issues/246) handle network error
+
 # 1.4.6 - 23 Dec 2025
 Bug fix:
 - [#235](https://github.com/elysiajs/eden/pull/235) SSE stream parser with partial chunks

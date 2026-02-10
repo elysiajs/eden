@@ -1,9 +1,14 @@
 /// <reference lib="dom" />
 import type { Elysia, ELYSIA_FORM_DATA } from 'elysia'
 
-import { EdenWS } from './ws'
-import type { IsNever, MaybeEmptyObject, Not, Prettify, ThrowHttpErrors } from '../types'
-import { BunFile } from 'bun'
+import type { EdenWS } from './ws'
+import type {
+    IsNever,
+    MaybeEmptyObject,
+    Not,
+    Prettify,
+    ThrowHttpErrors
+} from '../types'
 
 // type Files = File | FileList
 
@@ -59,12 +64,11 @@ type IsSuccessCode<S extends number> = S extends SuccessCodeRange ? true : false
 type MaybeArray<T> = T | T[]
 type MaybePromise<T> = T | Promise<T>
 
-type MaybeArrayFile<T> =
-    T extends (File | BunFile)[]
-        ? (File | BunFile)[] | File | BunFile
-        : T extends File | BunFile
-          ? File | BunFile
-          : T
+type MaybeArrayFile<T> = T extends File[]
+    ? File[] | File
+    : T extends File
+      ? File
+      : T
 
 type RelaxFileArrays<T> =
     T extends Record<string, unknown>
@@ -72,15 +76,16 @@ type RelaxFileArrays<T> =
               [K in keyof T]: MaybeArrayFile<T[K]>
           }
         : T
-type SerializeQueryParams<T> = T extends Record<string, any>
-  ? {
-      [K in keyof T]: T[K] extends Date
-        ? string
-        : T[K] extends Date | undefined
-          ? string | undefined
-          : T[K]
-    }
-  : T
+type SerializeQueryParams<T> =
+    T extends Record<string, any>
+        ? {
+              [K in keyof T]: T[K] extends Date
+                  ? string
+                  : T[K] extends Date | undefined
+                    ? string | undefined
+                    : T[K]
+          }
+        : T
 
 export namespace Treaty {
     export interface TreatyParam {
@@ -114,7 +119,10 @@ export namespace Treaty {
                     response: infer Res extends Record<number, unknown>
                 }
               ? MaybeEmptyObject<Headers, 'headers'> &
-                    MaybeEmptyObject<SerializeQueryParams<Query>, 'query'> extends infer Param
+                    MaybeEmptyObject<
+                        SerializeQueryParams<Query>,
+                        'query'
+                    > extends infer Param
                   ? {} extends Param
                       ? undefined extends Body
                           ? K extends 'get' | 'head'
