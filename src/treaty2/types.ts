@@ -75,14 +75,15 @@ type RelaxFileArrays<T> =
         ? {
               [K in keyof T]: MaybeArrayFile<T[K]>
           }
-        : T
+	: T
+
 type SerializeQueryParams<T> =
     T extends Record<string, any>
         ? {
               [K in keyof T]: T[K] extends Date
-                  ? string
+                  ? string | Date
                   : T[K] extends Date | undefined
-                    ? string | undefined
+                    ? string | Date | undefined
                     : T[K]
           }
         : T

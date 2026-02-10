@@ -255,9 +255,11 @@ const createProxy = (
                     const append = (key: string, value: unknown) => {
                         // Explicitly exclude null and undefined values from url encoding
                         // to prevent parsing string "null" / string "undefined"
-                        if (value === undefined || value === null) return
+						if (value === undefined || value === null) return
 
-                        q +=
+						if (value instanceof Date) value = value.toISOString()
+
+						q +=
                             (q ? '&' : '?') +
                             `${encodeURIComponent(key)}=${encodeURIComponent(
                                 typeof value === 'object'
@@ -506,7 +508,8 @@ const createProxy = (
                         }
                     }
 
-                    if (options?.headers?.['content-type'])
+					if (options?.headers?.['content-type'])
+						// @ts-ignore
                         fetchInit.headers['content-type'] =
                             options?.headers['content-type']
 
@@ -581,7 +584,8 @@ const createProxy = (
 
                                 return v
                             })
-                            break
+							break
+
                         case 'application/octet-stream':
                             data = await response.arrayBuffer()
                             break
