@@ -634,11 +634,12 @@ const createProxy = (
     }) as any
 
 export const treaty = <
-    const App extends Elysia<any, any, any, any, any, any, any>
+	const App extends Elysia<any, any, any, any, any, any, any>,
+	const Head extends {} = {}
 >(
     domain: string | App,
-    config: Treaty.Config = {}
-): Treaty.Create<App> => {
+    config: Treaty.Config<Head> = {}
+): Treaty.Create<App, Head> => {
     if (typeof domain === 'string') {
         if (!config.keepDomain) {
             if (!domain.includes('://'))

@@ -1,14 +1,24 @@
 import { Elysia, t } from 'elysia'
 import { treaty } from '../src'
 
-const app = new Elysia().get('/thing', () => 'hi')
+const app = new Elysia().get(
+    '/profile',
+    ({ headers }) => ({ user: 'hello', token: headers.authorization }),
+    {
+        // <- enforce that Authorization must be present
+        headers: t.Object({
+            authorization: t.String()
+        })
+    }
+)
 
-async function getClient() {
-  return treaty(app)
-}
+const api = treaty(app, {
+    headers: {
+        authorization: ''
+    }
+})
+type api = typeof api
 
-const api = await getClient()
-
-const { status } = await api.thing.get()
-
-console.log(status)
+const { status } = await api.profile.get({
+    headers: {}
+})

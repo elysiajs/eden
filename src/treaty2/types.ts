@@ -93,14 +93,30 @@ export namespace Treaty {
         throwHttpErrors?: ThrowHttpErrors
     }
 
-    export type Create<App extends Elysia<any, any, any, any, any, any, any>> =
-        App extends {
-            '~Routes': infer Schema extends Record<any, any>
-        }
-            ? Prettify<Sign<Schema>> & CreateParams<Schema>
-            : 'Please install Elysia before using Eden'
+    export type Create<
+        App extends Elysia<any, any, any, any, any, any, any>,
+        Head extends Record<string, unknown> = {}
+    > = App extends {
+        '~Routes': infer Schema extends Record<any, any>
+    }
+        ? Prettify<Sign<Schema, Head>> & CreateParams<Schema, Head>
+        : 'Please install Elysia before using Eden'
 
-    export type Sign<in out Route extends Record<any, any>> = {
+    type ToTreatyParam<Target, Head extends Record<string, unknown>> = Prettify<
+        TreatyParam &
+            ({} extends Head
+                ? Target
+                : Omit<Target, 'headers'> & {
+                      // @ts-ignore Trust me bro
+                      headers: Omit<Target['headers'], keyof Head> &
+                          Partial<Head>
+                  })
+    >
+
+    export type Sign<
+        in out Route extends Record<any, any>,
+        in out Head extends Record<string, unknown> = {}
+    > = {
         [K in keyof Route as K extends `:${string}`
             ? never
             : K]: K extends 'subscribe' // ? Websocket route
@@ -127,7 +143,7 @@ export namespace Treaty {
                       ? undefined extends Body
                           ? K extends 'get' | 'head'
                               ? (
-                                    options?: Prettify<Param & TreatyParam>
+                                    options?: ToTreatyParam<Param, Head>
                                 ) => Promise<
                                     TreatyResponse<
                                         ReplaceGeneratorWithAsyncGenerator<Res>
@@ -135,7 +151,7 @@ export namespace Treaty {
                                 >
                               : (
                                     body?: RelaxFileArrays<Body>,
-                                    options?: Prettify<Param & TreatyParam>
+                                    options?: ToTreatyParam<Param, Head>
                                 ) => Promise<
                                     TreatyResponse<
                                         ReplaceGeneratorWithAsyncGenerator<Res>
@@ -143,7 +159,7 @@ export namespace Treaty {
                                 >
                           : K extends 'get' | 'head'
                             ? (
-                                  options?: Prettify<Param & TreatyParam>
+                                  options?: ToTreatyParam<Param, Head>
                               ) => Promise<
                                   TreatyResponse<
                                       ReplaceGeneratorWithAsyncGenerator<Res>
@@ -152,7 +168,7 @@ export namespace Treaty {
                             : {} extends Body
                               ? (
                                     body?: RelaxFileArrays<Body>,
-                                    options?: Prettify<Param & TreatyParam>
+                                    options?: ToTreatyParam<Param, Head>
                                 ) => Promise<
                                     TreatyResponse<
                                         ReplaceGeneratorWithAsyncGenerator<Res>
@@ -160,7 +176,7 @@ export namespace Treaty {
                                 >
                               : (
                                     body: RelaxFileArrays<Body>,
-                                    options?: Prettify<Param & TreatyParam>
+                                    options?: ToTreatyParam<Param, Head>
                                 ) => Promise<
                                     TreatyResponse<
                                         ReplaceGeneratorWithAsyncGenerator<Res>
@@ -168,7 +184,7 @@ export namespace Treaty {
                                 >
                       : K extends 'get' | 'head'
                         ? (
-                              options: Prettify<Param & TreatyParam>
+                              options: ToTreatyParam<Param, Head>
                           ) => Promise<
                               TreatyResponse<
                                   ReplaceGeneratorWithAsyncGenerator<Res>
@@ -176,20 +192,23 @@ export namespace Treaty {
                           >
                         : (
                               body: RelaxFileArrays<Body>,
-                              options: Prettify<Param & TreatyParam>
+                              options: ToTreatyParam<Param, Head>
                           ) => Promise<
                               TreatyResponse<
                                   ReplaceGeneratorWithAsyncGenerator<Res>
                               >
                           >
                   : never
-              : CreateParams<Route[K]>
+              : CreateParams<Route[K], Head>
     }
 
-    type CreateParams<Route extends Record<string, any>> =
+    type CreateParams<
+        Route extends Record<string, any>,
+        Head extends Record<string, unknown> = {}
+    > =
         Extract<keyof Route, `:${string}`> extends infer Path extends string
             ? IsNever<Path> extends true
-                ? Prettify<Sign<Route>>
+                ? Prettify<Sign<Route, Head>>
                 : // ! DO NOT USE PRETTIFY ON THIS LINE, OTHERWISE FUNCTION CALLING WILL BE OMITTED
                   (((params: {
                       [param in Path extends `:${infer Param}`
@@ -197,23 +216,24 @@ export namespace Treaty {
                               ? Param
                               : Param
                           : never]: string | number
-                  }) => Prettify<Sign<Route[Path]>> &
-                      CreateParams<Route[Path]>) &
-                      Prettify<Sign<Route>>) &
+                  }) => Prettify<Sign<Route[Path], Head>> &
+                      CreateParams<Route[Path], Head>) &
+                      Prettify<Sign<Route, Head>>) &
                       (Path extends `:${string}?`
-                          ? CreateParams<Route[Path]>
+                          ? CreateParams<Route[Path], Head>
                           : {})
             : never
 
-    export interface Config {
+    export interface Config<Head extends {} = {}> {
         fetch?: Omit<RequestInit, 'headers' | 'method'>
         fetcher?: typeof fetch
         headers?: MaybeArray<
+            | Head
             | RequestInit['headers']
             | ((
                   path: string,
                   options: RequestInit
-              ) => MaybePromise<RequestInit['headers'] | void>)
+              ) => MaybePromise<Head | RequestInit['headers'] | void>)
         >
         onRequest?: MaybeArray<
             (

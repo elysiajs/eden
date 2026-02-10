@@ -1310,3 +1310,72 @@ type ValidationError = {
 
     expectTypeOf<Parameters<Fn>['length']>().toEqualTypeOf<0 | 1>()
 }
+
+// Optional head when provided to treaty
+{
+    const app = new Elysia().get(
+        '/profile',
+        ({ headers }) => ({ user: 'hello', token: headers.authorization }),
+        {
+            headers: t.Object({
+                authorization: t.String()
+            })
+        }
+    )
+
+    const api = treaty(app, {
+        headers: {
+            authorization: ''
+        }
+    })
+
+    api.profile.get({
+        headers: {}
+    })
+}
+
+// Required head when not provided to treaty
+{
+    const app = new Elysia().get(
+        '/profile',
+        ({ headers }) => ({ user: 'hello', token: headers.authorization }),
+        {
+            headers: t.Object({
+                authorization: t.String()
+            })
+        }
+    )
+
+    const api = treaty(app)
+
+    api.profile.get({
+        // @ts-expect-error
+        headers: {}
+    })
+}
+
+// Reconcile head when provided to treaty
+{
+    const app = new Elysia().get(
+        '/profile',
+        ({ headers }) => ({ user: 'hello', token: headers.authorization }),
+        {
+            headers: t.Object({
+                authorization: t.String(),
+                a: t.String()
+            })
+        }
+    )
+
+    const api = treaty(app, {
+        headers: {
+            authorization: ''
+        }
+    })
+
+    api.profile.get({
+        headers: {
+            a: 'a'
+        }
+    })
+}
