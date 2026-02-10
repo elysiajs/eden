@@ -1,4 +1,4 @@
-# 1.4.7
+# 1.4.7 - 10 Feb 2025
 Feature:
 - [#236](https://github.com/elysiajs/eden/issues/236) reconcile default headers in type-level
 - [#206](https://github.com/elysiajs/eden/issues/206), [#245](https://github.com/elysiajs/eden/pull/245) add `parseDate` option
