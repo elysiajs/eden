@@ -1309,4 +1309,36 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
 
         expect(status).toEqual(200)
     })
+
+    it('handle query array', async () => {
+        const app = new Elysia().get('/query', ({ query }) => query, {
+            query: t.Object({
+                orderBy: t.Array(
+                    t.Object({
+                        column: t.String()
+                    })
+                )
+            })
+        })
+
+        const api = treaty(app)
+
+        const { data } = await api.query.get({
+            query: {
+                orderBy: [
+                    {
+                        column: 'finalizedAt'
+                    }
+                ]
+            }
+        })
+
+        expect(data).toEqual({
+            orderBy: [
+                {
+                    column: 'finalizedAt'
+                }
+            ]
+        })
+    })
 })

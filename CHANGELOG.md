@@ -4,6 +4,7 @@ Bug fix:
 - [#244](https://github.com/elysiajs/eden/issues/244) don't skip index path name
 - [#241](https://github.com/elysiajs/eden/issues/241) prevent freeze from thenable
 - [#236](https://github.com/elysiajs/eden/issues/236) reconcile default headers in type-level
+- [#232](https://github.com/elysiajs/eden/issues/232) accept query array
 
 # 1.4.6 - 23 Dec 2025
 Bug fix:

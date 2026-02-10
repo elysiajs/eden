@@ -106,11 +106,13 @@ export namespace Treaty {
         TreatyParam &
             ({} extends Head
                 ? Target
-                : Omit<Target, 'headers'> & {
-                      // @ts-ignore Trust me bro
-                      headers: Omit<Target['headers'], keyof Head> &
-                          Partial<Head>
-                  })
+                : // @ts-ignore
+                  Omit<Target['headers'], keyof Head> &
+                        Partial<Head> extends infer Head
+                  ? {} extends Head
+                      ? { headers?: Head } & Omit<Target, 'headers'>
+                      : { headers: Head } & Omit<Target, 'headers'>
+                  : Target)
     >
 
     export type Sign<

@@ -252,29 +252,28 @@ const createProxy = (
 
                 let q = ''
                 if (query) {
-                    const append = (key: string, value: string) => {
+                    const append = (key: string, value: unknown) => {
+                        // Explicitly exclude null and undefined values from url encoding
+                        // to prevent parsing string "null" / string "undefined"
+                        if (value === undefined || value === null) return
+
                         q +=
                             (q ? '&' : '?') +
                             `${encodeURIComponent(key)}=${encodeURIComponent(
-                                value
+                                typeof value === 'object'
+                                    ? JSON.stringify(value)
+                                    : value + ''
                             )}`
                     }
 
                     for (const [key, value] of Object.entries(query)) {
                         if (Array.isArray(value)) {
                             for (const v of value) append(key, v)
+
                             continue
                         }
 
-                        // Explicitly exclude null and undefined values from url encoding
-                        // to prevent parsing string "null" / string "undefined"
-                        if (value === undefined || value === null) continue
-
-                        if (typeof value === 'object') {
-                            append(key, JSON.stringify(value))
-                            continue
-                        }
-                        append(key, `${value}`)
+                        append(key, value)
                     }
                 }
 
@@ -634,8 +633,8 @@ const createProxy = (
     }) as any
 
 export const treaty = <
-	const App extends Elysia<any, any, any, any, any, any, any>,
-	const Head extends {} = {}
+    const App extends Elysia<any, any, any, any, any, any, any>,
+    const Head extends {} = {}
 >(
     domain: string | App,
     config: Treaty.Config<Head> = {}
