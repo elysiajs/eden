@@ -2,7 +2,7 @@
 import type { Elysia, ELYSIA_FORM_DATA } from 'elysia'
 
 import { EdenWS } from './ws'
-import type { IsNever, MaybeEmptyObject, Not, Prettify } from '../types'
+import type { IsNever, MaybeEmptyObject, Not, Prettify, ThrowHttpErrors } from '../types'
 import { BunFile } from 'bun'
 
 // type Files = File | FileList
@@ -83,8 +83,9 @@ type SerializeQueryParams<T> = T extends Record<string, any>
   : T
 
 export namespace Treaty {
-    interface TreatyParam {
+    export interface TreatyParam {
         fetch?: RequestInit
+        throwHttpErrors?: ThrowHttpErrors
     }
 
     export type Create<App extends Elysia<any, any, any, any, any, any, any>> =
@@ -214,6 +215,7 @@ export namespace Treaty {
         >
         onResponse?: MaybeArray<(response: Response) => MaybePromise<unknown>>
         keepDomain?: boolean
+        throwHttpErrors?: ThrowHttpErrors
     }
 
     // type UnwrapAwaited<T extends Record<number, unknown>> = {

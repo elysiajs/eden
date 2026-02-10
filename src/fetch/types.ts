@@ -5,7 +5,8 @@ import type {
 	IsUnknown,
 	IsNever,
 	Prettify,
-	TreatyToPath
+	TreatyToPath,
+	ThrowHttpErrors
 } from '../types'
 
 export namespace EdenFetch {
@@ -21,6 +22,7 @@ export namespace EdenFetch {
 
 	export interface Config extends RequestInit {
 		fetcher?: typeof globalThis.fetch
+		throwHttpErrors?: ThrowHttpErrors
 	}
 
 	export type Fn<Schema extends Record<string, any>> = <
@@ -60,7 +62,9 @@ export namespace EdenFetch {
 					}) &
 			(IsUnknown<Route['body']> extends false
 				? { body: Route['body'] }
-				: { body?: unknown })
+				: { body?: unknown }) & {
+          throwHttpErrors?: ThrowHttpErrors
+        }
 	) => Promise<
 		Prettify<
 			| {
