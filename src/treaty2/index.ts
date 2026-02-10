@@ -213,12 +213,13 @@ const createProxy = (
 ): any =>
     new Proxy(() => {}, {
         get(_, param: string): any {
-            return createProxy(
-                domain,
-                config,
-                [...paths, param],
-                elysia
+            if (
+                paths.length === 0 &&
+                (param === 'then' || param === 'catch' || param === 'finally')
             )
+                return undefined
+
+            return createProxy(domain, config, [...paths, param], elysia)
         },
         apply(_, __, [body, options]) {
             if (
@@ -249,7 +250,7 @@ const createProxy = (
                           ?.query
                     : options?.query
 
-				let q = ''
+                let q = ''
                 if (query) {
                     const append = (key: string, value: string) => {
                         q +=
@@ -514,13 +515,14 @@ const createProxy = (
 
                     let response: Response
 
-					try {
+                    try {
                         response = await (elysia?.handle(
                             new Request(url, fetchInit)
                         ) ?? fetcher!(url, fetchInit))
                     } catch (err) {
                         const error = new EdenFetchError(503, err)
-                        if (shouldThrow(error, resolvedThrowHttpErrors)) throw error
+                        if (shouldThrow(error, resolvedThrowHttpErrors))
+                            throw error
                         return {
                             data: null,
                             error,
@@ -604,7 +606,8 @@ const createProxy = (
 
                     if (response.status >= 300 || response.status < 200) {
                         error = new EdenFetchError(response.status, data)
-                        if (shouldThrow(error, resolvedThrowHttpErrors)) throw error
+                        if (shouldThrow(error, resolvedThrowHttpErrors))
+                            throw error
                         data = null
                     }
 

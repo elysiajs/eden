@@ -1,11 +1,14 @@
 import { Elysia, t } from 'elysia'
 import { treaty } from '../src'
 
-const app = new Elysia().get('/search/index/:indexId/stocks', () => ({
-    data: []
-}))
+const app = new Elysia().get('/thing', () => 'hi')
 
-const api = treaty(app)
-type api = typeof api
+async function getClient() {
+  return treaty(app)
+}
 
-const { status } = await api.search.index({ indexId: 'a' }).stocks.get()
+const api = await getClient()
+
+const { status } = await api.thing.get()
+
+console.log(status)

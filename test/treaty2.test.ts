@@ -1291,8 +1291,22 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
         const api = treaty(app)
         type api = typeof api
 
-		const { status } = await api.search.index({ indexId: 'a' }).stocks.get()
+        const { status } = await api.search.index({ indexId: 'a' }).stocks.get()
 
-		expect(status).toEqual(200)
-	})
+        expect(status).toEqual(200)
+    })
+
+    it('handle thenable', async () => {
+        const app = new Elysia().get('/thing', () => 'hi')
+
+        async function getClient() {
+            return treaty(app)
+        }
+
+        const api = await getClient()
+
+        const { status } = await api.thing.get()
+
+        expect(status).toEqual(200)
+    })
 })

@@ -2,6 +2,7 @@
 Bug fix:
 - [#247](https://github.com/elysiajs/eden/pull/247), [#246](https://github.com/elysiajs/eden/issues/246) handle network error
 - [#244](https://github.com/elysiajs/eden/issues/244) don't skip index path name
+- [#241](https://github.com/elysiajs/eden/issues/241) prevent freeze from thenable
 
 # 1.4.6 - 23 Dec 2025
 Bug fix:
