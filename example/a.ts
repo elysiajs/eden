@@ -14,12 +14,14 @@ const app = new Elysia()
     })
     .listen(3000)
 
-const api = treaty(app)
+const api = treaty(app, {
+	parseDate: false
+})
 
 const { data, error } = await api.get({
 	query: {
-		minDate: new Date(),
-		maxDate: new Date()
+		minDate: '2025-01-01',
+		maxDate: '2025-01-01'
     }
 })
 

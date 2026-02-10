@@ -1,7 +1,7 @@
 import { Elysia, file, form, status, t } from 'elysia'
 import { treaty } from '../../src'
 import { expectTypeOf } from 'expect-type'
-import type { ThrowHttpErrors } from '../../src/types'
+import type { ThrowHttpError } from '../../src/types'
 
 const plugin = new Elysia({ prefix: '/level' })
     .get('/', '2')
@@ -186,7 +186,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
-              throwHttpErrors?: ThrowHttpErrors
+              throwHttpError?: ThrowHttpError
           }
         | undefined
     >()
@@ -227,7 +227,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
-              throwHttpErrors?: ThrowHttpErrors
+              throwHttpError?: ThrowHttpError
           }
         | undefined
     >()
@@ -264,7 +264,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
-              throwHttpErrors?: ThrowHttpErrors
+              throwHttpError?: ThrowHttpError
           }
         | undefined
     >()
@@ -303,7 +303,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
-              throwHttpErrors?: ThrowHttpErrors
+              throwHttpError?: ThrowHttpError
           }
         | undefined
     >()
@@ -344,7 +344,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
-              throwHttpErrors?: ThrowHttpErrors
+              throwHttpError?: ThrowHttpError
           }
         | undefined
     >()
@@ -374,7 +374,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
-              throwHttpErrors?: ThrowHttpErrors
+              throwHttpError?: ThrowHttpError
           }
         | undefined
     >()
@@ -412,7 +412,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
-              throwHttpErrors?: ThrowHttpErrors
+              throwHttpError?: ThrowHttpError
           }
         | undefined
     >()
@@ -461,7 +461,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
-              throwHttpErrors?: ThrowHttpErrors
+              throwHttpError?: ThrowHttpError
           }
         | undefined
     >()
@@ -493,7 +493,7 @@ type ValidationError = {
             username: string
         }
         fetch?: RequestInit | undefined
-        throwHttpErrors?: ThrowHttpErrors
+        throwHttpError?: ThrowHttpError
     }>()
 
     expectTypeOf<Route>().parameter(1).toBeUndefined()
@@ -521,10 +521,10 @@ type ValidationError = {
     expectTypeOf<Route>().parameter(0).toEqualTypeOf<{
         headers?: Record<string, unknown> | undefined
         query: {
-            since: string
+            since: string | Date
         }
         fetch?: RequestInit | undefined
-        throwHttpErrors?: ThrowHttpErrors
+        throwHttpError?: ThrowHttpError | undefined
     }>()
 
     expectTypeOf<Route>().parameter(1).toBeUndefined()
@@ -556,7 +556,7 @@ type ValidationError = {
             alias: 'Kristen'
         }
         fetch?: RequestInit | undefined
-        throwHttpErrors?: ThrowHttpErrors
+        throwHttpError?: ThrowHttpError
     }>()
 
     expectTypeOf<Route>().parameter(1).toBeUndefined()
@@ -591,7 +591,7 @@ type ValidationError = {
             alias: 'Kristen'
         }
         fetch?: RequestInit | undefined
-        throwHttpErrors?: ThrowHttpErrors
+        throwHttpError?: ThrowHttpError
     }>()
 
     type Res = Result<Route>
@@ -622,7 +622,7 @@ type ValidationError = {
             alias: 'Kristen'
         }
         fetch?: RequestInit | undefined
-        throwHttpErrors?: ThrowHttpErrors
+        throwHttpError?: ThrowHttpError
     }>()
 
     expectTypeOf<Route>().parameter(1).toBeUndefined()
@@ -653,7 +653,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
-              throwHttpErrors?: ThrowHttpErrors
+              throwHttpError?: ThrowHttpError
           }
         | undefined
     >()
@@ -711,7 +711,7 @@ type ValidationError = {
         }
         query?: Record<string, unknown> | undefined
         fetch?: RequestInit | undefined
-        throwHttpErrors?: ThrowHttpErrors
+        throwHttpError?: ThrowHttpError
     }>()
 
     expectTypeOf<Route>().parameter(1).toBeUndefined()
@@ -746,7 +746,7 @@ type ValidationError = {
         }
         query?: Record<string, unknown> | undefined
         fetch?: RequestInit | undefined
-        throwHttpErrors?: ThrowHttpErrors
+        throwHttpError?: ThrowHttpError
     }>()
 
     type Res = Result<Route>
@@ -780,7 +780,7 @@ type ValidationError = {
             alias: 'Kristen'
         }
         fetch?: RequestInit | undefined
-        throwHttpErrors?: ThrowHttpErrors
+        throwHttpError?: ThrowHttpError
     }>()
 
     expectTypeOf<Route>().parameter(1).toBeUndefined()
@@ -818,7 +818,7 @@ type ValidationError = {
             alias: 'Kristen'
         }
         fetch?: RequestInit | undefined
-        throwHttpErrors?: ThrowHttpErrors
+        throwHttpError?: ThrowHttpError
     }>()
 
     type Res = Result<Route>
@@ -857,7 +857,7 @@ type ValidationError = {
             alias: 'Kristen'
         }
         fetch?: RequestInit | undefined
-        throwHttpErrors?: ThrowHttpErrors
+        throwHttpError?: ThrowHttpError
     }>()
 
     type Res = Result<Route>
@@ -886,7 +886,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
-              throwHttpErrors?: ThrowHttpErrors
+              throwHttpError?: ThrowHttpError
           }
         | undefined
     >()

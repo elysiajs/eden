@@ -10,10 +10,10 @@ export const isNumericString = (message: string) =>
 
 export const parseStringifiedDate = (
     value: any,
-    options?: { parseDates?: boolean }
+    options?: { parseDate?: boolean }
 ) => {
     if (typeof value !== 'string') return null
-    if (options?.parseDates === false) return null
+    if (options?.parseDate === false) return null
 
     // Remove quote from stringified date
     const temp = value.replace(/"/g, '')
@@ -40,7 +40,7 @@ export const isStringifiedObject = (value: string) => {
 
 export const parseStringifiedObject = (
     data: string,
-    options?: { parseDates?: boolean }
+    options?: { parseDate?: boolean }
 ) =>
     JSON.parse(data, (_, value) => {
         const date = parseStringifiedDate(value, options)
@@ -54,14 +54,14 @@ export const parseStringifiedObject = (
 
 export const parseStringifiedValue = (
     value: string,
-    options?: { parseDates?: boolean }
+    options?: { parseDate?: boolean }
 ) => {
     if (!value) return value
     if (isNumericString(value)) return +value
     if (value === 'true') return true
     if (value === 'false') return false
 
-    if (options?.parseDates !== false) {
+    if (options?.parseDate !== false) {
         const date = parseStringifiedDate(value, options)
         if (date) return date
     }
@@ -77,7 +77,7 @@ export const parseStringifiedValue = (
 
 export const parseMessageEvent = (
     event: MessageEvent,
-    options?: { parseDates?: boolean }
+    options?: { parseDate?: boolean }
 ) => {
     const messageString = event.data.toString()
 

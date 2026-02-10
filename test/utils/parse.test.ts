@@ -3,7 +3,7 @@ import {
     parseStringifiedDate,
     parseStringifiedValue,
     parseStringifiedObject
-} from '../src/utils/parsingUtils'
+} from '../../src/utils/parse'
 
 describe('parseStringifiedDate', () => {
     const isoDate = '2024-01-15T10:30:00.000Z'
@@ -26,23 +26,23 @@ describe('parseStringifiedDate', () => {
         expect(result).toBeInstanceOf(Date)
     })
 
-    it('should parse date when parseDates is true', () => {
-        const result = parseStringifiedDate(isoDate, { parseDates: true })
+    it('should parse date when parseDate is true', () => {
+        const result = parseStringifiedDate(isoDate, { parseDate: true })
         expect(result).toBeInstanceOf(Date)
     })
 
-    it('should NOT parse date when parseDates is false', () => {
-        const result = parseStringifiedDate(isoDate, { parseDates: false })
+    it('should NOT parse date when parseDate is false', () => {
+        const result = parseStringifiedDate(isoDate, { parseDate: false })
         expect(result).toBeNull()
     })
 
-    it('should NOT parse short date when parseDates is false', () => {
-        const result = parseStringifiedDate(shortDate, { parseDates: false })
+    it('should NOT parse short date when parseDate is false', () => {
+        const result = parseStringifiedDate(shortDate, { parseDate: false })
         expect(result).toBeNull()
     })
 
-    it('should parse date when parseDates is undefined', () => {
-        const result = parseStringifiedDate(isoDate, { parseDates: undefined })
+    it('should parse date when parseDate is undefined', () => {
+        const result = parseStringifiedDate(isoDate, { parseDate: undefined })
         expect(result).toBeInstanceOf(Date)
     })
 
@@ -66,26 +66,26 @@ describe('parseStringifiedValue', () => {
         expect(result).toBeInstanceOf(Date)
     })
 
-    it('should parse date strings when parseDates is true', () => {
-        const result = parseStringifiedValue(isoDate, { parseDates: true })
+    it('should parse date strings when parseDate is true', () => {
+        const result = parseStringifiedValue(isoDate, { parseDate: true })
         expect(result).toBeInstanceOf(Date)
     })
 
-    it('should NOT parse date strings when parseDates is false', () => {
-        const result = parseStringifiedValue(isoDate, { parseDates: false })
+    it('should NOT parse date strings when parseDate is false', () => {
+        const result = parseStringifiedValue(isoDate, { parseDate: false })
         expect(result).toBe(isoDate)
     })
 
-    it('should still parse numbers when parseDates is false', () => {
-        expect(parseStringifiedValue('123', { parseDates: false })).toBe(123)
-        expect(parseStringifiedValue('45.67', { parseDates: false })).toBe(
+    it('should still parse numbers when parseDate is false', () => {
+        expect(parseStringifiedValue('123', { parseDate: false })).toBe(123)
+        expect(parseStringifiedValue('45.67', { parseDate: false })).toBe(
             45.67
         )
     })
 
-    it('should still parse booleans when parseDates is false', () => {
-        expect(parseStringifiedValue('true', { parseDates: false })).toBe(true)
-        expect(parseStringifiedValue('false', { parseDates: false })).toBe(
+    it('should still parse booleans when parseDate is false', () => {
+        expect(parseStringifiedValue('true', { parseDate: false })).toBe(true)
+        expect(parseStringifiedValue('false', { parseDate: false })).toBe(
             false
         )
     })
@@ -113,16 +113,16 @@ describe('parseStringifiedObject', () => {
         expect(result.name).toBe('test')
     })
 
-    it('should parse dates inside objects when parseDates is true', () => {
+    it('should parse dates inside objects when parseDate is true', () => {
         const json = '{"date":"2024-01-15T10:30:00.000Z"}'
-        const result = parseStringifiedObject(json, { parseDates: true })
+        const result = parseStringifiedObject(json, { parseDate: true })
 
         expect(result.date).toBeInstanceOf(Date)
     })
 
-    it('should NOT parse dates inside objects when parseDates is false', () => {
+    it('should NOT parse dates inside objects when parseDate is false', () => {
         const json = '{"date":"2024-01-15T10:30:00.000Z","name":"test"}'
-        const result = parseStringifiedObject(json, { parseDates: false })
+        const result = parseStringifiedObject(json, { parseDate: false })
 
         expect(result.date).toBe('2024-01-15T10:30:00.000Z')
         expect(result.name).toBe('test')
@@ -131,9 +131,9 @@ describe('parseStringifiedObject', () => {
     it('should handle nested objects with dates', () => {
         const json = '{"user":{"createdAt":"2024-01-15T10:30:00.000Z"}}'
 
-        const withParsing = parseStringifiedObject(json, { parseDates: true })
+        const withParsing = parseStringifiedObject(json, { parseDate: true })
         const withoutParsing = parseStringifiedObject(json, {
-            parseDates: false
+            parseDate: false
         })
 
         expect(withParsing.user.createdAt).toBeInstanceOf(Date)
@@ -144,9 +144,9 @@ describe('parseStringifiedObject', () => {
         const json =
             '{"dates":["2024-01-15T10:30:00.000Z","2024-02-20T15:00:00.000Z"]}'
 
-        const withParsing = parseStringifiedObject(json, { parseDates: true })
+        const withParsing = parseStringifiedObject(json, { parseDate: true })
         const withoutParsing = parseStringifiedObject(json, {
-            parseDates: false
+            parseDate: false
         })
 
         expect(withParsing.dates[0]).toBeInstanceOf(Date)

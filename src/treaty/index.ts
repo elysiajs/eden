@@ -2,7 +2,7 @@ import type { Elysia, InputSchema } from 'elysia'
 import { EdenFetchError } from '../errors'
 import { composePath } from './utils'
 import type { EdenTreaty } from './types'
-import { parseMessageEvent, parseStringifiedValue } from '../utils/parsingUtils'
+import { parseMessageEvent, parseStringifiedValue } from '../utils/parse'
 
 export type { EdenTreaty } from './types'
 

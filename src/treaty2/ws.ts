@@ -1,6 +1,6 @@
 import type { InputSchema } from 'elysia'
 import type { Treaty } from './types'
-import { parseMessageEvent } from '../utils/parsingUtils'
+import { parseMessageEvent } from '../utils/parse'
 
 export class EdenWS<in out Schema extends InputSchema<any> = {}> {
     ws: WebSocket

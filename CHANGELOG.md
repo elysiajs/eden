@@ -1,9 +1,12 @@
 # 1.4.7
+Feature:
+- [#236](https://github.com/elysiajs/eden/issues/236) reconcile default headers in type-level
+- [#206](https://github.com/elysiajs/eden/issues/206), [#245](https://github.com/elysiajs/eden/pull/245) add `parseDate` option
+
 Bug fix:
 - [#247](https://github.com/elysiajs/eden/pull/247), [#246](https://github.com/elysiajs/eden/issues/246) handle network error
 - [#244](https://github.com/elysiajs/eden/issues/244) don't skip index path name
 - [#241](https://github.com/elysiajs/eden/issues/241) prevent freeze from thenable
-- [#236](https://github.com/elysiajs/eden/issues/236) reconcile default headers in type-level
 - [#232](https://github.com/elysiajs/eden/issues/232) accept query array
 
 # 1.4.6 - 23 Dec 2025

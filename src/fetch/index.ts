@@ -2,8 +2,8 @@ import type { Elysia } from 'elysia'
 
 import { EdenFetchError } from '../errors'
 import type { EdenFetch } from './types'
-import { parseStringifiedValue } from '../utils/parsingUtils'
-import { ThrowHttpErrors } from '../types'
+import { parseStringifiedValue } from '../utils/parse'
+import type { ThrowHttpError } from '../types'
 
 export type { EdenFetch } from './types'
 
@@ -33,22 +33,23 @@ const parseResponse = async (response: Response) => {
 
 const shouldThrow = (
 	error: EdenFetchError<number, unknown>,
-	throwHttpErrors?: ThrowHttpErrors
+	throwHttpError?: ThrowHttpError
 ): boolean => {
-	if (typeof throwHttpErrors === 'function') return throwHttpErrors(error)
-	return throwHttpErrors === true
+	if (typeof throwHttpError === 'function') return throwHttpError(error)
+
+	return throwHttpError === true
 }
 
 const handleResponse = async (
 	response: Response,
 	retry: () => any,
-	throwHttpErrors?: ThrowHttpErrors
+	throwHttpError?: ThrowHttpError
 ) => {
 	const data = await parseResponse(response)
 
 	if (response.status >= 300 || response.status < 200) {
 		const error = new EdenFetchError(response.status, data)
-		if (shouldThrow(error, throwHttpErrors)) throw error
+		if (shouldThrow(error, throwHttpError)) throw error
 		return {
 			data: null,
 			status: response.status,
@@ -72,15 +73,15 @@ export const edenFetch = <App extends Elysia<any, any, any, any, any, any, any>>
 		config?: EdenFetch.Config
 	): EdenFetch.Create<App> =>
 	// @ts-ignore
-	(endpoint: string, { query, params, body, throwHttpErrors: requestThrowHttpErrors, ...options } = {}) => {
+	(endpoint: string, { query, params, body, throwHttpError: requestThrowHttpError, ...options } = {}) => {
 		if (params)
 			Object.entries(params).forEach(([key, value]) => {
 				endpoint = endpoint.replace(`:${key}`, value as string)
 			})
 
 		const fetch = config?.fetcher || globalThis.fetch
-		// Per-request throwHttpErrors overrides config
-		const resolvedThrowHttpErrors = requestThrowHttpErrors ?? config?.throwHttpErrors
+		// Per-request throwHttpError overrides config
+		const resolvedThrowHttpError = requestThrowHttpError ?? config?.throwHttpError
 
         const nonNullishQuery = query
             ? Object.fromEntries(
@@ -118,11 +119,11 @@ export const edenFetch = <App extends Elysia<any, any, any, any, any, any, any>>
 
 	const execute = () =>
 		fetch(requestUrl, init)
-			.then((response) => handleResponse(response, execute, resolvedThrowHttpErrors))
+			.then((response) => handleResponse(response, execute, resolvedThrowHttpError))
 			.catch((err) => {
 				if (err instanceof EdenFetchError) throw err
 				const error = new EdenFetchError(503, err)
-				if (shouldThrow(error, resolvedThrowHttpErrors)) throw error
+				if (shouldThrow(error, resolvedThrowHttpError)) throw error
 				return {
 					data: null,
 					error,

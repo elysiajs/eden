@@ -9,8 +9,8 @@ import { EdenWS } from './ws'
 import {
     parseStringifiedDate,
     parseStringifiedValue
-} from '../utils/parsingUtils'
-import { ThrowHttpErrors } from '../types'
+} from '../utils/parse'
+import type { ThrowHttpError } from '../types'
 
 const method = [
     'get',
@@ -26,10 +26,10 @@ const method = [
 
 const shouldThrow = (
     error: EdenFetchError<number, unknown>,
-    throwHttpErrors?: ThrowHttpErrors
+    throwHttpError?: ThrowHttpError
 ): boolean => {
-    if (typeof throwHttpErrors === 'function') return throwHttpErrors(error)
-    return throwHttpErrors === true
+    if (typeof throwHttpError === 'function') return throwHttpError(error)
+    return throwHttpError === true
 }
 
 const locals = ['localhost', '127.0.0.1', '0.0.0.0']
@@ -126,7 +126,7 @@ const processHeaders = async (
 
 function parseSSEBlock(
     block: string,
-    options?: { parseDates?: boolean }
+    options?: { parseDate?: boolean }
 ): Record<string, unknown> | null {
     const lines = block.split('\n')
     const result: Record<string, unknown> = {}
@@ -155,7 +155,7 @@ function* extractEvents(
     bufferRef: {
         value: string
     },
-    options?: { parseDates?: boolean }
+    options?: { parseDate?: boolean }
 ): Generator<Record<string, unknown>> {
     let eventEnd: number
     while ((eventEnd = bufferRef.value.indexOf('\n\n')) !== -1) {
@@ -171,7 +171,7 @@ function* extractEvents(
 
 export async function* streamResponse(
     response: Response,
-    options?: { parseDates?: boolean }
+    options?: { parseDate?: boolean }
 ) {
     const body = response.body
 
@@ -333,13 +333,13 @@ const createProxy = (
                             ? body.fetch
                             : options?.fetch
 
-                    // Per-request throwHttpErrors overrides config
-                    const requestThrowHttpErrors =
+                    // Per-request throwHttpError overrides config
+                    const requestThrowHttpError =
                         isGetOrHead && typeof body === 'object'
-                            ? body.throwHttpErrors
-                            : options?.throwHttpErrors
-                    const resolvedThrowHttpErrors =
-                        requestThrowHttpErrors ?? config.throwHttpErrors
+                            ? body.throwHttpError
+                            : options?.throwHttpError
+                    const resolvedThrowHttpError =
+                        requestThrowHttpError ?? config.throwHttpError
 
                     fetchInit = {
                         ...fetchInit,
@@ -532,7 +532,7 @@ const createProxy = (
                         ) ?? fetcher!(url, fetchInit))
                     } catch (err) {
                         const error = new EdenFetchError(503, err)
-                        if (shouldThrow(error, resolvedThrowHttpErrors))
+                        if (shouldThrow(error, resolvedThrowHttpError))
                             throw error
                         return {
                             data: null,
@@ -582,7 +582,7 @@ const createProxy = (
                     ) {
                         case 'text/event-stream':
                             data = streamResponse(response, {
-                                parseDates: config.parseDates
+                                parseDate: config.parseDate
                             })
                             break
 
@@ -591,7 +591,7 @@ const createProxy = (
                                 if (typeof v !== 'string') return v
 
                                 const date = parseStringifiedDate(v, {
-                                    parseDates: config.parseDates
+                                    parseDate: config.parseDate
                                 })
                                 if (date) return date
 
@@ -617,14 +617,14 @@ const createProxy = (
                         default:
                             data = await response.text().then((text) =>
                                 parseStringifiedValue(text, {
-                                    parseDates: config.parseDates
+                                    parseDate: config.parseDate
                                 })
                             )
                     }
 
                     if (response.status >= 300 || response.status < 200) {
                         error = new EdenFetchError(response.status, data)
-                        if (shouldThrow(error, resolvedThrowHttpErrors))
+                        if (shouldThrow(error, resolvedThrowHttpError))
                             throw error
                         data = null
                     }

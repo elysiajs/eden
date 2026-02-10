@@ -7,7 +7,7 @@ import type {
     MaybeEmptyObject,
     Not,
     Prettify,
-    ThrowHttpErrors
+    ThrowHttpError
 } from '../types'
 
 // type Files = File | FileList
@@ -75,7 +75,7 @@ type RelaxFileArrays<T> =
         ? {
               [K in keyof T]: MaybeArrayFile<T[K]>
           }
-	: T
+        : T
 
 type SerializeQueryParams<T> =
     T extends Record<string, any>
@@ -91,7 +91,7 @@ type SerializeQueryParams<T> =
 export namespace Treaty {
     export interface TreatyParam {
         fetch?: RequestInit
-        throwHttpErrors?: ThrowHttpErrors
+        throwHttpError?: ThrowHttpError
     }
 
     export type Create<
@@ -246,8 +246,16 @@ export namespace Treaty {
         >
         onResponse?: MaybeArray<(response: Response) => MaybePromise<unknown>>
         keepDomain?: boolean
-        parseDates?: boolean
-        throwHttpErrors?: ThrowHttpErrors
+        /**
+         * @default true
+         *
+         * parse stringifed Date to new Date
+         */
+        parseDate?: boolean
+        /**
+         *
+         */
+        throwHttpError?: ThrowHttpError
     }
 
     // type UnwrapAwaited<T extends Record<number, unknown>> = {

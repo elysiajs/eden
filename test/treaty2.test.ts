@@ -768,68 +768,68 @@ describe('Treaty2 - Server offline', () => {
     })
 })
 
-describe('Treaty2 - throwHttpErrors', () => {
+describe('Treaty2 - throwHttpError', () => {
     // Config-level tests
-    it('throws HTTP errors when config throwHttpErrors is true', async () => {
-        const client = treaty(app, { throwHttpErrors: true })
+    it('throws HTTP errors when config throwHttpError is true', async () => {
+        const client = treaty(app, { throwHttpError: true })
         expect(client.error.get()).rejects.toBeInstanceOf(EdenFetchError)
     })
 
-    it('throws network errors when config throwHttpErrors is true', async () => {
+    it('throws network errors when config throwHttpError is true', async () => {
         const client = treaty<typeof app>('http://localhost:59999', {
-            throwHttpErrors: true
+            throwHttpError: true
         })
         expect(client.get()).rejects.toBeInstanceOf(EdenFetchError)
     })
 
-    it('returns error in result when config throwHttpErrors is false', async () => {
-        const client = treaty(app, { throwHttpErrors: false })
+    it('returns error in result when config throwHttpError is false', async () => {
+        const client = treaty(app, { throwHttpError: false })
         const { error } = await client.error.get()
         expect(error?.status).toBe(418)
     })
 
-    it('throws selectively when config throwHttpErrors is a function', async () => {
-        const client = treaty(app, { throwHttpErrors: (e) => e.status === 418 })
+    it('throws selectively when config throwHttpError is a function', async () => {
+        const client = treaty(app, { throwHttpError: (e) => e.status === 418 })
         await expect(client.error.get()).rejects.toBeInstanceOf(EdenFetchError)
     })
 
     it('does not throw when config function returns false', async () => {
-        const client = treaty(app, { throwHttpErrors: (e) => e.status === 500 })
+        const client = treaty(app, { throwHttpError: (e) => e.status === 500 })
         const { error } = await client.error.get()
         expect(error?.status).toBe(418)
     })
 
     // Per-request override tests
     it('per-request true overrides config false', async () => {
-        const client = treaty(app, { throwHttpErrors: false })
+        const client = treaty(app, { throwHttpError: false })
         expect(
-            client.error.get({ throwHttpErrors: true })
+            client.error.get({ throwHttpError: true })
         ).rejects.toBeInstanceOf(EdenFetchError)
     })
 
     it('per-request false overrides config true', async () => {
-        const client = treaty(app, { throwHttpErrors: true })
-        const { error } = await client.error.get({ throwHttpErrors: false })
+        const client = treaty(app, { throwHttpError: true })
+        const { error } = await client.error.get({ throwHttpError: false })
         expect(error?.status).toBe(418)
     })
 
     it('per-request function overrides config boolean', async () => {
-        const client = treaty(app, { throwHttpErrors: true })
+        const client = treaty(app, { throwHttpError: true })
         const { error } = await client.error.get({
-            throwHttpErrors: (e) => e.status === 500
+            throwHttpError: (e) => e.status === 500
         })
         expect(error?.status).toBe(418)
     })
 
     it('per-request override works for POST requests', async () => {
         const client = treaty<typeof app>('http://localhost:59999', {
-            throwHttpErrors: false
+            throwHttpError: false
         })
         expect(
             client.mirror.post(
                 { username: 'test', password: 'test' },
                 {
-                    throwHttpErrors: true
+                    throwHttpError: true
                 }
             )
         ).rejects.toBeInstanceOf(EdenFetchError)
@@ -1343,7 +1343,7 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
     })
 })
 
-describe('Treaty2 - parseDates configuration', () => {
+describe('Treaty2 - parseDate configuration', () => {
     const dateApp = new Elysia()
         .get('/json', () => ({
             date: '01/05/2026',
@@ -1371,16 +1371,16 @@ describe('Treaty2 - parseDates configuration', () => {
         expect(data?.name).toBe('test')
     })
 
-    it('should parse dates in JSON response when parseDates is true', async () => {
-        const client = treaty(dateApp, { parseDates: true })
+    it('should parse dates in JSON response when parseDate is true', async () => {
+        const client = treaty(dateApp, { parseDate: true })
         const { data } = await client.json.get()
 
         expect(data?.date).toBeInstanceOf(Date)
         expect(data?.timestamp).toBeInstanceOf(Date)
     })
 
-    it('should NOT parse dates in JSON response when parseDates is false', async () => {
-        const client = treaty(dateApp, { parseDates: false })
+    it('should NOT parse dates in JSON response when parseDate is false', async () => {
+        const client = treaty(dateApp, { parseDate: false })
         const { data } = await client.json.get()
 
         expect(data?.date).toBe('01/05/2026')
@@ -1402,8 +1402,8 @@ describe('Treaty2 - parseDates configuration', () => {
         expect(events[0].data.name).toBe('test')
     })
 
-    it('should NOT parse dates in SSE response when parseDates is false', async () => {
-        const client = treaty(dateApp, { parseDates: false })
+    it('should NOT parse dates in SSE response when parseDate is false', async () => {
+        const client = treaty(dateApp, { parseDate: false })
         const response = await client.sse.get()
 
         const events: any[] = []
@@ -1423,8 +1423,8 @@ describe('Treaty2 - parseDates configuration', () => {
         expect(data).toBeInstanceOf(Date)
     })
 
-    it('should NOT parse date in text response when parseDates is false', async () => {
-        const client = treaty(dateApp, { parseDates: false })
+    it('should NOT parse date in text response when parseDate is false', async () => {
+        const client = treaty(dateApp, { parseDate: false })
         const { data } = await client['text-date'].get()
 
         expect(data).toBe('2024-01-15T10:30:00.000Z')
