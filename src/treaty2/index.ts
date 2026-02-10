@@ -653,7 +653,7 @@ const createProxy = (
 
 export const treaty = <
     const App extends Elysia<any, any, any, any, any, any, any>,
-    const Head extends {} = {}
+    Head extends {} = {}
 >(
     domain: string | App,
     config: Treaty.Config<Head> = {}

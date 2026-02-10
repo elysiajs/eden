@@ -1,3 +1,7 @@
+# 1.4.8 - 10 Feb 2025
+Bug fix:
+- override default header without type conflict
+
 # 1.4.7 - 10 Feb 2025
 Feature:
 - [#236](https://github.com/elysiajs/eden/issues/236) reconcile default headers in type-level

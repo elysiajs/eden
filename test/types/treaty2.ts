@@ -1354,6 +1354,31 @@ type ValidationError = {
     })
 }
 
+// Override authroization
+{
+    const app = new Elysia().get(
+        '/profile',
+        ({ headers }) => headers.authorization,
+        {
+            headers: t.Object({
+                authorization: t.String()
+            })
+        }
+    )
+
+    const api = treaty(app, {
+        headers: {
+            authorization: 'Hello'
+        }
+    })
+
+    api.profile.get({
+        headers: {
+            authorization: 'authorization'
+        }
+    })
+}
+
 // Reconcile head when provided to treaty
 {
     const app = new Elysia().get(

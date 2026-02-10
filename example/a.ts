@@ -1,28 +1,25 @@
 import { Elysia, sse, t } from 'elysia'
 import { treaty } from '../src'
 
-const model = t.Object({
-    value: t.Number()
-})
 
-const app = new Elysia()
-    .get('/', ({ query }) => query, {
-        query: t.Object({
-            minDate: t.Date(),
-            maxDate: t.Date()
-        })
-    })
-    .listen(3000)
+const app = new Elysia().get(
+	'/profile',
+	({ headers }) => headers.authorization,
+	{
+		headers: t.Object({
+			authorization: t.String()
+		})
+	}
+)
 
 const api = treaty(app, {
-	parseDate: false
+	headers: {
+		authorization: 'Hello'
+	}
 })
 
-const { data, error } = await api.get({
-	query: {
-		minDate: '2025-01-01',
-		maxDate: '2025-01-01'
-    }
+api.profile.get({
+	headers: {
+		authorization: 'Authorization'
+	}
 })
-
-console.log(data, error)
