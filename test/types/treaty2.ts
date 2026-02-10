@@ -1,6 +1,7 @@
 import { Elysia, file, form, status, t } from 'elysia'
 import { treaty } from '../../src'
 import { expectTypeOf } from 'expect-type'
+import type { ThrowHttpErrors } from '../../src/types'
 
 const plugin = new Elysia({ prefix: '/level' })
     .get('/', '2')
@@ -185,6 +186,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
+              throwHttpErrors?: ThrowHttpErrors
           }
         | undefined
     >()
@@ -225,6 +227,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
+              throwHttpErrors?: ThrowHttpErrors
           }
         | undefined
     >()
@@ -261,6 +264,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
+              throwHttpErrors?: ThrowHttpErrors
           }
         | undefined
     >()
@@ -299,6 +303,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
+              throwHttpErrors?: ThrowHttpErrors
           }
         | undefined
     >()
@@ -339,6 +344,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
+              throwHttpErrors?: ThrowHttpErrors
           }
         | undefined
     >()
@@ -368,6 +374,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
+              throwHttpErrors?: ThrowHttpErrors
           }
         | undefined
     >()
@@ -405,6 +412,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
+              throwHttpErrors?: ThrowHttpErrors
           }
         | undefined
     >()
@@ -453,6 +461,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
+              throwHttpErrors?: ThrowHttpErrors
           }
         | undefined
     >()
@@ -484,6 +493,7 @@ type ValidationError = {
             username: string
         }
         fetch?: RequestInit | undefined
+        throwHttpErrors?: ThrowHttpErrors
     }>()
 
     expectTypeOf<Route>().parameter(1).toBeUndefined()
@@ -514,6 +524,7 @@ type ValidationError = {
             since: string
         }
         fetch?: RequestInit | undefined
+        throwHttpErrors?: ThrowHttpErrors
     }>()
 
     expectTypeOf<Route>().parameter(1).toBeUndefined()
@@ -545,6 +556,7 @@ type ValidationError = {
             alias: 'Kristen'
         }
         fetch?: RequestInit | undefined
+        throwHttpErrors?: ThrowHttpErrors
     }>()
 
     expectTypeOf<Route>().parameter(1).toBeUndefined()
@@ -579,6 +591,7 @@ type ValidationError = {
             alias: 'Kristen'
         }
         fetch?: RequestInit | undefined
+        throwHttpErrors?: ThrowHttpErrors
     }>()
 
     type Res = Result<Route>
@@ -609,6 +622,7 @@ type ValidationError = {
             alias: 'Kristen'
         }
         fetch?: RequestInit | undefined
+        throwHttpErrors?: ThrowHttpErrors
     }>()
 
     expectTypeOf<Route>().parameter(1).toBeUndefined()
@@ -639,6 +653,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
+              throwHttpErrors?: ThrowHttpErrors
           }
         | undefined
     >()
@@ -696,6 +711,7 @@ type ValidationError = {
         }
         query?: Record<string, unknown> | undefined
         fetch?: RequestInit | undefined
+        throwHttpErrors?: ThrowHttpErrors
     }>()
 
     expectTypeOf<Route>().parameter(1).toBeUndefined()
@@ -730,6 +746,7 @@ type ValidationError = {
         }
         query?: Record<string, unknown> | undefined
         fetch?: RequestInit | undefined
+        throwHttpErrors?: ThrowHttpErrors
     }>()
 
     type Res = Result<Route>
@@ -763,6 +780,7 @@ type ValidationError = {
             alias: 'Kristen'
         }
         fetch?: RequestInit | undefined
+        throwHttpErrors?: ThrowHttpErrors
     }>()
 
     expectTypeOf<Route>().parameter(1).toBeUndefined()
@@ -800,6 +818,7 @@ type ValidationError = {
             alias: 'Kristen'
         }
         fetch?: RequestInit | undefined
+        throwHttpErrors?: ThrowHttpErrors
     }>()
 
     type Res = Result<Route>
@@ -838,6 +857,7 @@ type ValidationError = {
             alias: 'Kristen'
         }
         fetch?: RequestInit | undefined
+        throwHttpErrors?: ThrowHttpErrors
     }>()
 
     type Res = Result<Route>
@@ -866,6 +886,7 @@ type ValidationError = {
               headers?: Record<string, unknown> | undefined
               query?: Record<string, unknown> | undefined
               fetch?: RequestInit | undefined
+              throwHttpErrors?: ThrowHttpErrors
           }
         | undefined
     >()
@@ -1288,4 +1309,73 @@ type ValidationError = {
     type Fn = typeof api.single.get
 
     expectTypeOf<Parameters<Fn>['length']>().toEqualTypeOf<0 | 1>()
+}
+
+// Optional head when provided to treaty
+{
+    const app = new Elysia().get(
+        '/profile',
+        ({ headers }) => ({ user: 'hello', token: headers.authorization }),
+        {
+            headers: t.Object({
+                authorization: t.String()
+            })
+        }
+    )
+
+    const api = treaty(app, {
+        headers: {
+            authorization: ''
+        }
+    })
+
+    api.profile.get({
+        headers: {}
+    })
+}
+
+// Required head when not provided to treaty
+{
+    const app = new Elysia().get(
+        '/profile',
+        ({ headers }) => ({ user: 'hello', token: headers.authorization }),
+        {
+            headers: t.Object({
+                authorization: t.String()
+            })
+        }
+    )
+
+    const api = treaty(app)
+
+    api.profile.get({
+        // @ts-expect-error
+        headers: {}
+    })
+}
+
+// Reconcile head when provided to treaty
+{
+    const app = new Elysia().get(
+        '/profile',
+        ({ headers }) => ({ user: 'hello', token: headers.authorization }),
+        {
+            headers: t.Object({
+                authorization: t.String(),
+                a: t.String()
+            })
+        }
+    )
+
+    const api = treaty(app, {
+        headers: {
+            authorization: ''
+        }
+    })
+
+    api.profile.get({
+        headers: {
+            a: 'a'
+        }
+    })
 }

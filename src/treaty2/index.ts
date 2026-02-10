@@ -10,6 +10,7 @@ import {
     parseStringifiedDate,
     parseStringifiedValue
 } from '../utils/parsingUtils'
+import { ThrowHttpErrors } from '../types'
 
 const method = [
     'get',
@@ -22,6 +23,14 @@ const method = [
     'connect',
     'subscribe'
 ] as const
+
+const shouldThrow = (
+    error: EdenFetchError<number, unknown>,
+    throwHttpErrors?: ThrowHttpErrors
+): boolean => {
+    if (typeof throwHttpErrors === 'function') return throwHttpErrors(error)
+    return throwHttpErrors === true
+}
 
 const locals = ['localhost', '127.0.0.1', '0.0.0.0']
 
@@ -213,12 +222,13 @@ const createProxy = (
 ): any =>
     new Proxy(() => {}, {
         get(_, param: string): any {
-            return createProxy(
-                domain,
-                config,
-                param === 'index' ? paths : [...paths, param],
-                elysia
+            if (
+                paths.length === 0 &&
+                (param === 'then' || param === 'catch' || param === 'finally')
             )
+                return undefined
+
+            return createProxy(domain, config, [...paths, param], elysia)
         },
         apply(_, __, [body, options]) {
             if (
@@ -251,29 +261,30 @@ const createProxy = (
 
                 let q = ''
                 if (query) {
-                    const append = (key: string, value: string) => {
-                        q +=
+                    const append = (key: string, value: unknown) => {
+                        // Explicitly exclude null and undefined values from url encoding
+                        // to prevent parsing string "null" / string "undefined"
+						if (value === undefined || value === null) return
+
+						if (value instanceof Date) value = value.toISOString()
+
+						q +=
                             (q ? '&' : '?') +
                             `${encodeURIComponent(key)}=${encodeURIComponent(
-                                value
+                                typeof value === 'object'
+                                    ? JSON.stringify(value)
+                                    : value + ''
                             )}`
                     }
 
                     for (const [key, value] of Object.entries(query)) {
                         if (Array.isArray(value)) {
                             for (const v of value) append(key, v)
+
                             continue
                         }
 
-                        // Explicitly exclude null and undefined values from url encoding
-                        // to prevent parsing string "null" / string "undefined"
-                        if (value === undefined || value === null) continue
-
-                        if (typeof value === 'object') {
-                            append(key, JSON.stringify(value))
-                            continue
-                        }
-                        append(key, `${value}`)
+                        append(key, value)
                     }
                 }
 
@@ -321,6 +332,14 @@ const createProxy = (
                         isGetOrHead && typeof body === 'object'
                             ? body.fetch
                             : options?.fetch
+
+                    // Per-request throwHttpErrors overrides config
+                    const requestThrowHttpErrors =
+                        isGetOrHead && typeof body === 'object'
+                            ? body.throwHttpErrors
+                            : options?.throwHttpErrors
+                    const resolvedThrowHttpErrors =
+                        requestThrowHttpErrors ?? config.throwHttpErrors
 
                     fetchInit = {
                         ...fetchInit,
@@ -498,7 +517,8 @@ const createProxy = (
                         }
                     }
 
-                    if (options?.headers?.['content-type'])
+					if (options?.headers?.['content-type'])
+						// @ts-ignore
                         fetchInit.headers['content-type'] =
                             options?.headers['content-type']
 
@@ -511,9 +531,12 @@ const createProxy = (
                             new Request(url, fetchInit)
                         ) ?? fetcher!(url, fetchInit))
                     } catch (err) {
+                        const error = new EdenFetchError(503, err)
+                        if (shouldThrow(error, resolvedThrowHttpErrors))
+                            throw error
                         return {
                             data: null,
-                            error: new EdenFetchError(503, err),
+                            error,
                             response: undefined,
                             status: 503,
                             headers: undefined
@@ -574,7 +597,8 @@ const createProxy = (
 
                                 return v
                             })
-                            break
+							break
+
                         case 'application/octet-stream':
                             data = await response.arrayBuffer()
                             break
@@ -600,6 +624,8 @@ const createProxy = (
 
                     if (response.status >= 300 || response.status < 200) {
                         error = new EdenFetchError(response.status, data)
+                        if (shouldThrow(error, resolvedThrowHttpErrors))
+                            throw error
                         data = null
                     }
 
@@ -626,11 +652,12 @@ const createProxy = (
     }) as any
 
 export const treaty = <
-    const App extends Elysia<any, any, any, any, any, any, any>
+    const App extends Elysia<any, any, any, any, any, any, any>,
+    const Head extends {} = {}
 >(
     domain: string | App,
-    config: Treaty.Config = {}
-): Treaty.Create<App> => {
+    config: Treaty.Config<Head> = {}
+): Treaty.Create<App, Head> => {
     if (typeof domain === 'string') {
         if (!config.keepDomain) {
             if (!domain.includes('://'))
