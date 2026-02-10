@@ -246,6 +246,7 @@ export namespace Treaty {
         >
         onResponse?: MaybeArray<(response: Response) => MaybePromise<unknown>>
         keepDomain?: boolean
+        parseDates?: boolean
         throwHttpErrors?: ThrowHttpErrors
     }
 

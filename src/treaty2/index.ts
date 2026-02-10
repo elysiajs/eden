@@ -124,7 +124,10 @@ const processHeaders = async (
     }
 }
 
-function parseSSEBlock(block: string): Record<string, unknown> | null {
+function parseSSEBlock(
+    block: string,
+    options?: { parseDates?: boolean }
+): Record<string, unknown> | null {
     const lines = block.split('\n')
     const result: Record<string, unknown> = {}
 
@@ -137,7 +140,7 @@ function parseSSEBlock(block: string): Record<string, unknown> | null {
             // Per SSE spec, strip single leading space if present
             const value = line.slice(colonIndex + 1).replace(/^ /, '')
             // Preserve empty strings per SSE spec (e.g. "data:" with no value)
-            result[key] = value ? parseStringifiedValue(value) : value
+            result[key] = value ? parseStringifiedValue(value, options) : value
         }
     }
 
@@ -148,22 +151,28 @@ function parseSSEBlock(block: string): Record<string, unknown> | null {
  * Extracts complete SSE events from buffer, yielding parsed events.
  * Mutates bufferRef.value to remove consumed events.
  */
-function* extractEvents(bufferRef: {
-    value: string
-}): Generator<Record<string, unknown>> {
+function* extractEvents(
+    bufferRef: {
+        value: string
+    },
+    options?: { parseDates?: boolean }
+): Generator<Record<string, unknown>> {
     let eventEnd: number
     while ((eventEnd = bufferRef.value.indexOf('\n\n')) !== -1) {
         const eventBlock = bufferRef.value.slice(0, eventEnd)
         bufferRef.value = bufferRef.value.slice(eventEnd + 2)
 
         if (eventBlock.trim()) {
-            const parsed = parseSSEBlock(eventBlock)
+            const parsed = parseSSEBlock(eventBlock, options)
             if (parsed) yield parsed
         }
     }
 }
 
-export async function* streamResponse(response: Response) {
+export async function* streamResponse(
+    response: Response,
+    options?: { parseDates?: boolean }
+) {
     const body = response.body
 
     if (!body) return
@@ -184,7 +193,7 @@ export async function* streamResponse(response: Response) {
 
             bufferRef.value += chunk
 
-            yield* extractEvents(bufferRef)
+            yield* extractEvents(bufferRef, options)
         }
 
         const remaining = decoder.decode()
@@ -192,10 +201,10 @@ export async function* streamResponse(response: Response) {
             bufferRef.value += remaining
         }
 
-        yield* extractEvents(bufferRef)
+        yield* extractEvents(bufferRef, options)
 
         if (bufferRef.value.trim()) {
-            const parsed = parseSSEBlock(bufferRef.value)
+            const parsed = parseSSEBlock(bufferRef.value, options)
             if (parsed) {
                 yield parsed
             }
@@ -572,14 +581,18 @@ const createProxy = (
                         response.headers.get('Content-Type')?.split(';')[0]
                     ) {
                         case 'text/event-stream':
-                            data = streamResponse(response)
+                            data = streamResponse(response, {
+                                parseDates: config.parseDates
+                            })
                             break
 
                         case 'application/json':
                             data = JSON.parse(await response.text(), (k, v) => {
                                 if (typeof v !== 'string') return v
 
-                                const date = parseStringifiedDate(v)
+                                const date = parseStringifiedDate(v, {
+                                    parseDates: config.parseDates
+                                })
                                 if (date) return date
 
                                 return v
@@ -602,9 +615,11 @@ const createProxy = (
                             break
 
                         default:
-                            data = await response
-                                .text()
-                                .then(parseStringifiedValue)
+                            data = await response.text().then((text) =>
+                                parseStringifiedValue(text, {
+                                    parseDates: config.parseDates
+                                })
+                            )
                     }
 
                     if (response.status >= 300 || response.status < 200) {
