@@ -46,23 +46,19 @@ type ReplaceGeneratorWithAsyncGenerator<
               : RecordType[K]
 } & {}
 
-type Enumerate<
-    N extends number,
-    Acc extends number[] = []
-> = Acc['length'] extends N
-    ? Acc[number]
-    : Enumerate<N, [...Acc, Acc['length']]>
-
-type IntegerRange<F extends number, T extends number> = Exclude<
-    Enumerate<T>,
-    Enumerate<F>
->
-
-type SuccessCodeRange = IntegerRange<200, 300>
-type IsSuccessCode<S extends number> = S extends SuccessCodeRange ? true : false
+type SuccessCodes =
+    | 200
+    | 201
+    | 202
+    | 203
+    | 204
+    | 205
+    | 206
+    | 207
+    | 208
+    | 226
 
 type MaybeArray<T> = T | T[]
-type MaybePromise<T> = T | Promise<T>
 
 type MaybeArrayFile<T> = T extends File[]
     ? File[] | File
@@ -264,11 +260,11 @@ export namespace Treaty {
 
     export type TreatyResponse<Res extends Record<number, unknown>> =
         | {
-              data: Res[Extract<keyof Res, SuccessCodeRange>] extends {
+              data: Res[Extract<keyof Res, SuccessCodes>] extends {
                   [ELYSIA_FORM_DATA]: infer Data
               }
                   ? Data
-                  : Res[Extract<keyof Res, SuccessCodeRange>]
+                  : Res[Extract<keyof Res, SuccessCodes>]
               error: null
               response: Response
               status: number
@@ -276,7 +272,7 @@ export namespace Treaty {
           }
         | {
               data: null
-              error: Exclude<keyof Res, SuccessCodeRange> extends never
+              error: Exclude<keyof Res, SuccessCodes> extends never
                   ? {
                         status: unknown
                         value: unknown
@@ -290,7 +286,7 @@ export namespace Treaty {
                                 ? Data
                                 : Res[Status]
                         }
-                    }[Exclude<keyof Res, SuccessCodeRange>]
+                    }[Exclude<keyof Res, SuccessCodes>]
               response: Response
               status: number
               headers: ResponseInit['headers']
