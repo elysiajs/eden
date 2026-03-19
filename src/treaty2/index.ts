@@ -281,7 +281,7 @@ const createProxy = (
                         if (Array.isArray(value)) {
                             for (const v of value) append(key, v, true)
 
-							continue
+                            continue
                         }
 
                         append(key, value)
