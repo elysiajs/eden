@@ -280,6 +280,8 @@ const createProxy = (
                     for (const [key, value] of Object.entries(query)) {
                         if (Array.isArray(value)) {
                             for (const v of value) append(key, v, true)
+
+							continue
                         }
 
                         append(key, value)
