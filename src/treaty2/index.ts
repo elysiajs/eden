@@ -261,7 +261,7 @@ const createProxy = (
 
                 let q = ''
                 if (query) {
-                    const append = (key: string, value: unknown) => {
+                    const append = (key: string, value: unknown, isArray = false) => {
                         // Explicitly exclude null and undefined values from url encoding
                         // to prevent parsing string "null" / string "undefined"
 						if (value === undefined || value === null) return
@@ -270,7 +270,7 @@ const createProxy = (
 
 						q +=
                             (q ? '&' : '?') +
-                            `${encodeURIComponent(key)}=${encodeURIComponent(
+                            `${encodeURIComponent(key)}${isArray ? '[]' : ''}=${encodeURIComponent(
                                 typeof value === 'object'
                                     ? JSON.stringify(value)
                                     : value + ''
@@ -279,7 +279,7 @@ const createProxy = (
 
                     for (const [key, value] of Object.entries(query)) {
                         if (Array.isArray(value)) {
-                            for (const v of value) append(key, v)
+                            for (const v of value) append(key, v, true)
 
                             continue
                         }
