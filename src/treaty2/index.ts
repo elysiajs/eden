@@ -6,10 +6,7 @@ import type { Treaty } from './types'
 
 import { EdenFetchError } from '../errors'
 import { EdenWS } from './ws'
-import {
-    parseStringifiedDate,
-    parseStringifiedValue
-} from '../utils/parse'
+import { parseStringifiedDate, parseStringifiedValue } from '../utils/parse'
 import type { ThrowHttpError } from '../types'
 
 const method = [
@@ -171,8 +168,13 @@ function* extractEvents(
 
 export async function* streamResponse(
     response: Response,
-    options?: { parseDate?: boolean }
+    options?: { parseDate?: boolean; sse?: boolean }
 ) {
+    const sse =
+        typeof options?.sse === 'boolean'
+            ? options.sse
+            : response.headers.get('Content-Type')?.split(';')[0] ===
+              'text/event-stream'
     const body = response.body
 
     if (!body) return
@@ -191,22 +193,27 @@ export async function* streamResponse(
                     ? value
                     : decoder.decode(value, { stream: true })
 
-            bufferRef.value += chunk
+            if (sse) {
+                bufferRef.value += chunk
+                yield* extractEvents(bufferRef, options)
+            } else {
+                yield parseStringifiedValue(chunk, options)
+            }
+        }
+
+        if (sse) {
+            const remaining = decoder.decode()
+            if (remaining) {
+                bufferRef.value += remaining
+            }
 
             yield* extractEvents(bufferRef, options)
-        }
 
-        const remaining = decoder.decode()
-        if (remaining) {
-            bufferRef.value += remaining
-        }
-
-        yield* extractEvents(bufferRef, options)
-
-        if (bufferRef.value.trim()) {
-            const parsed = parseSSEBlock(bufferRef.value, options)
-            if (parsed) {
-                yield parsed
+            if (bufferRef.value.trim()) {
+                const parsed = parseSSEBlock(bufferRef.value, options)
+                if (parsed) {
+                    yield parsed
+                }
             }
         }
     } finally {
@@ -264,11 +271,11 @@ const createProxy = (
                     const append = (key: string, value: unknown) => {
                         // Explicitly exclude null and undefined values from url encoding
                         // to prevent parsing string "null" / string "undefined"
-						if (value === undefined || value === null) return
+                        if (value === undefined || value === null) return
 
-						if (value instanceof Date) value = value.toISOString()
+                        if (value instanceof Date) value = value.toISOString()
 
-						q +=
+                        q +=
                             (q ? '&' : '?') +
                             `${encodeURIComponent(key)}=${encodeURIComponent(
                                 typeof value === 'object'
@@ -517,8 +524,8 @@ const createProxy = (
                         }
                     }
 
-					if (options?.headers?.['content-type'])
-						// @ts-ignore
+                    if (options?.headers?.['content-type'])
+                        // @ts-ignore
                         fetchInit.headers['content-type'] =
                             options?.headers['content-type']
 
@@ -577,49 +584,66 @@ const createProxy = (
                         }
                     }
 
-                    switch (
-                        response.headers.get('Content-Type')?.split(';')[0]
+                    const contentType = response.headers
+                        .get('Content-Type')
+                        ?.split(';')[0]
+
+                    if (
+                        response.headers.get('Transfer-Encoding') ===
+                            'chunked' &&
+                        contentType !== 'text/event-stream'
                     ) {
-                        case 'text/event-stream':
-                            data = streamResponse(response, {
-                                parseDate: config.parseDate
-                            })
-                            break
-
-                        case 'application/json':
-                            data = JSON.parse(await response.text(), (k, v) => {
-                                if (typeof v !== 'string') return v
-
-                                const date = parseStringifiedDate(v, {
+                        data = streamResponse(response, {
+                            parseDate: config.parseDate,
+                            sse: false
+                        })
+                    } else {
+                        switch (contentType) {
+                            case 'text/event-stream':
+                                data = streamResponse(response, {
                                     parseDate: config.parseDate
                                 })
-                                if (date) return date
+                                break
 
-                                return v
-                            })
-							break
+                            case 'application/json':
+                                data = JSON.parse(
+                                    await response.text(),
+                                    (k, v) => {
+                                        if (typeof v !== 'string') return v
 
-                        case 'application/octet-stream':
-                            data = await response.arrayBuffer()
-                            break
+                                        const date = parseStringifiedDate(v, {
+                                            parseDate: config.parseDate
+                                        })
+                                        if (date) return date
 
-                        case 'multipart/form-data':
-                            const temp = (await response.formData()) as FormData
+                                        return v
+                                    }
+                                )
+                                break
 
-                            data = {}
-                            temp.forEach((value, key) => {
-                                // @ts-ignore
-                                data[key] = value
-                            })
+                            case 'application/octet-stream':
+                                data = await response.arrayBuffer()
+                                break
 
-                            break
+                            case 'multipart/form-data':
+                                const temp =
+                                    (await response.formData()) as FormData
 
-                        default:
-                            data = await response.text().then((text) =>
-                                parseStringifiedValue(text, {
-                                    parseDate: config.parseDate
+                                data = {}
+                                temp.forEach((value, key) => {
+                                    // @ts-ignore
+                                    data[key] = value
                                 })
-                            )
+
+                                break
+
+                            default:
+                                data = await response.text().then((text) =>
+                                    parseStringifiedValue(text, {
+                                        parseDate: config.parseDate
+                                    })
+                                )
+                        }
                     }
 
                     if (response.status >= 300 || response.status < 200) {
