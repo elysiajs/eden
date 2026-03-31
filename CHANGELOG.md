@@ -1,8 +1,15 @@
-# 1.4.8 - 10 Feb 2025
+# 1.4.9 - 1 Apr 2026
+Feature:
+- treaty2: add `~path` for getting api path
+
+Bug fix:
+- [#256](https://github.com/elysiajs/eden/pull/256) treaty2: handle non-sse stream
+
+# 1.4.8 - 10 Feb 2026
 Bug fix:
 - override default header without type conflict
 
-# 1.4.7 - 10 Feb 2025
+# 1.4.7 - 10 Feb 2026
 Feature:
 - [#236](https://github.com/elysiajs/eden/issues/236) reconcile default headers in type-level
 - [#206](https://github.com/elysiajs/eden/issues/206), [#245](https://github.com/elysiajs/eden/pull/245) add `parseDate` option

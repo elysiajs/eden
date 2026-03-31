@@ -1,25 +1,15 @@
 import { Elysia, sse, t } from 'elysia'
 import { treaty } from '../src'
 
+const app = new Elysia()
+	.get('/generator', async function* () {
+		yield 'a'
+		yield { 'hello': 'world' }
+		yield 1
+		yield true
+	})
 
-const app = new Elysia().get(
-	'/profile',
-	({ headers }) => headers.authorization,
-	{
-		headers: t.Object({
-			authorization: t.String()
-		})
-	}
-)
+const response = await treaty(app)['~path']
 
-const api = treaty(app, {
-	headers: {
-		authorization: 'Hello'
-	}
-})
-
-api.profile.get({
-	headers: {
-		authorization: 'Authorization'
-	}
-})
+for await (const chunk of response.data!)
+	console.log('chunk', chunk)

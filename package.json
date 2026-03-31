@@ -59,7 +59,7 @@
 		"@elysiajs/cors": "1.3.3",
 		"@types/bun": "^1.2.20",
 		"@types/node": "^24.3.0",
-		"elysia": "^1.4.23",
+		"elysia": "^1.4.28",
 		"esbuild": "^0.25.9",
 		"eslint": "^9.34.0",
 		"expect-type": "^1.2.2",
