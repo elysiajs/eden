@@ -1,9 +1,9 @@
-# @elysiajs/eden
+# @elysia/eden
 Fully type-safe Elysia client refers to the [documentation](https://elysiajs.com/eden/overview)
 
 ## Installation
 ```bash
-bun add elysia @elysiajs/eden
+bun add elysia @elysia/eden
 ```
 
 ## Example
@@ -27,7 +27,7 @@ const app = new Elysia()
 export type App = typeof app
 
 // client.ts
-import { edenTreaty } from '@elysiajs/eden'
+import { edenTreaty } from '@elysia/eden'
 import type { App } from './server'
 
 const app = edenTreaty<App>('http://localhost:8080')
@@ -44,3 +44,5 @@ const { data: nendoroid } = app.mirror.post({
     name: 'Skadi'
 })
 ```
+
+See [documentation](https://elysiajs.com/eden/overview) for more details.
