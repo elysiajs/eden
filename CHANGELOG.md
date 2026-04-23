@@ -1,3 +1,7 @@
+# 1.4.10 - 24 Apr 2026
+Chore:
+- Publish under @elysia scope
+
 # 1.4.9 - 1 Apr 2026
 Feature:
 - treaty2: add `~path` for getting api path
