@@ -1143,6 +1143,67 @@ function createChunkedSSEResponse(chunks: Array<string>): Response {
 	})
 }
 
+describe('Treaty2 - HTTP/2 streaming detection (#258)', () => {
+	function makeStreamingResponse(headers: HeadersInit): Response {
+		const encoder = new TextEncoder()
+		const stream = new ReadableStream<Uint8Array>({
+			async start(controller) {
+				controller.enqueue(encoder.encode('chunk-1'))
+				controller.enqueue(encoder.encode('chunk-2'))
+				controller.enqueue(encoder.encode('chunk-3'))
+				controller.close()
+			}
+		})
+		return new Response(stream, { headers })
+	}
+
+	it('streams text/plain when Transfer-Encoding is stripped (HTTP/2 / reverse proxy)', async () => {
+		// Reverse proxies serving HTTP/2 strip Transfer-Encoding (RFC 7540
+		// §8.1.2.2). Eden should still detect a stream when there's no
+		// Content-Length, which is the only legal way to signal a streaming
+		// body in either HTTP/1.1 (chunked, no length) or HTTP/2 (no length).
+		const client = treaty<any>('http://h2.test', {
+			fetcher: async () =>
+				makeStreamingResponse({ 'Content-Type': 'text/plain' })
+		})
+
+		const { data } = await (client as any).live.get()
+		expect(typeof data?.[Symbol.asyncIterator]).toBe('function')
+
+		const collected: unknown[] = []
+		for await (const chunk of data) collected.push(chunk)
+		expect(collected).toEqual(['chunk-1', 'chunk-2', 'chunk-3'])
+	})
+
+	it('streams text/plain with Transfer-Encoding: chunked (HTTP/1.1 direct)', async () => {
+		const client = treaty<any>('http://h1.test', {
+			fetcher: async () =>
+				makeStreamingResponse({
+					'Content-Type': 'text/plain',
+					'Transfer-Encoding': 'chunked'
+				})
+		})
+
+		const { data } = await (client as any).live.get()
+		expect(typeof data?.[Symbol.asyncIterator]).toBe('function')
+	})
+
+	it('still buffers text/plain when Content-Length is present (non-streaming)', async () => {
+		const client = treaty<any>('http://buffered.test', {
+			fetcher: async () =>
+				new Response('hello', {
+					headers: {
+						'Content-Type': 'text/plain',
+						'Content-Length': '5'
+					}
+				})
+		})
+
+		const { data } = await (client as any).hello.get()
+		expect(data).toBe('hello')
+	})
+})
+
 describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
 	it('handles SSE event split across chunks (data: broken mid-line)', async () => {
 		const chunks = ['event: message\nda', 'ta: hello world\n\n']

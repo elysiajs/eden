@@ -635,8 +635,6 @@ const createProxy = (
 								response.headers
 									.get('content-type')
 									?.startsWith('text/') &&
-								response.headers.get('transfer-encoding') ===
-									'chunked' &&
 								!response.headers.has('content-length')
 							)
 								data = streamResponse(response, {
