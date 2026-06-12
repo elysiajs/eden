@@ -1,7 +1,7 @@
 import { Elysia, file, form, status, t } from 'elysia'
 import { treaty } from '../../src'
 import { expectTypeOf } from 'expect-type'
-import type { ThrowHttpError } from '../../src/types'
+import type { ThrowHttpError } from '../../src'
 
 const plugin = new Elysia({ prefix: '/level' })
 	.get('/', '2')
