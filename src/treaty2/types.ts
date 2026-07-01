@@ -1,5 +1,5 @@
 /// <reference lib="dom" />
-import type { Elysia, ELYSIA_FORM_DATA } from 'elysia'
+import type { Elysia } from 'elysia'
 
 import type { EdenWS } from './ws'
 import type {
@@ -269,7 +269,7 @@ export namespace Treaty {
 	export type TreatyResponse<Res extends Record<number, unknown>> =
 		| {
 				data: Res[Extract<keyof Res, SuccessCodes>] extends {
-					[ELYSIA_FORM_DATA]: infer Data
+					['~ely-form']: infer Data
 				}
 					? Data
 					: Res[Extract<keyof Res, SuccessCodes>]
@@ -289,7 +289,7 @@ export namespace Treaty {
 							[Status in keyof Res]: {
 								status: Status
 								value: Res[Status] extends {
-									[ELYSIA_FORM_DATA]: infer Data
+									['~ely-form']: infer Data
 								}
 									? Data
 									: Res[Status]

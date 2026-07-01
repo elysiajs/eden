@@ -1,3 +1,4 @@
+import { fileTypeFromBlob } from 'file-type'
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { Elysia, form, t } from 'elysia'
 import { edenFetch } from '../src'
@@ -14,17 +15,21 @@ const json = {
 const app = new Elysia()
     .get('/', () => 'hi')
     .post('/', () => 'post')
-    .post('/form-data', ({ body }) => {
-        return {
-            file: body.file.name,
-            size: body.file.size
+    .post(
+        '/form-data',
+        {
+            body: t.Object({
+                file: t.File()
+            }),
+            parse: 'formdata'
+        },
+        ({ body }) => {
+            return {
+                file: body.file.name,
+                size: body.file.size
+            }
         }
-    }, {
-        body: t.Object({
-            file: t.File()
-        }),
-        parse: 'formdata'
-    })
+    )
     .get('/json', ({ body }) => json)
     .get(
         '/json-utf8',
@@ -38,12 +43,12 @@ const app = new Elysia()
     .get('/name/:name', ({ params: { name } }) => name)
     .post(
         '/headers',
-        ({ request: { headers } }) => headers.get('x-affiliation'),
         {
             headers: t.Object({
                 'x-affiliation': t.Literal('Arius')
             })
-        }
+        },
+        ({ request: { headers } }) => headers.get('x-affiliation')
     )
     .get('/number', () => 1)
     .get('/true', () => true)
@@ -55,55 +60,55 @@ const app = new Elysia()
     })
     .get(
         '/direct-error',
-        ({ set }) => {
-            set.status = 500
-
-            return 'hare'
-        },
         {
             response: {
                 200: t.String(),
                 500: t.Literal('hare')
             }
+        },
+        ({ set }) => {
+            set.status = 500
+
+            return 'hare'
         }
     )
     .get(
         '/with-query',
-        ({ query }) => {
-            return {
-                query
-            }
-        },
         {
             query: t.Object({
                 q: t.String()
             })
+        },
+        ({ query }) => {
+            return {
+                query
+            }
         }
     )
     .get(
         '/with-query-undefined',
+        {
+            query: t.Object({
+                q: t.Optional(t.MaybeEmpty(t.String()))
+            })
+        },
         ({ query }) => {
             return {
                 query
             }
-        },
-        {
-            query: t.Object({
-                q: t.Undefined(t.String())
-            })
         }
     )
     .get(
         '/with-query-nullish',
-        ({ query }) => {
-            return {
-                query
-            }
-        },
         {
             query: t.Object({
                 q: t.Nullable(t.String())
             })
+        },
+        ({ query }) => {
+            return {
+                query
+            }
         }
     )
     .listen(8081)
@@ -178,8 +183,11 @@ describe('Eden Fetch', () => {
     })
 
     it('parse form data', async () => {
-        const formData = new FormData();
-        formData.append('file', new File(['test'], 'test.txt', { type: 'text/plain' }))
+        const formData = new FormData()
+        formData.append(
+            'file',
+            new File(['test'], 'test.txt', { type: 'text/plain' })
+        )
 
         const { data } = await fetch('/form-data', {
             method: 'POST',
@@ -245,7 +253,7 @@ describe('Eden Fetch', () => {
         })
         expect(data?.query.q).toBeUndefined()
         expect(error?.status).toBe(422)
-        expect(error?.value.type).toBe("validation")
+        expect(error?.value.type).toBe('validation')
     })
 })
 
@@ -284,17 +292,25 @@ describe('Eden Fetch - Server offline', () => {
 describe('Eden Fetch - throwHttpError', () => {
     // Config-level tests
     it('throws HTTP errors when config throwHttpError is true', async () => {
-        const fetch = edenFetch<typeof app>('http://localhost:8081', { throwHttpError: true })
-        expect(fetch('/direct-error', {})).rejects.toBeInstanceOf(EdenFetchError)
+        const fetch = edenFetch<typeof app>('http://localhost:8081', {
+            throwHttpError: true
+        })
+        expect(fetch('/direct-error', {})).rejects.toBeInstanceOf(
+            EdenFetchError
+        )
     })
 
     it('throws network errors when config throwHttpError is true', async () => {
-        const fetch = edenFetch<typeof app>('http://localhost:59999', { throwHttpError: true })
+        const fetch = edenFetch<typeof app>('http://localhost:59999', {
+            throwHttpError: true
+        })
         expect(fetch('', {})).rejects.toBeInstanceOf(EdenFetchError)
     })
 
     it('returns error in result when config throwHttpError is false', async () => {
-        const fetch = edenFetch<typeof app>('http://localhost:8081', { throwHttpError: false })
+        const fetch = edenFetch<typeof app>('http://localhost:8081', {
+            throwHttpError: false
+        })
         const { error } = await fetch('/direct-error', {})
         expect(error?.status).toBe(500)
     })
@@ -303,7 +319,9 @@ describe('Eden Fetch - throwHttpError', () => {
         const fetch = edenFetch<typeof app>('http://localhost:8081', {
             throwHttpError: (e) => e.status === 500
         })
-        expect(fetch('/direct-error', {})).rejects.toBeInstanceOf(EdenFetchError)
+        expect(fetch('/direct-error', {})).rejects.toBeInstanceOf(
+            EdenFetchError
+        )
     })
 
     it('does not throw when config function returns false', async () => {
@@ -316,19 +334,31 @@ describe('Eden Fetch - throwHttpError', () => {
 
     // Per-request override tests
     it('per-request true overrides config false', async () => {
-        const fetch = edenFetch<typeof app>('http://localhost:8081', { throwHttpError: false })
-        expect(fetch('/direct-error', { throwHttpError: true })).rejects.toBeInstanceOf(EdenFetchError)
+        const fetch = edenFetch<typeof app>('http://localhost:8081', {
+            throwHttpError: false
+        })
+        expect(
+            fetch('/direct-error', { throwHttpError: true })
+        ).rejects.toBeInstanceOf(EdenFetchError)
     })
 
     it('per-request false overrides config true', async () => {
-        const fetch = edenFetch<typeof app>('http://localhost:8081', { throwHttpError: true })
-        const { error } = await fetch('/direct-error', { throwHttpError: false })
+        const fetch = edenFetch<typeof app>('http://localhost:8081', {
+            throwHttpError: true
+        })
+        const { error } = await fetch('/direct-error', {
+            throwHttpError: false
+        })
         expect(error?.status).toBe(500)
     })
 
     it('per-request function overrides config boolean', async () => {
-        const fetch = edenFetch<typeof app>('http://localhost:8081', { throwHttpError: true })
-        const { error } = await fetch('/direct-error', { throwHttpError: (e) => e.status === 404 })
+        const fetch = edenFetch<typeof app>('http://localhost:8081', {
+            throwHttpError: true
+        })
+        const { error } = await fetch('/direct-error', {
+            throwHttpError: (e) => e.status === 404
+        })
         expect(error?.status).toBe(500)
     })
 })

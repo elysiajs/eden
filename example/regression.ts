@@ -11,11 +11,11 @@ const errorPlugin = new Elysia().error({ CUSTOM_ERROR: CustomError })
 
 const main = new Elysia()
     .use(errorPlugin)
-    .get('/', () => ({ name: 'Elysia' }), {
+    .get('/', {
         response: {
             200: t.Object({ name: t.String() })
         }
-    })
+    }, () => ({ name: 'Elysia' }))
 
 type App = typeof main
 type B = App['schema']['/']

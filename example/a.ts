@@ -9,7 +9,7 @@ const app = new Elysia()
 		yield true
 	})
 
-const response = await treaty(app)['~path']
+const response = await treaty(app).generator.get()
 
 for await (const chunk of response.data!)
 	console.log('chunk', chunk)

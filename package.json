@@ -53,13 +53,13 @@
 		"release": "npm run build && npm run test && npm publish --access public"
 	},
 	"peerDependencies": {
-		"elysia": ">=1.4.19"
+		"elysia": "2.0.0@experimental"
 	},
 	"devDependencies": {
 		"@elysia/cors": "1.4.2",
 		"@types/bun": "^1.2.20",
 		"@types/node": "^24.3.0",
-		"elysia": "^1.4.28",
+		"elysia": "^2.0.0-exp.24",
 		"esbuild": "^0.25.9",
 		"eslint": "^9.34.0",
 		"expect-type": "^1.2.2",
@@ -73,5 +73,8 @@
 		"tabWidth": 4,
 		"singleQuote": true,
 		"trailingComma": "none"
+	},
+	"dependencies": {
+		"file-type": "^22.0.0"
 	}
 }

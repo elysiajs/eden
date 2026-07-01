@@ -5,21 +5,21 @@ import { expectTypeOf } from 'expect-type'
 import { treaty } from '../src'
 
 const app = new Elysia()
-    .post('/files', ({ body: { files } }) => files.map((file) => file.name), {
+    .post('/files', {
         body: t.Object({
             files: t.Files()
         })
-    })
-    .post('/any/file', ({ body: { file } }) => file.name, {
+    }, ({ body: { files } }) => files.map((file) => file.name))
+    .post('/any/file', {
         body: t.Object({
             file: t.File({ type: 'image/*' })
         })
-    })
-    .post('/png/file', ({ body: { file } }) => file.name, {
+    }, ({ body: { file } }) => file.name)
+    .post('/png/file', {
         body: t.Object({
             file: t.File({ type: 'image/png' })
         })
-    })
+    }, ({ body: { file } }) => file.name)
 
 const client = treaty(app)
 type client = typeof client

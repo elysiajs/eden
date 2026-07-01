@@ -1,3 +1,4 @@
+import { setFileTypeDetector } from 'elysia'
 import { Elysia, t } from 'elysia'
 import { edenTreaty } from '../src'
 
@@ -26,18 +27,18 @@ const app = new Elysia()
                 }
             })
     )
-    .post('/mirror', ({ body }) => body, {
+    .post('/mirror', {
         body: t.Object({
             username: t.String(),
             password: t.String()
         })
-    })
-    .post('/deep/nested/mirror', ({ body }) => body, {
+    }, ({ body }) => body)
+    .post('/deep/nested/mirror', {
         body: t.Object({
             username: t.String(),
             password: t.String()
         })
-    })
+    }, ({ body }) => body)
     .get('/query', ({ query }) => query)
     .get('/sign-in', ({ query }) => query)
     .group('/v2', (app) => app.guard({}, (app) => app.get('/data', () => 'hi')))
@@ -45,12 +46,12 @@ const app = new Elysia()
     .get('/true', () => true)
     .get('/false', () => false)
     .patch('/update', () => 1)
-    .post('/array', ({ body }) => body, {
+    .post('/array', {
         body: t.Array(t.String())
-    })
-    .post('/string', ({ body }) => body, {
+    }, ({ body }) => body)
+    .post('/string', {
         body: t.String()
-    })
+    }, ({ body }) => body)
     .listen(8082)
 
 const client = edenTreaty<typeof app>('http://localhost:8082')

@@ -24,12 +24,12 @@ const app = new Elysia()
     .get('/name/:name', ({ params: { name } }) => name)
     .post(
         '/headers',
-        ({ request: { headers } }) => headers.get('x-affiliation'),
         {
             headers: t.Object({
                 'x-affiliation': t.Literal('Arius')
             })
-        }
+        },
+        ({ request: { headers } }) => headers.get('x-affiliation')
     )
     .get('/number', () => 1)
     .get('/true', () => true)
@@ -41,16 +41,16 @@ const app = new Elysia()
     })
     .get(
         '/direct-error',
-        ({ set }) => {
-            set.status = 500
-
-            return 'hare'
-        },
         {
             response: {
                 200: t.String(),
                 500: t.Literal('hare')
             }
+        },
+        ({ set }) => {
+            set.status = 500
+
+            return 'hare'
         }
     )
     .listen(8080)
