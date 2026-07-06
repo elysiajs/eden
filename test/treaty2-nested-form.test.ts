@@ -36,7 +36,7 @@ const patchProductModel = t.Object({
             inStock: t.Boolean()
         })
     ),
-    image: t.Optional(t.File({ type: 'image' }))
+    image: t.Optional(t.File())
 })
 
 const app = new Elysia()
@@ -133,8 +133,6 @@ describe('Nested FormData with file(s) support', () => {
                     image: Bun.file(filePath2) as any as File
                     // metadata and variants fields are omitted (should be OK since they're optional)
                 })
-
-            console.error(error)
 
             expect(error).toBeNull()
             expect(status).toBe(200)

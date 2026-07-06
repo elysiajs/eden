@@ -79,6 +79,7 @@ export const edenFetch =
     // @ts-ignore
     (
         endpoint: string,
+        // @ts-ignore
         {
             query,
             params,

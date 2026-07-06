@@ -206,14 +206,16 @@ type Result<T extends Function> = T extends (...args: any[]) => infer R
     ? Awaited<R>
     : never
 
-type ValidationError = {
+interface ValidationError {
     data: null
     error: {
         status: 422
         value: {
             type: 'validation'
+            title: 'Validation Error'
+            status: 422
+            detail?: string
             on: string
-            message?: string
             found?: unknown
             property?: string
             expected?: string
@@ -479,8 +481,10 @@ type ValidationError = {
                   status: 422
                   value: {
                       type: 'validation'
+                      title: 'Validation Error'
+                      status: 422
                       on: string
-                      message?: string
+                      detail?: string
                       found?: unknown
                       property?: string
                       expected?: string
@@ -726,17 +730,6 @@ type ValidationError = {
                   | {
                         status: 420
                         value: 'Snoop Dogg'
-                    }
-                  | {
-                        status: 422
-                        value: {
-                            type: 'validation'
-                            on: string
-                            message?: string
-                            found?: unknown
-                            property?: string
-                            expected?: string
-                        }
                     }
               response: Response
               status: number

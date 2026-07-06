@@ -548,8 +548,10 @@ const createProxy = (
                         ) ?? fetcher!(url, fetchInit))
                     } catch (err) {
                         const error = new EdenFetchError(503, err)
+
                         if (shouldThrow(error, resolvedThrowHttpError))
                             throw error
+
                         return {
                             data: null,
                             error,
@@ -652,12 +654,7 @@ const createProxy = (
                     }
 
                     if (response.status >= 300 || response.status < 200) {
-                        error = new EdenFetchError(
-                            response.status,
-                            typeof data === 'object'
-                                ? JSON.stringify(data)
-                                : data
-                        )
+                        error = new EdenFetchError(response.status, data)
 
                         if (shouldThrow(error, resolvedThrowHttpError))
                             throw error
