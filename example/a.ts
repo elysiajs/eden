@@ -1,15 +1,12 @@
-import { Elysia, sse, t } from 'elysia'
+import { Elysia, problem } from 'elysia'
 import { treaty } from '../src'
 
-const app = new Elysia()
-	.get('/generator', async function* () {
-		yield 'a'
-		yield { 'hello': 'world' }
-		yield 1
-		yield true
-	})
+const app = new Elysia().get('/', async function* () {
+    return problem(418, {
+        details: 'I am a teapot'
+    })
+})
 
-const response = await treaty(app).generator.get()
+const response = await treaty(app).get()
 
-for await (const chunk of response.data!)
-	console.log('chunk', chunk)
+console.log(response.error)

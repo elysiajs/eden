@@ -1,7 +1,7 @@
 import { setFileTypeDetector } from 'elysia'
 import { fileTypeFromBlob } from 'file-type'
 import { Elysia, t } from 'elysia'
-import { cors } from '@elysiajs/cors'
+import { cors } from '@elysia/cors'
 
 const app = new Elysia()
     .use(cors())

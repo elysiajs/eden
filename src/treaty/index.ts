@@ -315,7 +315,8 @@ const createProxy = (
 
                 if (modifiers.getRaw) return response as any
                 switch (response.headers.get('Content-Type')?.split(';')[0]) {
-                    case 'application/json':
+					case 'application/json':
+					case 'application/problem+json':
                         data = await response.json()
                         break
 
