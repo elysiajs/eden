@@ -15,15 +15,29 @@ type Replace<RecordType, TargetType, GenericType> = {
 type MaybeArray<T> = T | T[]
 
 export namespace EdenTreaty {
+    type GetErrorResponse<App extends Elysia<any, any, any, any, any, any, any>> =
+        App extends Elysia<any, any, any, infer Metadata, any, infer Ephemeral, infer Volatile>
+            ? (Metadata['response'] & Ephemeral['response'] & Volatile['response']) extends infer Res
+                ? Exclude<keyof Res, 200> extends never
+                    ? Res[keyof Res]
+                    : {
+                            [Status in keyof Res]: Res[Status]
+                      }[Exclude<keyof Res, 200>]
+                : unknown
+            : unknown
+
     export type Create<
         App extends Elysia<any, any, any, any, any, any, any>
     > = App extends {
         '~Routes': infer Schema extends Record<string, unknown>
     }
-        ? Prettify<Sign<Schema>>
+        ? Prettify<Sign<Schema, GetErrorResponse<App>>>
         : 'Please install Elysia before using Eden'
 
-    export type Sign<Route extends Record<string, any>> = {
+    export type Sign<
+        Route extends Record<string, any>,
+        ErrorResponse = unknown
+    > = {
         [K in keyof Route as K extends `:${string}`
             ? (string & {}) | number | K
             : K extends '' | '/'
@@ -82,8 +96,12 @@ export namespace EdenTreaty {
                                 error: Response extends Record<number, unknown>
                                     ? MapError<Response> extends infer Errors
                                         ? IsNever<Errors> extends true
-                                            ? EdenFetchError<number, string>
-                                            : Errors
+                                            ? IsNever<ErrorResponse> extends true
+                                                ? EdenFetchError<number, string>
+                                                : EdenFetchError<number, ErrorResponse>
+                                            : Errors | (IsNever<ErrorResponse> extends true
+                                                ? never
+                                                : EdenFetchError<number, ErrorResponse>)
                                         : EdenFetchError<number, string>
                                     : EdenFetchError<number, unknown>
                             }
@@ -121,7 +139,7 @@ export namespace EdenTreaty {
                           }
                       ) => Response
                 : never
-            : Prettify<Sign<Route[K]>>
+            : Prettify<Sign<Route[K], ErrorResponse>>
     }
 
     type UnwrapPromise<T> = T extends Promise<infer A> ? A : T
