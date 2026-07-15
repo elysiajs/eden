@@ -1,5 +1,5 @@
 import { Elysia, file, form, status, t } from 'elysia'
-import { treaty } from '../../src'
+import { treaty, edenTreaty } from '../../src'
 import { expectTypeOf } from 'expect-type'
 import type { ThrowHttpError } from '../../src/types'
 
@@ -1415,4 +1415,30 @@ type ValidationError = {
 
 	expectTypeOf(api.id({ id: 1 })['~path']).toEqualTypeOf<string>()
 	expectTypeOf(api.nested.q['~path']).toEqualTypeOf<string>()
+}
+
+// ? Custom error from onError hook type inference
+{
+	const app = new Elysia()
+		.onError(({ code, error }) => {
+			return {
+				customError: error instanceof Error ? error.message : 'no message',
+				code
+			}
+		})
+		.get('/', () => 'hello')
+
+	const client2 = treaty(app)
+	type Err2 = NonNullable<Result<typeof client2.get>['error']>
+	expectTypeOf<Err2['value']>().toEqualTypeOf<{
+		customError: string
+		code: number | "INTERNAL_SERVER_ERROR" | "NOT_FOUND" | "PARSE" | "INVALID_COOKIE_SIGNATURE" | "INVALID_FILE_TYPE" | "VALIDATION" | "UNKNOWN"
+	}>()
+
+	const client1 = edenTreaty<typeof app>('http://localhost')
+	type Err1 = NonNullable<Result<typeof client1.get>['error']>
+	expectTypeOf<Err1['value']>().toEqualTypeOf<{
+		customError: string
+		code: number | "INTERNAL_SERVER_ERROR" | "NOT_FOUND" | "PARSE" | "INVALID_COOKIE_SIGNATURE" | "INVALID_FILE_TYPE" | "VALIDATION" | "UNKNOWN"
+	}>()
 }

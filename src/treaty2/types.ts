@@ -81,6 +81,17 @@ type SerializeQueryParams<T> =
 		: T
 
 export namespace Treaty {
+	type GetErrorResponse<App extends Elysia<any, any, any, any, any, any, any>> =
+		App extends Elysia<any, any, any, infer Metadata, any, infer Ephemeral, infer Volatile>
+			? (Metadata['response'] & Ephemeral['response'] & Volatile['response']) extends infer Res
+				? Exclude<keyof Res, SuccessCodes> extends never
+					? Res[keyof Res]
+					: {
+							[Status in keyof Res]: Res[Status]
+					  }[Exclude<keyof Res, SuccessCodes>]
+				: unknown
+			: unknown
+
 	export interface TreatyParam {
 		fetch?: RequestInit
 		throwHttpError?: ThrowHttpError
@@ -92,7 +103,7 @@ export namespace Treaty {
 	> = App extends {
 		'~Routes': infer Schema extends Record<any, any>
 	}
-		? Prettify<Sign<Schema, Head>> & CreateParams<Schema, Head>
+		? Prettify<Sign<Schema, Head, GetErrorResponse<App>>> & CreateParams<Schema, Head, GetErrorResponse<App>>
 		: 'Please install Elysia before using Eden'
 
 	type ToTreatyParam<Target, Head extends Record<string, unknown>> = Prettify<
@@ -110,7 +121,8 @@ export namespace Treaty {
 
 	export type Sign<
 		in out Route extends Record<any, any>,
-		in out Head extends Record<string, unknown> = {}
+		in out Head extends Record<string, unknown> = {},
+		ErrorResponse = unknown
 	> = {
 		[K in keyof Route as K extends `:${string}`
 			? never
@@ -141,7 +153,8 @@ export namespace Treaty {
 											options?: ToTreatyParam<Param, Head>
 										) => Promise<
 											TreatyResponse<
-												ReplaceGeneratorWithAsyncGenerator<Res>
+												ReplaceGeneratorWithAsyncGenerator<Res>,
+												ErrorResponse
 											>
 										>
 									: (
@@ -149,7 +162,8 @@ export namespace Treaty {
 											options?: ToTreatyParam<Param, Head>
 										) => Promise<
 											TreatyResponse<
-												ReplaceGeneratorWithAsyncGenerator<Res>
+												ReplaceGeneratorWithAsyncGenerator<Res>,
+												ErrorResponse
 											>
 										>
 								: K extends 'get' | 'head'
@@ -157,7 +171,8 @@ export namespace Treaty {
 											options?: ToTreatyParam<Param, Head>
 										) => Promise<
 											TreatyResponse<
-												ReplaceGeneratorWithAsyncGenerator<Res>
+												ReplaceGeneratorWithAsyncGenerator<Res>,
+												ErrorResponse
 											>
 										>
 									: {} extends Body
@@ -169,7 +184,8 @@ export namespace Treaty {
 												>
 											) => Promise<
 												TreatyResponse<
-													ReplaceGeneratorWithAsyncGenerator<Res>
+													ReplaceGeneratorWithAsyncGenerator<Res>,
+													ErrorResponse
 												>
 											>
 										: (
@@ -180,7 +196,8 @@ export namespace Treaty {
 												>
 											) => Promise<
 												TreatyResponse<
-													ReplaceGeneratorWithAsyncGenerator<Res>
+													ReplaceGeneratorWithAsyncGenerator<Res>,
+													ErrorResponse
 												>
 											>
 							: K extends 'get' | 'head'
@@ -188,7 +205,8 @@ export namespace Treaty {
 										options: ToTreatyParam<Param, Head>
 									) => Promise<
 										TreatyResponse<
-											ReplaceGeneratorWithAsyncGenerator<Res>
+											ReplaceGeneratorWithAsyncGenerator<Res>,
+											ErrorResponse
 										>
 									>
 								: (
@@ -196,22 +214,24 @@ export namespace Treaty {
 										options: ToTreatyParam<Param, Head>
 									) => Promise<
 										TreatyResponse<
-											ReplaceGeneratorWithAsyncGenerator<Res>
+											ReplaceGeneratorWithAsyncGenerator<Res>,
+											ErrorResponse
 										>
 									>
 						: never
-					: CreateParams<Route[K], Head>) & {
+					: CreateParams<Route[K], Head, ErrorResponse>) & {
 					'~path': string
 				}
 	}
 
 	type CreateParams<
 		Route extends Record<string, any>,
-		Head extends Record<string, unknown> = {}
+		Head extends Record<string, unknown> = {},
+		ErrorResponse = unknown
 	> =
 		Extract<keyof Route, `:${string}`> extends infer Path extends string
 			? IsNever<Path> extends true
-				? Prettify<Sign<Route, Head>>
+				? Prettify<Sign<Route, Head, ErrorResponse>>
 				: // ! DO NOT USE PRETTIFY ON THIS LINE, OTHERWISE FUNCTION CALLING WILL BE OMITTED
 					(((params: {
 						[param in Path extends `:${infer Param}`
@@ -220,14 +240,14 @@ export namespace Treaty {
 								: Param
 							: never]: string | number
 					}) => Prettify<
-						Sign<Route[Path], Head> & {
+						Sign<Route[Path], Head, ErrorResponse> & {
 							'~path': string
 						}
 					> &
-						CreateParams<Route[Path], Head>) &
-						Prettify<Sign<Route, Head>>) &
+						CreateParams<Route[Path], Head, ErrorResponse>) &
+						Prettify<Sign<Route, Head, ErrorResponse>>) &
 						(Path extends `:${string}?`
-							? CreateParams<Route[Path], Head>
+							? CreateParams<Route[Path], Head, ErrorResponse>
 							: {})
 			: never
 
@@ -266,7 +286,10 @@ export namespace Treaty {
 	//     [K in keyof T]: Awaited<T[K]>
 	// }
 
-	export type TreatyResponse<Res extends Record<number, unknown>> =
+	export type TreatyResponse<
+		Res extends Record<number, unknown>,
+		ErrorResponse = unknown
+	> =
 		| {
 				data: Res[Extract<keyof Res, SuccessCodes>] extends {
 					[ELYSIA_FORM_DATA]: infer Data
@@ -281,11 +304,17 @@ export namespace Treaty {
 		| {
 				data: null
 				error: Exclude<keyof Res, SuccessCodes> extends never
-					? {
-							status: unknown
-							value: unknown
-						}
-					: {
+					? IsNever<ErrorResponse> extends true
+						? {
+								status: unknown
+								value: unknown
+						  }
+						: {
+								status: unknown
+								value: ErrorResponse
+						  }
+					: (
+						{
 							[Status in keyof Res]: {
 								status: Status
 								value: Res[Status] extends {
@@ -295,6 +324,12 @@ export namespace Treaty {
 									: Res[Status]
 							}
 						}[Exclude<keyof Res, SuccessCodes>]
+					) | (IsNever<ErrorResponse> extends true
+						? never
+						: {
+								status: unknown
+								value: ErrorResponse
+						  })
 				response: Response
 				status: number
 				headers: ResponseInit['headers']

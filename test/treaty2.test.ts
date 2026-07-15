@@ -1448,7 +1448,32 @@ describe('Treaty2 - parseDate configuration', () => {
 	it('should NOT parse date in text response when parseDate is false', async () => {
 		const client = treaty(dateApp, { parseDate: false })
 		const { data } = await client['text-date'].get()
-
 		expect(data).toBe('2024-01-15T10:30:00.000Z')
+	})
+})
+
+describe('Treaty2 - custom error from onError', () => {
+	it('should return type-safe custom error bodies from onError handler', async () => {
+		const app = new Elysia()
+			.onError(({ code, error, set }) => {
+				set.status = 500
+				return {
+					customError: error.message,
+					code
+				}
+			})
+			.get('/', () => {
+				throw new Error('Something went wrong!')
+			})
+
+		const client = treaty(app)
+		const { data, error } = await client.get()
+
+		expect(data).toBeNull()
+		expect(error?.status).toBe(500)
+		expect(error?.value).toEqual({
+			customError: 'Something went wrong!',
+			code: 'UNKNOWN'
+		})
 	})
 })
