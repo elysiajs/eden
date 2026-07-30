@@ -992,8 +992,8 @@ describe('Treaty2 - Using endpoint URL', () => {
     })
 
     it('Receives the proper objects back from the other end of the websocket', async (done) => {
-        app.listen(8080, async () => {
-            const client = treaty<typeof app>('http://localhost:8080')
+		app.listen(0, async (server) => {
+			const client = treaty<typeof app>(`http://localhost:${server.port}`)
 
             const dataOutOfSocket = await new Promise<any[]>((res) => {
                 const data: any = []
@@ -1062,30 +1062,28 @@ describe('Treaty2 - Using endpoint URL', () => {
     })
 
     it('handle multiple sse in same tick', async () => {
-        const app = new Elysia()
-            .get('/chunk', async function* () {
-                const chunks = ['chunk1', 'chunk2']
+        const app = new Elysia().get('/chunk', async function* () {
+            const chunks = ['chunk1', 'chunk2']
 
-                for (const chunk of chunks) {
-                    yield sse({
-                        event: 'data',
-                        data: { text: chunk, attempt: 1 }
-                    })
+            for (const chunk of chunks) {
+                yield sse({
+                    event: 'data',
+                    data: { text: chunk, attempt: 1 }
+                })
 
-                    yield 1
-
-                    yield sse({
-                        event: 'data',
-                        data: { text: chunk, attempt: 2 }
-                    })
-                }
+                yield 1
 
                 yield sse({
-                    event: 'complete',
-                    data: { message: 'done' }
+                    event: 'data',
+                    data: { text: chunk, attempt: 2 }
                 })
+            }
+
+            yield sse({
+                event: 'complete',
+                data: { message: 'done' }
             })
-            .listen(3000)
+        })
 
         const client = treaty(app)
 

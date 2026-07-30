@@ -1,7 +1,7 @@
 /* eslint-disable no-extra-semi */
 /* eslint-disable no-case-declarations */
 /* eslint-disable prefer-const */
-import type { Elysia } from 'elysia'
+import type { AnyElysia, Elysia } from 'elysia'
 import type { Treaty } from './types'
 
 import { EdenFetchError } from '../errors'
@@ -685,7 +685,7 @@ const createProxy = (
     }) as any
 
 export const treaty = <
-    const App extends Elysia<any, any, any, any, any, any, any>,
+    const App extends AnyElysia,
     Head extends {} = {}
 >(
     domain: string | App,
