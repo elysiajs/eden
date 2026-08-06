@@ -2,6 +2,7 @@ import { Elysia, file, form, status, t } from 'elysia'
 import { treaty } from '../../src'
 import { expectTypeOf } from 'expect-type'
 import type { ThrowHttpError } from '../../src/types'
+import type { Treaty } from '../../src/treaty2/types'
 
 const plugin = new Elysia({ prefix: '/level' })
     .get('/', '2')
@@ -1452,4 +1453,33 @@ interface ValidationError {
 
     expectTypeOf(api.id({ id: 1 })['~path']).toEqualTypeOf<string>()
     expectTypeOf(api.nested.q['~path']).toEqualTypeOf<string>()
+}
+
+// A plain object response carrying a field literally named `~ely-form` must not
+// be unwrapped as a form. `~ely-form` is a runtime symbol on Elysia's side, so
+// that string field name is legal user data. Driven through TreatyResponse
+// directly because the installed elysia predates the matching fix.
+{
+    type Res = Treaty.TreatyResponse<{
+        200: { '~ely-form': string }
+        422: { '~ely-form': string }
+    }>
+
+    const res = {} as Res
+
+    if (res.error) expectTypeOf(res.error.value).toEqualTypeOf<{
+        '~ely-form': string
+    }>()
+    else expectTypeOf(res.data).toEqualTypeOf<{ '~ely-form': string }>()
+}
+
+// A real FormData-backed response still unwraps to its inner shape
+{
+    type Res = Treaty.TreatyResponse<{
+        200: FormData & { '~ely-form': { image: File } }
+    }>
+
+    const res = {} as Res
+
+    if (!res.error) expectTypeOf(res.data).toEqualTypeOf<{ image: File }>()
 }

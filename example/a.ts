@@ -1,21 +1,17 @@
-import { Elysia, problem, t } from 'elysia'
+import { Elysia, problem } from 'elysia'
 import { treaty } from '../src'
 
+class Error1 extends Error {}
+class Error2 extends Error {}
+
 const app = new Elysia()
-	.derive(({ headers }) => {
-		return {
-			authToken: 'q'
-		}
+    .error(Error1, () => problem(400, { detail: 'q' }))
+    .error(Error2, () => problem(401, { detail: 'q' }))
+    .get('/', () => {
+        if (Math.random() > 0.25) return new Error1()
+		if (Math.random() > 0.25) return new Error2()
+
+		return 'ok'
 	})
 
-const api = treaty<typeof app>('http://localhost:3001')
-
-const response = api.subscribe()
-
-response.subscribe((data) => {
-    console.log(data)
-})
-
-await Bun.sleep(100)
-
-response.send('Hello from client!')
+app['~Routes']['get']['response']
