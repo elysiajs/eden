@@ -7,7 +7,7 @@
         "noImplicitAny": true,
         "module": "ES2022",
         "target": "es2022",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "jsx": "react",
         "skipLibCheck": true
     },

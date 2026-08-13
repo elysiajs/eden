@@ -147,7 +147,7 @@ describe('Nested FormData with file(s) support', () => {
                 .product({ id: '123' })
                 .patch({
                     name: 'Updated Product',
-                    image: Bun.file(filePath2),
+                    image: Bun.file(filePath2) as any as File,
                     metadata: {
                         category: 'Electronics',
                         tags: ['sale', 'new'],

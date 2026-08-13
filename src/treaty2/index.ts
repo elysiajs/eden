@@ -3,6 +3,7 @@
 /* eslint-disable prefer-const */
 import type { AnyElysia, Elysia } from 'elysia'
 import type { Treaty } from './types'
+import type { PluginTypeFn, PluginVerbContext, TreatyPlugin } from './plugin'
 
 import { EdenFetchError } from '../errors'
 import { EdenWS } from './ws'
@@ -21,16 +22,65 @@ const method = [
     'subscribe'
 ] as const
 
-const shouldThrow = (
+// Reserve names
+const reserved = [
+    ...method,
+    'use',
+    '~path',
+    'then',
+    'catch',
+    'finally'
+] as string[]
+
+type RegisteredVerbs = Record<
+    string,
+    {
+        plugin: string
+        handler: (context: PluginVerbContext, ...args: any[]) => unknown
+    }
+>
+
+const registerPlugin = (
+    plugin: TreatyPlugin<any>,
+    verbs: RegisteredVerbs = {}
+): RegisteredVerbs => {
+    if (!plugin?.name || !plugin.verbs)
+        throw new Error(
+            'Eden Treaty plugin must have a "name" and a "verbs" record'
+        )
+
+    const next: RegisteredVerbs = { ...verbs }
+
+    for (const verb of Object.keys(plugin.verbs)) {
+        if (reserved.includes(verb))
+            throw new Error(
+                `Eden Treaty plugin "${plugin.name}" cannot register verb "${verb}" because it is reserved by Eden Treaty`
+            )
+
+        if (Object.hasOwn(next, verb))
+            throw new Error(
+                `Eden Treaty plugin "${plugin.name}" cannot register verb "${verb}" because it is already registered by plugin "${next[verb].plugin}"`
+            )
+
+        next[verb] = {
+            plugin: plugin.name,
+            handler: plugin.verbs[verb]
+        }
+    }
+
+    return next
+}
+
+function shouldThrow(
     error: EdenFetchError<number, unknown>,
     throwHttpError?: ThrowHttpError
-): boolean => {
-    if (typeof throwHttpError === 'function') return throwHttpError(error)
+) {
+	if (typeof throwHttpError === 'function') return throwHttpError(error)
+
     return throwHttpError === true
 }
 
 const locals = ['localhost', '127.0.0.1', '0.0.0.0']
-
 const isServer = typeof FileList === 'undefined'
 
 const isFile = (v: any) => {
@@ -133,10 +183,12 @@ function parseSSEBlock(
 
         const colonIndex = line.indexOf(':')
         if (colonIndex > 0) {
-            const key = line.slice(0, colonIndex).trim()
+			const key = line.slice(0, colonIndex).trim()
+
             // Per SSE spec, strip single leading space if present
             const value = line.slice(colonIndex + 1).replace(/^ /, '')
-            // Preserve empty strings per SSE spec (e.g. "data:" with no value)
+
+			// Preserve empty strings per SSE spec (e.g. "data:" with no value)
             result[key] = value ? parseStringifiedValue(value, options) : value
         }
     }
@@ -232,21 +284,62 @@ const createProxy = (
     domain: string,
     config: Treaty.Config,
     paths: string[] = [],
-    elysia?: Elysia<any, any, any, any, any, any>
+    elysia?: Elysia<any, any, any, any, any, any>,
+    verbs?: RegisteredVerbs,
+    fromParam = false
 ): any =>
     new Proxy(() => {}, {
         get(_, param: string): any {
             if (param === '~path') return '/' + paths.join('/')
 
-            if (
-                paths.length === 0 &&
-                (param === 'then' || param === 'catch' || param === 'finally')
-            )
-                return undefined
+            if (paths.length === 0) {
+                if (param === 'use')
+                    return (plugin: TreatyPlugin<any>) =>
+                        createProxy(
+                            domain,
+                            config,
+                            paths,
+                            elysia,
+                            registerPlugin(plugin, verbs)
+                        )
 
-            return createProxy(domain, config, [...paths, param], elysia)
+                if (
+                    param === 'then' ||
+                    param === 'catch' ||
+                    param === 'finally'
+                )
+                    return undefined
+            }
+
+            return createProxy(
+                domain,
+                config,
+                [...paths, param],
+                elysia,
+                verbs,
+                false
+            )
         },
-        apply(_, __, [body, options]) {
+        apply(_, __, args) {
+            if (verbs && paths.length > 0 && !fromParam) {
+                const verb = paths[paths.length - 1]
+
+                if (Object.hasOwn(verbs, verb))
+                    return verbs[verb].handler(
+                        {
+                            path: '/' + paths.slice(0, -1).join('/'),
+                            // ? a path parameter may be a number, as `~path` stringifies it
+                            paths: paths.slice(0, -1).map(String),
+                            domain,
+                            config,
+                            elysia
+                        },
+                        ...args
+                    )
+            }
+
+            const [body, options] = args
+
             if (
                 !body ||
                 options ||
@@ -677,20 +770,26 @@ const createProxy = (
                     domain,
                     config,
                     [...paths, Object.values(body)[0] as string],
-                    elysia
+                    elysia,
+                    verbs,
+                    true
                 )
 
-            return createProxy(domain, config, paths)
+            return createProxy(
+                domain,
+                config,
+                paths,
+                undefined,
+                verbs,
+                fromParam
+            )
         }
     }) as any
 
-export const treaty = <
-    const App extends AnyElysia,
-    Head extends {} = {}
->(
+export const treaty = <const App extends AnyElysia, Head extends {} = {}>(
     domain: string | App,
     config: Treaty.Config<Head> = {}
-): Treaty.Create<App, Head> => {
+): Treaty.Instance<App, Head> => {
     if (typeof domain === 'string') {
         if (!config.keepDomain) {
             if (!domain.includes('://'))
@@ -714,3 +813,9 @@ export const treaty = <
 }
 
 export type { Treaty }
+export type { PluginTypeFn, PluginVerbContext, TreatyPlugin }
+export type {
+    ApplyPluginTypeFn,
+    ApplyPlugins,
+    ExtractPluginTypeFn
+} from './plugin'

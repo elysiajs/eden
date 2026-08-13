@@ -1,3 +1,7 @@
+# 2.0.0
+Feature:
+- type aware plugin
+
 # 1.4.10 - 24 Apr 2026
 Chore:
 - Publish under @elysia scope

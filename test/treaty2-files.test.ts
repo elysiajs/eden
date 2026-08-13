@@ -43,9 +43,11 @@ describe('Treaty2 - Using t.File() and t.Files() from server', async () => {
     const filePath2 = `test/public/midori.png`
     const filePath3 = `test/public/kyuukurarin.mp4`
 
-    const bunFile1 = Bun.file(filePath1)
-    const bunFile2 = Bun.file(filePath2)
-    const bunFile3 = Bun.file(filePath3)
+    // ? BunFile lacks `webkitRelativePath`, but the runtime deliberately
+    // ? exercises Bun.file as a File input
+    const bunFile1 = Bun.file(filePath1) as unknown as File
+    const bunFile2 = Bun.file(filePath2) as unknown as File
+    const bunFile3 = Bun.file(filePath3) as unknown as File
 
     const file1 = new File([await bunFile2.arrayBuffer()], 'aris-yuzu.jpg', {
         type: 'image/jpeg'

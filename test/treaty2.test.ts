@@ -1,4 +1,5 @@
 import { Elysia, form, sse, t } from 'elysia'
+import { websocket } from 'elysia/websocket'
 import { treaty, type Treaty } from '../src'
 import { EdenFetchError } from '../src/errors'
 import { streamResponse } from '../src/treaty2'
@@ -42,6 +43,8 @@ const websocketPayloads = [
 ] as const
 
 const app = new Elysia()
+    // ? `.ws` throws at router build without the WebSocket capability
+    .use(websocket())
     .get('/', 'a')
     .post('/', 'a')
     .get('/number', () => 1)
@@ -991,32 +994,28 @@ describe('Treaty2 - Using endpoint URL', () => {
         expect(data).toEqual('http://localhost/?1%2F2=1%2F2&1%2F2=1%202' as any)
     })
 
-    it('Receives the proper objects back from the other end of the websocket', async (done) => {
-		app.listen(0, async (server) => {
-			const client = treaty<typeof app>(`http://localhost:${server.port}`)
-
-            const dataOutOfSocket = await new Promise<any[]>((res) => {
-                const data: any = []
-                // Wait until we've gotten all the data
-                const socket =
-                    client['json-serialization-deserialization'].subscribe()
-                socket.subscribe(({ data: dataItem }) => {
-                    data.push(dataItem)
-                    // Only continue when we got all the messages
-                    if (data.length === websocketPayloads.length) {
-                        res(data)
-                    }
-                })
+    // ? the server this describe already started is reused, as listening twice
+    // ? now throws '[Elysia] Cannot call listen() while a server or teardown is active'
+    it('Receives the proper objects back from the other end of the websocket', async () => {
+        const dataOutOfSocket = await new Promise<any[]>((res) => {
+            const data: any = []
+            // Wait until we've gotten all the data
+            const socket =
+                treatyApp['json-serialization-deserialization'].subscribe()
+            socket.subscribe(({ data: dataItem }) => {
+                data.push(dataItem)
+                // Only continue when we got all the messages
+                if (data.length === websocketPayloads.length) {
+                    res(data)
+                }
             })
-
-            // expect that everything that came out of the socket
-            // got deserialized into the same thing that we inteded to send
-            for (let i = 0; i < websocketPayloads.length; i++) {
-                expect(dataOutOfSocket[i]).toEqual(websocketPayloads[i])
-            }
-
-            done()
         })
+
+        // expect that everything that came out of the socket
+        // got deserialized into the same thing that we inteded to send
+        for (let i = 0; i < websocketPayloads.length; i++) {
+            expect(dataOutOfSocket[i]).toEqual(websocketPayloads[i])
+        }
     })
 
     it('handle Server-Sent Event', async () => {

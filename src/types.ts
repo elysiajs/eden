@@ -95,9 +95,10 @@ export type TreatyToPath<T, Path extends string = ''> = UnionToIntersect<
     T extends Record<string, unknown>
         ? {
               [K in keyof T]: T[K] extends AnyTypedRoute
-                  ? { [path in Path]: { [method in K]: T[K] } }
+                  ? // ? root routes are reachable as both '' (historical) and '/'
+                    { [path in Path extends '' ? '' | '/' : Path]: { [method in K]: T[K] } }
                   : unknown extends T[K]
-                  ? { [path in Path]: { [method in K]: T[K] } }
+                  ? { [path in Path extends '' ? '' | '/' : Path]: { [method in K]: T[K] } }
                   : TreatyToPath<T[K], `${Path}/${K & string}`>
           }[keyof T]
         : {}

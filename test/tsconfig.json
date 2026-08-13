@@ -1,0 +1,7 @@
+{
+    // ? tsserver only auto-discovers `tsconfig.json`-named configs, so without
+    // ? this file the IDE checks test files in an inferred project with
+    // ? node-style resolution. The gate itself is ../tsconfig.test.json
+    "extends": "../tsconfig.test.json",
+    "include": ["./**/*"]
+}

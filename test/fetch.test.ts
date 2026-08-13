@@ -139,7 +139,9 @@ describe('Eden Fetch', () => {
     it('parse json with additional parameters', async () => {
         const { data } = await fetch('/json-utf8', {})
 
-        expect(data).toEqual(json)
+        // ? typed `Response` (the handler returns one raw), but the runtime
+        // ? parses the JSON body by content-type
+        expect(data as unknown).toEqual(json)
     })
 
     it('send parameters', async () => {

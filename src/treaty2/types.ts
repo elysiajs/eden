@@ -9,6 +9,12 @@ import type {
     Prettify,
     ThrowHttpError
 } from '../types'
+import type {
+    ApplyPlugins,
+    ExtractPluginTypeFn,
+    PluginTypeFn,
+    TreatyPlugin
+} from './plugin'
 
 // type Files = File | FileList
 
@@ -82,12 +88,29 @@ export namespace Treaty {
 
     export type Create<
         App extends Elysia<any, any, any, any, any, any, any>,
-        Head extends Record<string, unknown> = {}
+        Head extends Record<string, unknown> = {},
+        Fns extends PluginTypeFn[] = []
     > = App extends {
         '~Routes': infer Schema extends Record<any, any>
     }
-        ? Prettify<Sign<Schema, Head>> & CreateParams<Schema, Head>
+        ? Prettify<Sign<Schema, Head, Fns>> & CreateParams<Schema, Head, Fns>
         : 'Please install Elysia before using Eden'
+
+    /**
+     * A `treaty()` surface, with `.use` to register a client plugin.
+     *
+     * Each `.use` appends the plugin's type fn to `Fns`, which every route
+     * node is folded over to obtain the plugin's extra verbs.
+     */
+    export type Instance<
+        App extends Elysia<any, any, any, any, any, any, any>,
+        Head extends Record<string, unknown> = {},
+        Fns extends PluginTypeFn[] = []
+    > = Create<App, Head, Fns> & {
+        use<const P extends TreatyPlugin<any>>(
+            plugin: P
+        ): Instance<App, Head, [...Fns, ExtractPluginTypeFn<P>]>
+    }
 
     type ToTreatyParam<Target, Head extends Record<string, unknown>> = Prettify<
         TreatyParam &
@@ -104,7 +127,8 @@ export namespace Treaty {
 
     export type Sign<
         in out Route extends Record<any, any>,
-        in out Head extends Record<string, unknown> = {}
+        in out Head extends Record<string, unknown> = {},
+        in out Fns extends PluginTypeFn[] = []
     > = {
         [K in keyof Route as K extends `:${string}`
             ? never
@@ -188,18 +212,20 @@ export namespace Treaty {
                                   >
                               >
                       : never
-                  : CreateParams<Route[K], Head>) & {
+                  : CreateParams<Route[K], Head, Fns>) & {
                   '~path': string
               }
     }
 
     type CreateParams<
         Route extends Record<string, any>,
-        Head extends Record<string, unknown> = {}
+        Head extends Record<string, unknown> = {},
+        Fns extends PluginTypeFn[] = []
     > =
         Extract<keyof Route, `:${string}`> extends infer Path extends string
             ? IsNever<Path> extends true
-                ? Prettify<Sign<Route, Head>>
+                ? Prettify<Sign<Route, Head, Fns>> &
+                      ApplyPlugins<Fns, Route, Head>
                 : // ! DO NOT USE PRETTIFY ON THIS LINE, OTHERWISE FUNCTION CALLING WILL BE OMITTED
                   (((params: {
                       [param in Path extends `:${infer Param}`
@@ -208,14 +234,15 @@ export namespace Treaty {
                               : Param
                           : never]: string | number
                   }) => Prettify<
-                      Sign<Route[Path], Head> & {
+                      Sign<Route[Path], Head, Fns> & {
                           '~path': string
                       }
                   > &
-                      CreateParams<Route[Path], Head>) &
-                      Prettify<Sign<Route, Head>>) &
+                      CreateParams<Route[Path], Head, Fns>) &
+                      Prettify<Sign<Route, Head, Fns>> &
+                      ApplyPlugins<Fns, Route, Head>) &
                       (Path extends `:${string}?`
-                          ? CreateParams<Route[Path], Head>
+                          ? CreateParams<Route[Path], Head, Fns>
                           : {})
             : never
 
