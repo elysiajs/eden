@@ -1,5 +1,6 @@
 import type { Elysia } from 'elysia'
 
+import type { EdenFetchError } from '../errors'
 import type { Treaty } from './types'
 
 export interface PluginTypeFn {
@@ -12,6 +13,18 @@ export interface PluginTypeFn {
      */
     head: unknown
     output: unknown
+
+    /**
+     * Extra per-call options, merged into the option parameter of the mutation
+     * verbs — the same verbs {@link TreatyPlugin.onBeforeCall} observes.
+     *
+     * `output` cannot carry these: it merges members onto the route node,
+     * while a verb's options are built separately from the node's methods.
+     *
+     * Optional: a type fn declared structurally against an older Eden has no
+     * such member, and an absent one contributes nothing to the fold.
+     */
+    callOptions?: unknown
 }
 
 /**
@@ -23,21 +36,33 @@ export interface PluginTypeFn {
  * - `F` is `never` when {@link ExtractPluginTypeFn} cannot recover a type fn
  *   (an unannotated plugin object), which would otherwise collapse the whole
  *   route node to `never`
+ * - `Key` is absent when the type fn predates it ({@link PluginTypeFn.callOptions})
  */
-export type ApplyPluginTypeFn<F extends PluginTypeFn, Node, Head> = [
-    F
-] extends [never]
+export type ApplyPluginTypeFn<
+    F extends PluginTypeFn,
+    Node,
+    Head,
+    Key extends 'output' | 'callOptions' = 'output'
+> = [F] extends [never]
     ? {}
     : [Node] extends [never]
       ? {}
-      : (F & { node: Node; head: Head })['output']
+      : Key extends keyof F
+        ? (F & { node: Node; head: Head })[Key]
+        : {}
 
 /** Fold a tuple of type fns over a node, intersecting each result. */
-export type ApplyPlugins<Fns extends PluginTypeFn[], Node, Head> = Fns extends [
+export type ApplyPlugins<
+    Fns extends PluginTypeFn[],
+    Node,
+    Head,
+    Key extends 'output' | 'callOptions' = 'output'
+> = Fns extends [
     infer F extends PluginTypeFn,
     ...infer Rest extends PluginTypeFn[]
 ]
-    ? ApplyPluginTypeFn<F, Node, Head> & ApplyPlugins<Rest, Node, Head>
+    ? ApplyPluginTypeFn<F, Node, Head, Key> &
+          ApplyPlugins<Rest, Node, Head, Key>
     : {}
 
 export type ExtractPluginTypeFn<P> = P extends { '~fn'?: infer F }
@@ -56,30 +81,44 @@ export interface PluginVerbContext {
     elysia?: Elysia<any, any, any, any, any, any>
 }
 
-/**
- * A Treaty client plugin.
- *
- * ! Dispatching a verb deliberately bypasses Treaty's request pipeline — no
- * ! query serialization, header processing, `onRequest` / `onResponse` or
- * ! response parsing runs. A plugin owns its own wire path.
- */
+/** A mutation call, as seen before it is sent. */
+export interface PluginCallContext {
+    paths: string[]
+    /** the verb, lowercased: `post`, `put`, `patch` or `delete` */
+    method: string
+    /** the call's option argument, by reference */
+    options: Record<string, any> | undefined
+    /** the same object identity {@link PluginVerbContext.config} carries */
+    config: Treaty.Config
+    domain: string
+}
+
+/** The value a mutation call resolves to, or throws when `throwHttpError`. */
+export interface PluginCallResult {
+    data: unknown
+    error: EdenFetchError<number, unknown> | null
+    /** `undefined` when the request never reached the server */
+    response: Response | undefined
+    status: number
+    headers: Headers | undefined
+}
+
+export type OnBeforeCall = (context: PluginCallContext) => void
+export type OnAfterCall = (
+    result: PluginCallResult,
+    context: PluginCallContext
+) => void
+
 export interface TreatyPlugin<Fn extends PluginTypeFn = never> {
     name: string
     /** phantom type carrier */
     '~fn'?: Fn
-    /**
-     * ! Keys MUST match the keys `Fn` contributes. The contract is not
-     * ! statically enforceable, as `Fn`'s output keys are conditional on the
-     * ! route node; a typed verb with no runtime entry silently falls through
-     * ! to an ordinary HTTP request named after the verb.
-     *
-     * ! Reserved: Treaty's 9 built-in methods and the names the proxy owns
-     * ! (`use`, `~path`, `then`, `catch`, `finally`) throw on registration.
-     * ! Exotic http methods (`TRACE`, `PROPFIND`, any custom token) and route
-     * ! segments sharing a verb name are shadowed by the plugin, by design.
-     */
-    verbs: Record<
+
+    verbs?: Record<
         string,
         (context: PluginVerbContext, ...args: any[]) => unknown
-    >
+	>
+
+    before?: OnBeforeCall
+    after?: OnAfterCall
 }

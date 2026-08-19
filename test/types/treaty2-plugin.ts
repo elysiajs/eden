@@ -36,6 +36,8 @@ const app = new Elysia()
         ({ body }) => ({ id: 1, ...body }) as Todo
     )
     .get('/users', () => [] as User[])
+    // ? a mutation on a node carrying no live marker
+    .post('/logs', { body: t.Object({ message: t.String() }) }, () => 'ok')
     .get('/item/:id', { live: true }, () => ({ id: 1, text: 'a' }) as Todo)
     // ? own method AND a `:param` child, the node shape reached by the second
     // ? of the two fold sites
@@ -235,3 +237,74 @@ expectTypeOf((await untyped.todos.get()).data).toEqualTypeOf<Todo[] | null>()
 
 // @ts-expect-error no type fn was declared, so no verb is contributed
 untyped.todos.live
+
+interface OptimisticTypeFn extends PluginTypeFn {
+    output: {}
+    callOptions: this['node'] extends {
+        get: { meta: { live: true } }
+        post: { response: infer R extends Record<number, unknown> }
+    }
+        ? { optimistic?: (draft: R[200]) => R[200] }
+        : {}
+}
+
+declare const optimistic: TreatyPlugin<OptimisticTypeFn>
+
+const withOptimistic = treaty<App>('localhost').use(optimistic)
+
+withOptimistic.todos.post(
+    { text: 'a' },
+    {
+        // ? typed from the route node
+        optimistic: (draft) => {
+            expectTypeOf(draft).toEqualTypeOf<Todo>()
+
+            return draft
+        }
+    }
+)
+
+// ? the built-in options are untouched
+withOptimistic.todos.post({ text: 'a' }, { fetch: { keepalive: true } })
+
+// @ts-expect-error the node carries no live marker, so no option is contributed
+withOptimistic.logs.post({ message: 'a' }, { optimistic: (draft) => draft })
+
+// @ts-expect-error a read is not a mutation
+withOptimistic.todos.get({ optimistic: (draft) => draft })
+
+// @ts-expect-error the option arrives with the plugin
+bare.todos.post({ text: 'a' }, { optimistic: (draft) => draft })
+
+// ? a type fn contributing no `callOptions` leaves the options alone
+// @ts-expect-error `sync` contributes verbs, not options
+api.todos.post({ text: 'a' }, { optimistic: (draft) => draft })
+
+// ! back-compat: a type fn declared STRUCTURALLY (not by extending
+// ! `PluginTypeFn`) against an Eden that predates `callOptions` has no such
+// ! member. It must still satisfy the constraint, and contribute nothing
+interface StructuralTypeFn {
+    node: unknown
+    head: unknown
+    output: this['node'] extends { get: { meta: { live: true } } }
+        ? { legacy: () => void }
+        : {}
+}
+
+expectTypeOf<StructuralTypeFn>().toExtend<PluginTypeFn>()
+
+declare const legacy: TreatyPlugin<StructuralTypeFn>
+
+const withLegacy = treaty<App>('localhost').use(legacy)
+
+expectTypeOf(withLegacy.todos.legacy).toEqualTypeOf<() => void>()
+
+// ? no `callOptions` member, so the option surface is the built-in one
+withLegacy.todos.post({ text: 'a' }, { fetch: { keepalive: true } })
+
+// @ts-expect-error an absent `callOptions` contributes no option
+withLegacy.todos.post({ text: 'a' }, { optimistic: (draft) => draft })
+
+expectTypeOf<
+    ApplyPluginTypeFn<StructuralTypeFn, Routes['todos'], {}, 'callOptions'>
+>().toEqualTypeOf<{}>()

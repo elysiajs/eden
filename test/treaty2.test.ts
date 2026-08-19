@@ -1509,3 +1509,76 @@ describe('Treaty2 - parseDate configuration', () => {
         expect(data).toBe('2024-01-15T10:30:00.000Z')
     })
 })
+
+describe('Treaty2 - path parameter encoding', () => {
+    const app = new Elysia()
+        .get('/item/:id', ({ params: { id } }) => id)
+        .get('/pair/:a/:b', ({ params: { a, b } }) => `${a}|${b}`)
+        .get('/deep/nested/:id', ({ params: { id } }) => id)
+
+    const spyFetcher = () => {
+        let url = ''
+
+        const fetcher = ((input: string) => {
+            url = input
+
+            return Promise.resolve(new Response('a'))
+        }) as unknown as typeof fetch
+
+        return { fetcher, url: () => url }
+    }
+
+    it.each([
+        ['space', 'a b'],
+        ['slash', 'a/b'],
+        ['percent', '100%'],
+        ['unicode', 'ユニコード'],
+        ['query delimiter', 'a?b#c']
+    ])('round trip a parameter holding a %s', async (_, value) => {
+        const api = treaty(app)
+
+        const { data, status } = await api.item({ id: value }).get()
+
+        expect(status).toBe(200)
+        expect(data).toBe(value as any)
+    })
+
+    it('round trip every parameter of a multi parameter route', async () => {
+        const api = treaty(app)
+
+        const { data } = await api.pair({ a: 'a/b' })({ b: 'c d' }).get()
+
+        expect(data).toBe('a/b|c d' as any)
+    })
+
+    it('encode the parameter on the wire', async () => {
+        const { fetcher, url } = spyFetcher()
+        const api = treaty<typeof app>('localhost:3000', { fetcher })
+
+        await api.item({ id: 'a b/c%d' }).get()
+
+        expect(url()).toBe('http://localhost:3000/item/a%20b%2Fc%25d')
+    })
+
+    it('encode the parameter alongside a query', async () => {
+        const { fetcher, url } = spyFetcher()
+        const api = treaty<typeof app>('localhost:3000', { fetcher })
+
+        await api.item({ id: 'a/b' }).get({ query: { q: 'c/d' } })
+
+        expect(url()).toBe('http://localhost:3000/item/a%2Fb?q=c%2Fd')
+    })
+
+    // ! only a parameter carries user data. A segment is a path, and a bracket
+    // ! accessed one is how a caller reaches a route the types do not name
+    it('not encode a static segment', async () => {
+        const { fetcher, url } = spyFetcher()
+        const api = treaty<typeof app>('localhost:3000', {
+            fetcher
+        }) as any
+
+        await api['deep/nested']({ id: 'a/b' }).get()
+
+        expect(url()).toBe('http://localhost:3000/deep/nested/a%2Fb')
+    })
+})

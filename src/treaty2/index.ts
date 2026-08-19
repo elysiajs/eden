@@ -3,7 +3,15 @@
 /* eslint-disable prefer-const */
 import type { AnyElysia, Elysia } from 'elysia'
 import type { Treaty } from './types'
-import type { PluginTypeFn, PluginVerbContext, TreatyPlugin } from './plugin'
+import type {
+    OnAfterCall,
+    OnBeforeCall,
+    PluginCallContext,
+    PluginCallResult,
+    PluginTypeFn,
+    PluginVerbContext,
+    TreatyPlugin
+} from './plugin'
 
 import { EdenFetchError } from '../errors'
 import { EdenWS } from './ws'
@@ -32,6 +40,9 @@ const reserved = [
     'finally'
 ] as string[]
 
+// Verbs the plugin call callbacks bracket
+const mutation = ['post', 'put', 'patch', 'delete'] as string[]
+
 type RegisteredVerbs = Record<
     string,
     {
@@ -40,33 +51,49 @@ type RegisteredVerbs = Record<
     }
 >
 
+interface PluginRegistry {
+    verbs: RegisteredVerbs
+    beforeCall: OnBeforeCall[]
+    afterCall: OnAfterCall[]
+}
+
 const registerPlugin = (
     plugin: TreatyPlugin<any>,
-    verbs: RegisteredVerbs = {}
-): RegisteredVerbs => {
-    if (!plugin?.name || !plugin.verbs)
+    registry?: PluginRegistry
+): PluginRegistry => {
+    if (
+        !plugin?.name ||
+        (!plugin.verbs && !plugin.before && !plugin.after)
+    )
         throw new Error(
-            'Eden Treaty plugin must have a "name" and a "verbs" record'
+            'Eden Treaty plugin must have a "name" and a "verbs" record or a call callback'
         )
 
-    const next: RegisteredVerbs = { ...verbs }
+    const next: PluginRegistry = {
+        verbs: { ...registry?.verbs },
+        beforeCall: registry ? [...registry.beforeCall] : [],
+        afterCall: registry ? [...registry.afterCall] : []
+    }
 
-    for (const verb of Object.keys(plugin.verbs)) {
+    for (const verb of Object.keys(plugin.verbs ?? {})) {
         if (reserved.includes(verb))
             throw new Error(
                 `Eden Treaty plugin "${plugin.name}" cannot register verb "${verb}" because it is reserved by Eden Treaty`
             )
 
-        if (Object.hasOwn(next, verb))
+        if (Object.hasOwn(next.verbs, verb))
             throw new Error(
-                `Eden Treaty plugin "${plugin.name}" cannot register verb "${verb}" because it is already registered by plugin "${next[verb].plugin}"`
+                `Eden Treaty plugin "${plugin.name}" cannot register verb "${verb}" because it is already registered by plugin "${next.verbs[verb].plugin}"`
             )
 
-        next[verb] = {
+        next.verbs[verb] = {
             plugin: plugin.name,
-            handler: plugin.verbs[verb]
+            handler: plugin.verbs![verb]
         }
     }
+
+    if (plugin.before) next.beforeCall.push(plugin.before)
+    if (plugin.after) next.afterCall.push(plugin.after)
 
     return next
 }
@@ -285,8 +312,10 @@ const createProxy = (
     config: Treaty.Config,
     paths: string[] = [],
     elysia?: Elysia<any, any, any, any, any, any>,
-    verbs?: RegisteredVerbs,
-    fromParam = false
+    plugins?: PluginRegistry,
+    fromParam = false,
+    // ? indexes of `paths` holding a path parameter, ie. user data to encode
+    params: number[] = []
 ): any =>
     new Proxy(() => {}, {
         get(_, param: string): any {
@@ -300,7 +329,7 @@ const createProxy = (
                             config,
                             paths,
                             elysia,
-                            registerPlugin(plugin, verbs)
+                            registerPlugin(plugin, plugins)
                         )
 
                 if (
@@ -316,16 +345,17 @@ const createProxy = (
                 config,
                 [...paths, param],
                 elysia,
-                verbs,
-                false
+                plugins,
+                false,
+                params
             )
         },
         apply(_, __, args) {
-            if (verbs && paths.length > 0 && !fromParam) {
+            if (plugins && paths.length > 0 && !fromParam) {
                 const verb = paths[paths.length - 1]
 
-                if (Object.hasOwn(verbs, verb))
-                    return verbs[verb].handler(
+                if (Object.hasOwn(plugins.verbs, verb))
+                    return plugins.verbs[verb].handler(
                         {
                             path: '/' + paths.slice(0, -1).join('/'),
                             // ? a path parameter may be a number, as `~path` stringifies it
@@ -348,7 +378,15 @@ const createProxy = (
             ) {
                 const methodPaths = [...paths]
                 const method = methodPaths.pop()
-                const path = '/' + methodPaths.join('/')
+                const path =
+                    '/' +
+                    methodPaths
+                        .map((segment, index) =>
+                            params.includes(index)
+                                ? encodeURIComponent(segment)
+                                : segment
+                        )
+                        .join('/')
 
                 let {
                     fetcher = fetch,
@@ -417,7 +455,52 @@ const createProxy = (
                     return new EdenWS(url)
                 }
 
-                return (async () => {
+                // ? the callbacks bracket a write, never a read
+                const bracketed =
+                    !!plugins && mutation.includes(method as string)
+                const context: PluginCallContext | undefined = bracketed
+                    ? {
+                          paths: methodPaths.map(String),
+                          method: method!,
+                          options,
+                          config,
+                          domain
+                      }
+                    : undefined
+
+                let settled = false
+
+                const settle = (result: PluginCallResult) => {
+                    settled = true
+
+                    if (context && plugins)
+                        for (const callback of plugins.afterCall)
+                            try {
+                                callback(result, context)
+                            } catch (error) {
+                                console.error(error)
+                            }
+
+                    return result
+                }
+
+                const abort = (thrown: unknown) => {
+                    if (settled) return
+
+                    settle({
+                        data: null,
+                        error: new EdenFetchError(0, thrown),
+                        response: undefined,
+                        status: 0,
+                        headers: undefined
+                    })
+                }
+
+                const call = (async () => {
+                    if (context && plugins)
+                        for (const beforeCall of plugins.beforeCall)
+                            beforeCall(context)
+
                     headers = await processHeaders(headers, path, options)
 
                     let fetchInit = {
@@ -642,16 +725,18 @@ const createProxy = (
                     } catch (err) {
                         const error = new EdenFetchError(503, err)
 
-                        if (shouldThrow(error, resolvedThrowHttpError))
-                            throw error
-
-                        return {
+                        const result = settle({
                             data: null,
                             error,
                             response: undefined,
                             status: 503,
                             headers: undefined
-                        }
+                        })
+
+                        if (shouldThrow(error, resolvedThrowHttpError))
+                            throw error
+
+                        return result
                     }
 
                     // @ts-ignore
@@ -679,13 +764,13 @@ const createProxy = (
                     }
 
                     if (data !== null) {
-                        return {
+                        return settle({
                             data,
                             error,
                             response,
                             status: response.status,
                             headers: response.headers
-                        }
+                        })
                     }
 
                     switch (
@@ -748,21 +833,38 @@ const createProxy = (
 
                     if (response.status >= 300 || response.status < 200) {
                         error = new EdenFetchError(response.status, data)
+                        data = null
+
+                        const result = settle({
+                            data,
+                            error,
+                            response,
+                            status: response.status,
+                            headers: response.headers
+                        })
 
                         if (shouldThrow(error, resolvedThrowHttpError))
                             throw error
 
-                        data = null
+                        return result
                     }
 
-                    return {
+                    return settle({
                         data,
                         error,
                         response,
                         status: response.status,
                         headers: response.headers
-                    }
+                    })
                 })()
+
+                return bracketed
+                    ? call.catch((error) => {
+                          abort(error)
+
+                          throw error
+                      })
+                    : call
             }
 
             if (typeof body === 'object')
@@ -771,8 +873,9 @@ const createProxy = (
                     config,
                     [...paths, Object.values(body)[0] as string],
                     elysia,
-                    verbs,
-                    true
+                    plugins,
+                    true,
+                    [...params, paths.length]
                 )
 
             return createProxy(
@@ -780,8 +883,9 @@ const createProxy = (
                 config,
                 paths,
                 undefined,
-                verbs,
-                fromParam
+                plugins,
+                fromParam,
+                params
             )
         }
     }) as any
@@ -813,7 +917,15 @@ export const treaty = <const App extends AnyElysia, Head extends {} = {}>(
 }
 
 export type { Treaty }
-export type { PluginTypeFn, PluginVerbContext, TreatyPlugin }
+export type {
+    OnAfterCall,
+    OnBeforeCall,
+    PluginCallContext,
+    PluginCallResult,
+    PluginTypeFn,
+    PluginVerbContext,
+    TreatyPlugin
+}
 export type {
     ApplyPluginTypeFn,
     ApplyPlugins,

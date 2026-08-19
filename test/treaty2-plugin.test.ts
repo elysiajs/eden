@@ -1,12 +1,17 @@
 import { Elysia, t } from 'elysia'
 import { treaty } from '../src'
-import type { PluginTypeFn, PluginVerbContext, TreatyPlugin } from '../src'
+import { EdenFetchError } from '../src/errors'
+import type {
+    PluginCallContext,
+    PluginCallResult,
+    PluginTypeFn,
+    PluginVerbContext,
+    TreatyPlugin
+} from '../src'
 
-import { describe, expect, it } from 'bun:test'
+import { describe, expect, it, spyOn } from 'bun:test'
 
 const app = new Elysia()
-    // ? the same macro the type test gates on. `meta` is compile-time only, so
-    // ? a marked route must behave exactly like an unmarked one at runtime
     .macro({ live: { meta: { live: true } as const } })
     .get('/todos', { live: true }, () => [{ id: 1, text: 'a' }])
     .post(
@@ -18,7 +23,13 @@ const app = new Elysia()
         },
         ({ body }) => body
     )
+    .post('/stamped', ({ set }) => {
+        set.headers['x-offset'] = '7'
+
+        return 'ok'
+    })
     .get('/item/:id', ({ params: { id } }) => id)
+    .delete('/item/:id', ({ params: { id } }) => id)
     .get('/pair/:a/:b', ({ params: { a, b } }) => `${a}-${b}`)
 
 interface LiveHandle {
@@ -85,8 +96,6 @@ describe('Treaty2 - plugin', () => {
         expect(calls[0].args).toEqual([{ query: { list: 'work' } }])
     })
 
-    // ! A single-key object argument is otherwise parsed as a path parameter,
-    // ! which is why the dispatch must precede the request path
     it('dispatch a single-key object argument instead of parsing it as a path parameter', () => {
         const { plugin, calls } = createSync()
         const api = treaty(app).use(plugin)
@@ -106,9 +115,6 @@ describe('Treaty2 - plugin', () => {
         expect(calls[0].context.paths).toEqual(['item', '1'])
     })
 
-    // ! A path parameter is user data. If its value could name a verb, the
-    // ! caller of `api.pair({ a: 'live' })({ b: 1 })` would hand control of the
-    // ! dispatch to whatever `a` happens to hold
     it('not dispatch a verb named by a path parameter value', async () => {
         const { plugin, calls } = createSync()
         const api = treaty(app).use(plugin)
@@ -123,8 +129,6 @@ describe('Treaty2 - plugin', () => {
         expect(data).toBe('live-1')
     })
 
-    // ! A non-object argument returns the same node, so the last segment is
-    // ! still the parameter value and must stay untrusted
     it('keep a path parameter value untrusted across a non-object call', async () => {
         const { plugin, calls } = createSync()
         const api = treaty(app).use(plugin)
@@ -188,7 +192,6 @@ describe('Treaty2 - plugin', () => {
         expect(calls.length).toBe(1)
     })
 
-    // ! `.use` must not mutate the instance it was called on
     it('not leak a verb into the instance it was registered from', async () => {
         const other: TreatyPlugin<OtherTypeFn> = {
             name: 'other',
@@ -262,8 +265,6 @@ describe('Treaty2 - plugin', () => {
         it('path parameter', async () => {
             const { data } = await api.item({ id: 1 }).get()
 
-            // ? typed `string` (the handler returns the `id` param), but
-            // ? parseStringifiedValue turns "1" into the number 1 at runtime
             expect(data as unknown).toBe(1)
         })
 
@@ -272,7 +273,6 @@ describe('Treaty2 - plugin', () => {
             expect(api.item({ id: 1 })['~path']).toBe('/item/1')
         })
 
-        // ! an unregistered name is still treated as an http verb, as before
         it('no dispatch without a registered plugin', async () => {
             const { calls } = createSync()
             const bare = treaty(app)
@@ -284,5 +284,378 @@ describe('Treaty2 - plugin', () => {
             expect(await request).toHaveProperty('response')
             expect(calls.length).toBe(0)
         })
+    })
+})
+
+const createObserver = (name = 'observer') => {
+    const before: PluginCallContext[] = []
+    const after: PluginCallResult[] = []
+
+    const plugin: TreatyPlugin = {
+        name,
+        before(context) {
+            before.push(context)
+        },
+        after(result) {
+            after.push(result)
+        }
+    }
+
+    return { plugin, before, after }
+}
+
+describe('Treaty2 - plugin call callback', () => {
+    it('observe a mutation before it is sent', async () => {
+        const { plugin, before } = createObserver()
+        const config = { parseDate: false }
+        const api = treaty(app, config).use(plugin)
+
+        const options = { optimistic: () => {} } as any
+
+        await api.todos.post({ text: 'a' }, options)
+
+        expect(before.length).toBe(1)
+        expect(before[0].paths).toEqual(['todos'])
+        expect(before[0].method).toBe('post')
+        expect(before[0].options).toBe(options)
+        expect(before[0].config).toBe(config)
+        expect(before[0].domain).toBe('http://e.ly')
+    })
+
+    it('carry the config identity the verbs receive', async () => {
+        const { plugin, before } = createObserver()
+        const { plugin: sync, calls } = createSync()
+
+        const api = treaty(app, { parseDate: false }).use(sync).use(plugin)
+
+        api.todos.live()
+        await api.todos.post({ text: 'a' })
+
+        expect(before[0].config).toBe(calls[0].context.config)
+    })
+
+    it('carry raw path segments', async () => {
+        const { plugin, before } = createObserver()
+        const api = treaty(app).use(plugin)
+
+        const { data } = await api.item({ id: 'a/b' }).delete()
+
+        expect(data).toBe('a/b')
+        expect(before[0].paths).toEqual(['item', 'a/b'])
+        expect(before[0].method).toBe('delete')
+    })
+
+    it('observe every mutation verb and no read', async () => {
+        const methods = new Elysia()
+            .get('/x', () => 'a')
+            .head('/x', () => 'a')
+            .post('/x', () => 'a')
+            .put('/x', () => 'a')
+            .patch('/x', () => 'a')
+            .delete('/x', () => 'a')
+
+        const { plugin, before, after } = createObserver()
+        const api = treaty(methods).use(plugin)
+
+        await api.x.get()
+        await api.x.head()
+
+        expect(before.length).toBe(0)
+        expect(after.length).toBe(0)
+
+        await api.x.post()
+        await api.x.put()
+        await api.x.patch()
+        await api.x.delete()
+
+        expect(before.map((call) => call.method)).toEqual([
+            'post',
+            'put',
+            'patch',
+            'delete'
+        ])
+        expect(after.length).toBe(4)
+    })
+
+    it('not observe a plugin verb dispatch', () => {
+        const { plugin: sync } = createSync()
+        const { plugin, before, after } = createObserver()
+
+        treaty(app).use(sync).use(plugin).todos.live()
+
+        expect(before.length).toBe(0)
+        expect(after.length).toBe(0)
+    })
+
+    it('observe the result the caller receives', async () => {
+        const { plugin, after } = createObserver()
+        const api = treaty(app).use(plugin)
+
+        const result = await api.stamped.post()
+
+        expect(after.length).toBe(1)
+        expect(after[0]).toBe(result as unknown as PluginCallResult)
+        expect(after[0].data).toBe('ok')
+        expect(after[0].error).toBeNull()
+        expect(after[0].status).toBe(200)
+        expect(after[0].headers?.get('x-offset')).toBe('7')
+    })
+
+    it('observe a resolved error result', async () => {
+        const { plugin, after } = createObserver()
+        const api = treaty(app).use(plugin)
+
+        // @ts-expect-error deliberately invalid body
+        const { error } = await api.todos.post({})
+
+        expect(after.length).toBe(1)
+        expect(after[0].status).toBe(422)
+        expect(after[0].error).toBe(error as unknown as EdenFetchError)
+        expect(after[0].data).toBeNull()
+    })
+
+    it('observe a result that throwHttpError throws', async () => {
+        const { plugin, after } = createObserver()
+        const api = treaty(app, { throwHttpError: true }).use(plugin)
+
+        let thrown: unknown
+
+        try {
+            // @ts-expect-error deliberately invalid body
+            await api.todos.post({})
+        } catch (error) {
+            thrown = error
+        }
+
+        expect(thrown).toBeInstanceOf(EdenFetchError)
+        expect(after.length).toBe(1)
+        expect(after[0].error).toBe(thrown as EdenFetchError)
+        expect(after[0].status).toBe(422)
+        expect(after[0].data).toBeNull()
+    })
+
+    it('observe the fabricated result of a request that never left', async () => {
+        const { plugin, after } = createObserver()
+        const api = treaty<typeof app>('http://localhost:59999').use(plugin)
+
+        const { error } = await api.todos.post({ text: 'a' })
+
+        expect(after.length).toBe(1)
+        expect(after[0].status).toBe(503)
+        expect(after[0].error).toBe(error as unknown as EdenFetchError)
+        expect(after[0].response).toBeUndefined()
+        expect(after[0].headers).toBeUndefined()
+    })
+
+    it('observe a network failure that throwHttpError throws', async () => {
+        const { plugin, after } = createObserver()
+        const api = treaty<typeof app>('http://localhost:59999', {
+            throwHttpError: true
+        }).use(plugin)
+
+        let thrown: unknown
+
+        try {
+            await api.todos.post({ text: 'a' })
+        } catch (error) {
+            thrown = error
+        }
+
+        expect(thrown).toBeInstanceOf(EdenFetchError)
+        expect(after.length).toBe(1)
+        expect(after[0].error).toBe(thrown as EdenFetchError)
+        expect(after[0].status).toBe(503)
+    })
+
+    it('pair a result with the call that produced it', async () => {
+        const timed = new Elysia()
+            .post('/slow', async () => {
+                await Bun.sleep(20)
+
+                return 'slow'
+            })
+            .post('/fast', () => 'fast')
+
+        const staged: PluginCallContext[] = []
+        const settled: [PluginCallResult, PluginCallContext][] = []
+
+        const api = treaty(timed).use({
+            name: 'pairing',
+            before(context) {
+                staged.push(context)
+            },
+            after(result, context) {
+                settled.push([result, context])
+            }
+        })
+
+        await Promise.all([api.slow.post(), api.fast.post()])
+
+        expect(staged.map((call) => call.paths[0])).toEqual(['slow', 'fast'])
+        expect(settled.map(([result]) => result.data)).toEqual(['fast', 'slow'])
+        expect(settled[0][1]).toBe(staged[1])
+        expect(settled[1][1]).toBe(staged[0])
+    })
+
+    it('run callbacks in registration order', async () => {
+        const order: string[] = []
+        const record = (name: string): TreatyPlugin => ({
+            name,
+            before: () => order.push(`${name}:before`),
+            after: () => order.push(`${name}:after`)
+        })
+
+        const api = treaty(app).use(record('first')).use(record('second'))
+
+        await api.todos.post({ text: 'a' })
+
+        expect(order).toEqual([
+            'first:before',
+            'second:before',
+            'first:after',
+            'second:after'
+        ])
+    })
+
+    it('survive a throwing after', async () => {
+        const errors = spyOn(console, 'error').mockImplementation(() => {})
+
+        const { plugin, before, after } = createObserver()
+        const api = treaty(app)
+            .use({
+                name: 'broken',
+                after: () => {
+                    throw new Error('after')
+                }
+            })
+            .use(plugin)
+
+        const { data, error } = await api.todos.post({ text: 'a' })
+
+        expect(data).toEqual({ text: 'a' })
+        expect(error).toBeNull()
+        expect(before.length).toBe(1)
+        expect(after.length).toBe(1)
+        expect(errors).toHaveBeenCalledTimes(1)
+
+        errors.mockRestore()
+    })
+
+    it('veto the call when before throws', async () => {
+        const staged = createObserver('staged')
+        const later = createObserver('later')
+
+        const api = treaty(app)
+            .use(staged.plugin)
+            .use({
+                name: 'broken',
+                before: () => {
+                    throw new Error('veto')
+                }
+            })
+            .use(later.plugin)
+
+        await expect(api.todos.post({ text: 'a' })).rejects.toThrow('veto')
+
+        expect(staged.before.length).toBe(1)
+        expect(later.before.length).toBe(0)
+
+        expect(staged.after.length).toBe(1)
+        expect(later.after.length).toBe(1)
+        expect(staged.after[0].status).toBe(0)
+        expect(staged.after[0].error).toBeInstanceOf(EdenFetchError)
+        expect(staged.after[0].response).toBeUndefined()
+    })
+
+    describe('settle every escaping throw', () => {
+        const settlements = async (
+            run: (api: any) => Promise<unknown>,
+            config: Record<string, any> = {}
+        ) => {
+            const { plugin, before, after } = createObserver()
+            const api = treaty(app, config).use(plugin)
+
+            await expect(run(api)).rejects.toBeDefined()
+
+            expect(before.length).toBe(1)
+
+            return after
+        }
+
+        it('a throwing onRequest interceptor', async () => {
+            const after = await settlements(
+                (api) => api.todos.post({ text: 'a' }),
+                {
+                    onRequest: () => {
+                        throw new Error('interceptor')
+                    }
+                }
+            )
+
+            expect(after.length).toBe(1)
+            expect(after[0].status).toBe(0)
+            expect(after[0].error).not.toBeNull()
+            expect(after[0].response).toBeUndefined()
+            expect(after[0].headers).toBeUndefined()
+        })
+
+        it('a throwing header function', async () => {
+            const after = await settlements(
+                (api) => api.todos.post({ text: 'a' }),
+                {
+                    headers: () => {
+                        throw new Error('headers')
+                    }
+                }
+            )
+
+            expect(after.length).toBe(1)
+            expect(after[0].error).not.toBeNull()
+        })
+
+        it('a body that cannot be serialized', async () => {
+            const body: Record<string, unknown> = { text: 'a' }
+            body.self = body
+
+            const after = await settlements((api) => api.todos.post(body))
+
+            expect(after.length).toBe(1)
+            expect(after[0].error).not.toBeNull()
+        })
+
+        it('a 2xx carrying malformed JSON', async () => {
+            const malformed = new Elysia().post(
+                '/todos',
+                () =>
+                    new Response('{', {
+                        headers: { 'content-type': 'application/json' }
+                    })
+            )
+
+            const { plugin, after } = createObserver()
+            const api = treaty(malformed).use(plugin)
+
+            await expect(api.todos.post({ text: 'a' })).rejects.toBeDefined()
+
+            expect(after.length).toBe(1)
+            expect(after[0].status).toBe(0)
+        })
+    })
+
+    it('throw when a plugin carries neither a verb nor a callback', () => {
+        expect(() => treaty(app).use({ name: 'empty' })).toThrow(
+            'must have a "name"'
+        )
+    })
+
+    it('not leak a callback into the instance it was registered from', async () => {
+        const { plugin, before } = createObserver()
+        const api = treaty(app)
+
+        api.use(plugin)
+
+        await api.todos.post({ text: 'a' })
+
+        expect(before.length).toBe(0)
     })
 })

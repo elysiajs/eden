@@ -3,6 +3,10 @@ export type {
     ApplyPluginTypeFn,
     ApplyPlugins,
     ExtractPluginTypeFn,
+    OnAfterCall,
+    OnBeforeCall,
+    PluginCallContext,
+    PluginCallResult,
     PluginTypeFn,
     PluginVerbContext,
     TreatyPlugin

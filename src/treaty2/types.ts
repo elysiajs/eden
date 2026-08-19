@@ -112,8 +112,26 @@ export namespace Treaty {
         ): Instance<App, Head, [...Fns, ExtractPluginTypeFn<P>]>
     }
 
-    type ToTreatyParam<Target, Head extends Record<string, unknown>> = Prettify<
-        TreatyParam &
+    /**
+     * Options a plugin contributes to a mutation verb, `unknown` — ie. absent
+     * from the intersection — on a read
+     */
+    type CallOptions<
+        K,
+        Route,
+        Head extends Record<string, unknown>,
+        Fns extends PluginTypeFn[]
+    > = K extends 'post' | 'put' | 'patch' | 'delete'
+        ? ApplyPlugins<Fns, Route, Head, 'callOptions'>
+        : unknown
+
+    type ToTreatyParam<
+        Target,
+        Head extends Record<string, unknown>,
+        Options = unknown
+    > = Prettify<
+        Options &
+            TreatyParam &
             ({} extends Head
                 ? Target
                 : // @ts-ignore
@@ -164,7 +182,11 @@ export namespace Treaty {
                                     >
                                   : (
                                         body?: RelaxFileArrays<Body>,
-                                        options?: ToTreatyParam<Param, Head>
+                                        options?: ToTreatyParam<
+                                            Param,
+                                            Head,
+                                            CallOptions<K, Route, Head, Fns>
+                                        >
                                     ) => Promise<
                                         TreatyResponse<
                                             ReplaceGeneratorWithAsyncGenerator<Res>
@@ -181,7 +203,11 @@ export namespace Treaty {
                                 : {} extends Body
                                   ? (
                                         body?: RelaxFileArrays<Body>,
-                                        options?: ToTreatyParam<Param, Head>
+                                        options?: ToTreatyParam<
+                                            Param,
+                                            Head,
+                                            CallOptions<K, Route, Head, Fns>
+                                        >
                                     ) => Promise<
                                         TreatyResponse<
                                             ReplaceGeneratorWithAsyncGenerator<Res>
@@ -189,7 +215,11 @@ export namespace Treaty {
                                     >
                                   : (
                                         body: RelaxFileArrays<Body>,
-                                        options?: ToTreatyParam<Param, Head>
+                                        options?: ToTreatyParam<
+                                            Param,
+                                            Head,
+                                            CallOptions<K, Route, Head, Fns>
+                                        >
                                     ) => Promise<
                                         TreatyResponse<
                                             ReplaceGeneratorWithAsyncGenerator<Res>
@@ -205,7 +235,11 @@ export namespace Treaty {
                               >
                             : (
                                   body: RelaxFileArrays<Body>,
-                                  options: ToTreatyParam<Param, Head>
+                                  options: ToTreatyParam<
+                                      Param,
+                                      Head,
+                                      CallOptions<K, Route, Head, Fns>
+                                  >
                               ) => Promise<
                                   TreatyResponse<
                                       ReplaceGeneratorWithAsyncGenerator<Res>
