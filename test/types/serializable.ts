@@ -114,3 +114,43 @@ class MoneyList {
 
     expectTypeOf(wholeArray).toExtend<Serializable<Body[]>>()
 }
+
+class Cents {
+    toJSON(): number {
+        return 7
+    }
+}
+
+class Order {
+    toJSON(): { price: Cents } {
+        return { price: new Cents() }
+    }
+}
+
+class DoubleWrapped {
+    toJSON(): Money {
+        return new Money(100)
+    }
+}
+
+{
+    type Body = { price: number }
+
+    const nestedResult: Serializable<Body> = new Order()
+
+    const doubleWrapped = new DoubleWrapped()
+
+    // @ts-expect-error
+    const rejected: Serializable<{ amount: number; currency: string }> = doubleWrapped
+}
+
+{
+    type Body = { toJSON: string; amount: number }
+
+    const named: Serializable<Body> = { toJSON: 'value', amount: 1 }
+
+    const callable = { toJSON: () => 'value', amount: 1 }
+
+    // @ts-expect-error
+    const rejected: Serializable<Body> = callable
+}

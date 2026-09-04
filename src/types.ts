@@ -106,7 +106,6 @@ export type TreatyToPath<T, Path extends string = ''> = UnionToIntersect<
 
 export type Not<T> = T extends true ? false : true
 
-/** Values the client sends as-is, never through `JSON.stringify` */
 type Opaque =
     | File
     | Blob
@@ -116,18 +115,20 @@ type Opaque =
     | ReadableStream
     | Date
 
-/** A value `JSON.stringify` replaces with its `toJSON()` result */
-type ToJSON<T> = { toJSON(key?: string): T }
+type ToJSON<T> = { toJSON(key?: string): Serialized<T> }
 
-/**
- * What a caller may pass where the wire shape must be `T`.
- *
- * The request body ends in `JSON.stringify`, which serializes a value's
- * `toJSON()` result in place of the value. So a plain `T` is accepted only
- * when it carries no `toJSON` of its own, and any object whose `toJSON()`
- * returns `T` is accepted regardless of its own shape. Applied per field;
- * `Date` satisfies `string` this way.
- */
+type Serialized<T> = T extends Opaque
+    ? T
+    : T extends (infer U)[]
+      ? Serializable<U>[]
+      : T extends object
+        ? Fields<T>
+        : T
+
+type Fields<T> = {
+    [K in keyof T]: K extends 'toJSON' ? T[K] : Serializable<T[K]>
+} & ('toJSON' extends keyof T ? {} : { toJSON?: never })
+
 export type Serializable<T> =
     IsAny<T> extends true
         ? T
@@ -138,8 +139,5 @@ export type Serializable<T> =
             : T extends (infer U)[]
               ? Serializable<U>[] | ToJSON<T>
               : T extends object
-                ? ({ [K in keyof T]: Serializable<T[K]> } & {
-                      toJSON?: never
-                  })
-                  | ToJSON<T>
+                ? Fields<T> | ToJSON<T>
                 : T | ToJSON<T>
