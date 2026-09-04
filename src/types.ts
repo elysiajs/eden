@@ -104,3 +104,39 @@ export type TreatyToPath<T, Path extends string = ''> = UnionToIntersect<
 >
 
 export type Not<T> = T extends true ? false : true
+
+type Opaque =
+    | File
+    | Blob
+    | FormData
+    | ArrayBuffer
+    | ArrayBufferView
+    | ReadableStream
+    | Date
+
+type ToJSON<T> = { toJSON(key?: string): Serialized<T> }
+
+type Serialized<T> = T extends Opaque
+    ? T
+    : T extends (infer U)[]
+      ? Serializable<U>[]
+      : T extends object
+        ? Fields<T>
+        : T
+
+type Fields<T> = {
+    [K in keyof T]: K extends 'toJSON' ? T[K] : Serializable<T[K]>
+} & ('toJSON' extends keyof T ? {} : { toJSON?: never })
+
+export type Serializable<T> =
+    IsAny<T> extends true
+        ? T
+        : unknown extends T
+          ? T
+          : T extends Opaque
+            ? T
+            : T extends (infer U)[]
+              ? Serializable<U>[] | ToJSON<T>
+              : T extends object
+                ? Fields<T> | ToJSON<T>
+                : T | ToJSON<T>
