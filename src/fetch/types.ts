@@ -3,6 +3,7 @@ import type { EdenFetchError } from '../errors'
 import type {
 	MapError,
 	IsUnknown,
+	Serializable,
 	IsNever,
 	Prettify,
 	TreatyToPath,
@@ -61,7 +62,7 @@ export namespace EdenFetch {
 						headers: Route['headers']
 					}) &
 			(IsUnknown<Route['body']> extends false
-				? { body: Route['body'] }
+				? { body: Serializable<Route['body']> }
 				: { body?: unknown }) & {
           throwHttpError?: ThrowHttpError
         }
