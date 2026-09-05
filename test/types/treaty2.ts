@@ -1,7 +1,7 @@
 import { Elysia, file, form, status, t } from 'elysia'
 import { treaty } from '../../src'
 import { expectTypeOf } from 'expect-type'
-import type { ThrowHttpError } from '../../src/types'
+import type { Serializable, ThrowHttpError } from '../../src/types'
 import type { Treaty } from '../../src/treaty2/types'
 
 const plugin = new Elysia({ prefix: '/level' })
@@ -387,7 +387,7 @@ interface ValidationError {
 {
     type Route = api['array']['post']
 
-    expectTypeOf<Route>().parameter(0).toEqualTypeOf<string[]>()
+    expectTypeOf<Route>().parameter(0).toEqualTypeOf<Serializable<string[]>>()
 
     expectTypeOf<Route>().parameter(1).toEqualTypeOf<
         | {
@@ -455,7 +455,7 @@ interface ValidationError {
 {
     type Route = api['body']['post']
 
-    expectTypeOf<Route>().parameter(0).toEqualTypeOf<string>()
+    expectTypeOf<Route>().parameter(0).toEqualTypeOf<Serializable<string>>()
 
     expectTypeOf<Route>().parameter(1).toEqualTypeOf<
         | {
@@ -502,10 +502,12 @@ interface ValidationError {
 {
     type Route = api['deep']['nested']['mirror']['post']
 
-    expectTypeOf<Route>().parameter(0).toEqualTypeOf<{
-        username: string
-        password: string
-    }>()
+    expectTypeOf<Route>().parameter(0).toEqualTypeOf<
+        Serializable<{
+            username: string
+            password: string
+        }>
+    >()
 
     expectTypeOf<Route>().parameter(1).toEqualTypeOf<
         | {
@@ -881,10 +883,12 @@ interface ValidationError {
 {
     type Route = api['body-queries-headers']['post']
 
-    expectTypeOf<Route>().parameter(0).toEqualTypeOf<{
-        username: string
-        alias: 'Kristen'
-    }>()
+    expectTypeOf<Route>().parameter(0).toEqualTypeOf<
+        Serializable<{
+            username: string
+            alias: 'Kristen'
+        }>
+    >()
 
     expectTypeOf<Route>().parameter(1).toEqualTypeOf<{
         headers: {
@@ -1482,4 +1486,52 @@ interface ValidationError {
     const res = {} as Res
 
     if (!res.error) expectTypeOf(res.data).toEqualTypeOf<{ image: File }>()
+}
+
+{
+    class Credential {
+        toJSON(): { username: string; password: string } {
+            return { username: 'saltyaom', password: '12345678' }
+        }
+    }
+
+    api.deep.nested.mirror.post(new Credential())
+}
+
+{
+    api.deep.nested.mirror.post({
+        username: new Date(),
+        password: '12345678'
+    })
+}
+
+{
+    class WrongShape {
+        toJSON(): string {
+            return 'x'
+        }
+    }
+
+    const wrongShape = new WrongShape()
+
+    // @ts-expect-error
+    api.deep.nested.mirror.post(wrongShape)
+}
+
+{
+    const wsApp = new Elysia().ws('/ws', {
+        body: t.Object({
+            amount: t.Number(),
+            currency: t.String()
+        }),
+        message() {}
+    })
+
+    class Money {
+        toJSON(): { amount: number; currency: string } {
+            return { amount: 1, currency: 'USD' }
+        }
+    }
+
+    treaty(wsApp).ws.subscribe().send(new Money())
 }
