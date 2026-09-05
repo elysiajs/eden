@@ -119,11 +119,13 @@ type ToJSON<T> = { toJSON(key?: string): Serialized<T> }
 
 type Serialized<T> = T extends Opaque
     ? T
-    : T extends (infer U)[]
-      ? Serializable<U>[]
+    : T extends readonly unknown[]
+      ? Elements<T>
       : T extends object
         ? Fields<T>
         : T
+
+type Elements<T> = { [K in keyof T]: Serializable<T[K]> }
 
 type Fields<T> = {
     [K in keyof T]: K extends 'toJSON' ? T[K] : Serializable<T[K]>
@@ -136,8 +138,8 @@ export type Serializable<T> =
           ? T
           : T extends Opaque
             ? T
-            : T extends (infer U)[]
-              ? Serializable<U>[] | ToJSON<T>
+            : T extends readonly unknown[]
+              ? Elements<T> | ToJSON<T>
               : T extends object
                 ? Fields<T> | ToJSON<T>
                 : T | ToJSON<T>

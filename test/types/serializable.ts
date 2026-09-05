@@ -154,3 +154,36 @@ class DoubleWrapped {
     // @ts-expect-error
     const rejected: Serializable<Body> = callable
 }
+
+class PairResult {
+    toJSON(): [number, string] {
+        return [1, 'x']
+    }
+}
+
+class LongerPairResult {
+    toJSON(): [number, string, number] {
+        return [1, 'x', 3]
+    }
+}
+
+{
+    type Pair = [number, string]
+
+    const pair: Serializable<Pair> = [1, 'x']
+    const wrapped: Serializable<Pair> = new PairResult()
+    const readonlyPair: Serializable<readonly [number, string]> = [1, 'x']
+
+    // @ts-expect-error
+    const extra: Serializable<Pair> = [1, 'x', 3]
+    // @ts-expect-error
+    const short: Serializable<Pair> = [1]
+    // @ts-expect-error
+    const swapped: Serializable<Pair> = ['x', 1]
+    // @ts-expect-error
+    const extraFromResult: Serializable<Pair> = new LongerPairResult()
+
+    expectTypeOf<Serializable<readonly number[]>>().not.toExtend<number[]>()
+    expectTypeOf(wrapped).toExtend<Serializable<Pair>>()
+    expectTypeOf(readonlyPair).toExtend<Serializable<readonly [number, string]>>()
+}
