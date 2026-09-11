@@ -14,17 +14,19 @@ type Replace<RecordType, TargetType, GenericType> = {
 
 type MaybeArray<T> = T | T[]
 
+type SuccessCodes = 200 | 201 | 202 | 203 | 204 | 205 | 206 | 207 | 208 | 226
+
 export namespace EdenTreaty {
     type GetErrorResponse<App extends Elysia<any, any, any, any, any, any, any>> =
         App extends Elysia<any, any, any, infer Metadata, any, infer Ephemeral, infer Volatile>
             ? (Metadata['response'] & Ephemeral['response'] & Volatile['response']) extends infer Res
-                ? Exclude<keyof Res, 200> extends never
-                    ? Res[keyof Res]
+                ? Exclude<keyof Res, SuccessCodes> extends never
+                    ? never
                     : {
-                            [Status in keyof Res]: Res[Status]
-                      }[Exclude<keyof Res, 200>]
-                : unknown
-            : unknown
+                            [Status in keyof Res as Status extends SuccessCodes ? never : Status]: Res[Status]
+                      }
+                : never
+            : never
 
     export type Create<
         App extends Elysia<any, any, any, any, any, any, any>
@@ -36,7 +38,7 @@ export namespace EdenTreaty {
 
     export type Sign<
         Route extends Record<string, any>,
-        ErrorResponse = unknown
+        ErrorResponse = never
     > = {
         [K in keyof Route as K extends `:${string}`
             ? (string & {}) | number | K
@@ -98,10 +100,14 @@ export namespace EdenTreaty {
                                         ? IsNever<Errors> extends true
                                             ? IsNever<ErrorResponse> extends true
                                                 ? EdenFetchError<number, string>
-                                                : EdenFetchError<number, ErrorResponse>
+                                                : ErrorResponse extends Record<number, unknown>
+                                                    ? { [Status in keyof ErrorResponse & number]: EdenFetchError<Status, ErrorResponse[Status]> }[keyof ErrorResponse & number]
+                                                    : EdenFetchError<number, ErrorResponse>
                                             : Errors | (IsNever<ErrorResponse> extends true
                                                 ? never
-                                                : EdenFetchError<number, ErrorResponse>)
+                                                : ErrorResponse extends Record<number, unknown>
+                                                    ? { [Status in keyof ErrorResponse & number]: EdenFetchError<Status, ErrorResponse[Status]> }[keyof ErrorResponse & number]
+                                                    : EdenFetchError<number, ErrorResponse>)
                                         : EdenFetchError<number, string>
                                     : EdenFetchError<number, unknown>
                             }

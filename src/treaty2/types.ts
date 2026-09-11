@@ -85,12 +85,12 @@ export namespace Treaty {
 		App extends Elysia<any, any, any, infer Metadata, any, infer Ephemeral, infer Volatile>
 			? (Metadata['response'] & Ephemeral['response'] & Volatile['response']) extends infer Res
 				? Exclude<keyof Res, SuccessCodes> extends never
-					? Res[keyof Res]
+					? never
 					: {
-							[Status in keyof Res]: Res[Status]
-					  }[Exclude<keyof Res, SuccessCodes>]
-				: unknown
-			: unknown
+							[Status in keyof Res as Status extends SuccessCodes ? never : Status]: Res[Status]
+					  }
+				: never
+			: never
 
 	export interface TreatyParam {
 		fetch?: RequestInit
@@ -122,7 +122,7 @@ export namespace Treaty {
 	export type Sign<
 		in out Route extends Record<any, any>,
 		in out Head extends Record<string, unknown> = {},
-		ErrorResponse = unknown
+		ErrorResponse = never
 	> = {
 		[K in keyof Route as K extends `:${string}`
 			? never
@@ -227,7 +227,7 @@ export namespace Treaty {
 	type CreateParams<
 		Route extends Record<string, any>,
 		Head extends Record<string, unknown> = {},
-		ErrorResponse = unknown
+		ErrorResponse = never
 	> =
 		Extract<keyof Route, `:${string}`> extends infer Path extends string
 			? IsNever<Path> extends true
@@ -288,7 +288,7 @@ export namespace Treaty {
 
 	export type TreatyResponse<
 		Res extends Record<number, unknown>,
-		ErrorResponse = unknown
+		ErrorResponse = never
 	> =
 		| {
 				data: Res[Extract<keyof Res, SuccessCodes>] extends {
@@ -309,10 +309,17 @@ export namespace Treaty {
 								status: unknown
 								value: unknown
 						  }
-						: {
-								status: unknown
-								value: ErrorResponse
-						  }
+						: ErrorResponse extends Record<number, unknown>
+							? {
+									[K in keyof ErrorResponse & number]: {
+										status: K
+										value: ErrorResponse[K]
+									}
+							  }[keyof ErrorResponse & number]
+							: {
+									status: unknown
+									value: ErrorResponse
+							  }
 					: (
 						{
 							[Status in keyof Res]: {
@@ -326,10 +333,17 @@ export namespace Treaty {
 						}[Exclude<keyof Res, SuccessCodes>]
 					) | (IsNever<ErrorResponse> extends true
 						? never
-						: {
-								status: unknown
-								value: ErrorResponse
-						  })
+						: ErrorResponse extends Record<number, unknown>
+							? {
+									[K in keyof ErrorResponse & number]: {
+										status: K
+										value: ErrorResponse[K]
+									}
+							  }[keyof ErrorResponse & number]
+							: {
+									status: unknown
+									value: ErrorResponse
+							  })
 				response: Response
 				status: number
 				headers: ResponseInit['headers']
