@@ -3,6 +3,8 @@ export type {
     ApplyPluginTypeFn,
     ApplyPlugins,
     ExtractPluginTypeFn,
+    InferredTypeFn,
+    InferVerbs,
     OnAfterCall,
     OnBeforeCall,
     PluginCallContext,
@@ -12,7 +14,7 @@ export type {
     TreatyPlugin
 } from './treaty2'
 
-export { treaty } from './treaty2'
+export { treaty, createPlugin } from './treaty2'
 export { edenTreaty } from './treaty'
 export { edenFetch } from './fetch'
 export { EdenFetchError } from './errors'

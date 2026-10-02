@@ -58,6 +58,7 @@ const app = new Elysia()
         ({ body }) => body
     )
     .post('/mirror', ({ body }) => body)
+    .method('query', '/search', { body: t.Object({ q: t.String() }) }, ({ body }) => body)
     .post(
         '/body',
         {
@@ -353,6 +354,13 @@ describe('Treaty2', () => {
         const { data, error } = await client.get()
 
         expect(data).toBe('a')
+        expect(error).toBeNull()
+    })
+
+    it('query method sends a body', async () => {
+        const { data, error } = await client.search.query({ q: 'kiana' })
+
+        expect(data).toEqual({ q: 'kiana' })
         expect(error).toBeNull()
     })
 
