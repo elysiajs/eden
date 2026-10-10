@@ -1,6 +1,6 @@
 {
 	"name": "@elysia/eden",
-	"version": "2.0.0-beta.6",
+	"version": "2.0.0-beta.7",
 	"description": "Fully type-safe Elysia client",
 	"author": {
 		"name": "saltyAom",
@@ -58,13 +58,13 @@
 		"release": "npm run build && npm run test && npm publish --access public"
 	},
 	"peerDependencies": {
-		"elysia": ">= 2.0.0-beta.2"
+		"elysia": ">= 2.0.0-beta.30"
 	},
 	"devDependencies": {
-		"@elysia/cors": "^2.0.0-exp.1",
+		"@elysia/cors": "^2.0.0-beta.2",
 		"@types/bun": "^1.2.20",
 		"@types/node": "^24.3.0",
-		"elysia": "2.0.0-exp.63",
+		"elysia": "2.0.0-beta.30",
 		"esbuild": "^0.25.9",
 		"eslint": "^9.34.0",
 		"expect-type": "^1.2.2",
