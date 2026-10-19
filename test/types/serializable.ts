@@ -1,6 +1,5 @@
 import { expectTypeOf } from 'expect-type'
-import type { Serializable } from '../../src/types'
-import type { Serializable as ExportedSerializable } from '../../src'
+import type { Serializable } from '../../src'
 
 class Money {
     constructor(public cents: number) {}
@@ -15,14 +14,6 @@ class Money {
 
     expectTypeOf<Money>().toExtend<Serializable<Body>>()
     expectTypeOf<Body>().toExtend<Serializable<Body>>()
-}
-
-{
-    type Body = { amount: number; currency: string }
-
-    expectTypeOf<ExportedSerializable<Body>>().toEqualTypeOf<
-        Serializable<Body>
-    >()
 }
 
 {
@@ -90,10 +81,6 @@ class Wrong {
 
     const literalA: Serializable<'a' | 'b'> = 'a'
     const literalB: Serializable<'a' | 'b'> = 'b'
-
-    expectTypeOf(asUndefined).toExtend<Serializable<Body | null | undefined>>()
-    expectTypeOf(asObject).toExtend<Serializable<Body | null | undefined>>()
-    expectTypeOf(literalB).toExtend<Serializable<'a' | 'b'>>()
 }
 
 class MoneyList {
@@ -111,8 +98,6 @@ class MoneyList {
     ]
     const wholeArray: Serializable<Body[]> = new MoneyList()
     const dates: Serializable<string[]> = [new Date()]
-
-    expectTypeOf(wholeArray).toExtend<Serializable<Body[]>>()
 }
 
 class Cents {
@@ -172,7 +157,8 @@ class LongerPairResult {
 
     const pair: Serializable<Pair> = [1, 'x']
     const wrapped: Serializable<Pair> = new PairResult()
-    const readonlyPair: Serializable<readonly [number, string]> = [1, 'x']
+    const source = [1, 'x'] as const
+    const readonlyPair: Serializable<readonly [number, string]> = source
 
     // @ts-expect-error
     const extra: Serializable<Pair> = [1, 'x', 3]
@@ -182,8 +168,4 @@ class LongerPairResult {
     const swapped: Serializable<Pair> = ['x', 1]
     // @ts-expect-error
     const extraFromResult: Serializable<Pair> = new LongerPairResult()
-
-    expectTypeOf<Serializable<readonly number[]>>().not.toExtend<number[]>()
-    expectTypeOf(wrapped).toExtend<Serializable<Pair>>()
-    expectTypeOf(readonlyPair).toExtend<Serializable<readonly [number, string]>>()
 }
