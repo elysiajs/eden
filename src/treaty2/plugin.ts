@@ -14,17 +14,7 @@ export interface PluginTypeFn {
     head: unknown
     output: unknown
 
-    /**
-     * Extra per-call options, merged into the option parameter of the mutation
-     * verbs — the same verbs {@link TreatyPlugin.onBeforeCall} observes.
-     *
-     * `output` cannot carry these: it merges members onto the route node,
-     * while a verb's options are built separately from the node's methods.
-     *
-     * Optional: a type fn declared structurally against an older Eden has no
-     * such member, and an absent one contributes nothing to the fold.
-     */
-    callOptions?: unknown
+	callOptions?: unknown
 }
 
 /**
@@ -122,3 +112,36 @@ export interface TreatyPlugin<Fn extends PluginTypeFn = never> {
     before?: OnBeforeCall
     after?: OnAfterCall
 }
+
+/** Each runtime verb minus its context parameter, contributed on every node */
+export type InferVerbs<V> = {
+    -readonly [K in keyof V]: V[K] extends (
+        context: any,
+        ...args: infer A
+    ) => infer R
+        ? (...args: A) => R
+        : never
+}
+
+/**
+ * A type fn inferred from a plugin's runtime `verbs`. It is node-independent:
+ * the verbs appear on every route node. A verb gated on, or typed from, the
+ * route node still needs a hand-written type fn, ie. `TreatyPlugin<Fn>`.
+ * A generic or overloaded verb is erased by the inference too (type
+ * parameters to their constraints, overloads to the last one), so it needs
+ * the same.
+ */
+export interface InferredTypeFn<V> extends PluginTypeFn {
+    output: InferVerbs<V>
+}
+
+type VerbRecord = Record<
+    string,
+    (context: PluginVerbContext, ...args: any[]) => unknown
+>
+
+export const createPlugin = <V extends VerbRecord = {}>(
+    definition: Omit<TreatyPlugin, '~fn' | 'verbs'> & {
+        verbs?: V & VerbRecord
+    }
+): TreatyPlugin<InferredTypeFn<V>> => definition

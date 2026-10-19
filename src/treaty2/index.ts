@@ -24,6 +24,7 @@ const method = [
     'put',
     'delete',
     'patch',
+    'query',
     'options',
     'head',
     'connect',
@@ -929,5 +930,9 @@ export type {
 export type {
     ApplyPluginTypeFn,
     ApplyPlugins,
-    ExtractPluginTypeFn
+    ExtractPluginTypeFn,
+    InferredTypeFn,
+    InferVerbs
 } from './plugin'
+
+export { createPlugin } from './plugin'

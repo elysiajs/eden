@@ -2,6 +2,9 @@
 Feature:
 - type aware plugin
 
+Bug fix:
+- optional param type
+
 # 1.4.10 - 24 Apr 2026
 Chore:
 - Publish under @elysia scope
