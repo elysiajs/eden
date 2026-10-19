@@ -1,5 +1,5 @@
 /// <reference lib="dom" />
-import type { Elysia } from 'elysia'
+import type { AnyElysia } from 'elysia'
 
 import type { EdenWS } from './ws'
 import type {
@@ -94,7 +94,7 @@ export namespace Treaty {
 	}
 
 	export type Create<
-		App extends Elysia<any, any, any, any, any, any, any>,
+		App extends AnyElysia,
 		Head extends Record<string, unknown> = {},
 		Fns extends PluginTypeFn[] = []
 	> = App extends {
@@ -110,7 +110,7 @@ export namespace Treaty {
 	 * node is folded over to obtain the plugin's extra verbs.
 	 */
 	export type Instance<
-		App extends Elysia<any, any, any, any, any, any, any>,
+		App extends AnyElysia,
 		Head extends Record<string, unknown> = {},
 		Fns extends PluginTypeFn[] = []
 	> = Create<App, Head, Fns> & {
