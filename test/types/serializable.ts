@@ -100,6 +100,16 @@ class MoneyList {
     const dates: Serializable<string[]> = [new Date()]
 }
 
+{
+    const stray = Object.assign([1], { toJSON: () => 'x' })
+
+    // @ts-expect-error
+    const rejected: Serializable<number[]> = stray
+
+    const matching = Object.assign([1], { toJSON: () => [2] })
+    const accepted: Serializable<number[]> = matching
+}
+
 class Cents {
     toJSON(): number {
         return 7
