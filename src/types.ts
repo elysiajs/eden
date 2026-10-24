@@ -122,7 +122,7 @@ type Serialized<T> = T extends readonly unknown[]
       ? Fields<T>
       : T
 
-type Elements<T> = { [K in keyof T]: Serializable<T[K]> }
+type Elements<T> = { [K in keyof T]: Serializable<T[K]> } & { toJSON?: never }
 
 type Fields<T> = {
     [K in keyof T]: K extends 'toJSON' ? T[K] : Serializable<T[K]>
