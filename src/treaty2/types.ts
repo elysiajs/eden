@@ -7,6 +7,7 @@ import type {
 	MaybeEmptyObject,
 	Not,
 	Prettify,
+	Serializable,
 	ThrowHttpError
 } from '../types'
 
@@ -145,7 +146,7 @@ export namespace Treaty {
 											>
 										>
 									: (
-											body?: RelaxFileArrays<Body>,
+											body?: Serializable<RelaxFileArrays<Body>>,
 											options?: ToTreatyParam<Param, Head>
 										) => Promise<
 											TreatyResponse<
@@ -162,7 +163,7 @@ export namespace Treaty {
 										>
 									: {} extends Body
 										? (
-												body?: RelaxFileArrays<Body>,
+												body?: Serializable<RelaxFileArrays<Body>>,
 												options?: ToTreatyParam<
 													Param,
 													Head
@@ -173,7 +174,7 @@ export namespace Treaty {
 												>
 											>
 										: (
-												body: RelaxFileArrays<Body>,
+												body: Serializable<RelaxFileArrays<Body>>,
 												options?: ToTreatyParam<
 													Param,
 													Head
@@ -192,7 +193,7 @@ export namespace Treaty {
 										>
 									>
 								: (
-										body: RelaxFileArrays<Body>,
+										body: Serializable<RelaxFileArrays<Body>>,
 										options: ToTreatyParam<Param, Head>
 									) => Promise<
 										TreatyResponse<

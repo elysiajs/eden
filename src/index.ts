@@ -1,5 +1,7 @@
 export type { Treaty } from './treaty2'
 
+export type { Serializable } from './types'
+
 export { treaty } from './treaty2'
 export { edenTreaty } from './treaty'
 export { edenFetch } from './fetch'
