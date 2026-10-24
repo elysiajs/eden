@@ -14,6 +14,8 @@ export type {
     TreatyPlugin
 } from './treaty2'
 
+export type { Serializable } from './types'
+
 export { treaty, createPlugin } from './treaty2'
 export { edenTreaty } from './treaty'
 export { edenFetch } from './fetch'

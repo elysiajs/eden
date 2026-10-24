@@ -2,6 +2,7 @@ import type { Elysia, InputSchema } from 'elysia'
 import { EdenFetchError } from '../errors'
 import { composePath } from './utils'
 import type { EdenTreaty } from './types'
+import type { Serializable } from '../types'
 import { parseMessageEvent, parseStringifiedValue } from '../utils/parse'
 
 export type { EdenTreaty } from './types'
@@ -65,7 +66,7 @@ export class EdenWS<Schema extends InputSchema<any> = InputSchema> {
         this.url = url
     }
 
-    send(data: MaybeArray<Schema['body']>) {
+    send(data: MaybeArray<Serializable<Schema['body']>>) {
         if (Array.isArray(data)) {
             data.forEach((datum) => this.send(datum))
 

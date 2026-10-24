@@ -1,7 +1,13 @@
 /// <reference lib="dom" />
 import { Elysia } from 'elysia'
 import type { EdenWS } from './index'
-import type { IsUnknown, IsNever, MapError, Prettify } from '../types'
+import type {
+    IsUnknown,
+    IsNever,
+    MapError,
+    Prettify,
+    Serializable
+} from '../types'
 import type { EdenFetchError } from '../errors'
 
 type Files = File | FileList
@@ -50,7 +56,7 @@ export namespace EdenTreaty {
                               getRaw?: boolean
                               $transform?: Transform
                           } & (IsUnknown<Body> extends false
-                              ? Replace<Body, Blob | Blob[], Files>
+                              ? Serializable<Replace<Body, Blob | Blob[], Files>>
                               : {}) &
                               (undefined extends Query
                                   ? {
