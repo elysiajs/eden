@@ -5,7 +5,7 @@
     "": {
       "name": "@elysiajs/eden",
       "devDependencies": {
-        "@elysia/cors": "^2.0.0-beta.2",
+        "@elysia/cors": "^2.0.0-rc.0",
         "@types/bun": "^1.2.20",
         "@types/node": "^24.3.0",
         "elysia": "^2.0.0-rc.0",
@@ -18,12 +18,12 @@
         "vite": "^7.1.3",
       },
       "peerDependencies": {
-        "elysia": ">= 2.0.0-beta.30",
+        "elysia": ">= 2.0.0-rc.0",
       },
     },
   },
   "packages": {
-    "@elysia/cors": ["@elysia/cors@2.0.0-exp.1", "", { "peerDependencies": { "elysia": ">= 2.0.0-exp.14" } }, "sha512-Y23iaNj82ml5jCjvckQAZIgdTDcCS7FZtEQU018Pf2Yd8a3Ogsqa8+hPdjwje7uCJHBLE88QyZeJgo2bly2Hrw=="],
+    "@elysia/cors": ["@elysia/cors@2.0.0-rc.0", "", { "peerDependencies": { "elysia": ">= 2.0.0-rc.0" } }, "sha512-mlkOv7lHhT3HCCIIwawZBYXzQ6Ok1B//IQvIKaNww0o9xE2JLH6S74xVFZfobsH12eOVKWQVITr9iM/7Z/Zcdw=="],
 
     "@esbuild/aix-ppc64": ["@esbuild/aix-ppc64@0.25.12", "", { "os": "aix", "cpu": "ppc64" }, "sha512-Hhmwd6CInZ3dwpuGTF8fJG6yoWmsToE+vYgD4nytZVxcu1ulHpUQRAB1UJ8+N1Am3Mz4+xOByoQoSZf4D+CpkA=="],
 

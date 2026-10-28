@@ -234,7 +234,7 @@ type Data<T> = T extends (...args: any[]) => Promise<infer R>
             { body: t.Object({ a: t.String() }) },
             () => 'A' as const
         )
-        .method(
+        .route(
             'POST',
             '/i/:id?/x',
             { body: t.Object({ b: t.Number() }) },
