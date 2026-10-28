@@ -1,6 +1,7 @@
 import type { Elysia } from 'elysia'
 import type { EdenFetchError } from '../errors'
 import type {
+	ClientBody,
 	MapError,
 	IsUnknown,
 	IsNever,
@@ -68,7 +69,16 @@ export namespace EdenFetch {
 	) => Promise<
 		Prettify<
 			| {
-					data: Awaited<Route['response'][200]>
+					// `default`: a status Elysia only knows as `number`, a 2xx too
+					data: ClientBody<
+						| Awaited<Route['response'][200]>
+						| ('default' extends keyof Route['response']
+								? Awaited<
+										Route['response']['default' &
+											keyof Route['response']]
+									>
+								: never)
+					>
 					error: null
 					status: number
 					headers: Record<string, unknown>

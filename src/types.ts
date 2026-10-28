@@ -17,15 +17,25 @@ type Enumerate<
 
 type ErrorRange = Range<300, 599>
 
+// Elysia keys a body served at a status it only knows as `number` as
+// `default` (OpenAPI's "any other status"): an error at some `number` status
 export type MapError<T extends Record<number, unknown>> = [
     {
         [K in keyof T]-?: K extends ErrorRange ? K : never
     }[keyof T]
 ] extends [infer A extends number]
-    ? {
-          [K in A]: EdenFetchError<K, T[K]>
-      }[A]
+    ?
+          | {
+                [K in A]: EdenFetchError<K, ClientBody<T[K]>>
+            }[A]
+          | ('default' extends keyof T
+                ? EdenFetchError<number, ClientBody<T['default' & keyof T]>>
+                : never)
     : false
+
+// A body Elysia types `undefined` (no body: 204, an empty handler return) is
+// read as `''`
+export type ClientBody<T> = T extends undefined ? '' : T
 
 export type UnionToIntersect<U> = (
     U extends any ? (arg: U) => any : never

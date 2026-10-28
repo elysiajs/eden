@@ -58,7 +58,7 @@ const app = new Elysia()
         ({ body }) => body
     )
     .post('/mirror', ({ body }) => body)
-    .method('query', '/search', { body: t.Object({ q: t.String() }) }, ({ body }) => body)
+    .query('/search', { body: t.Object({ q: t.String() }) }, ({ body }) => body)
     .post(
         '/body',
         {

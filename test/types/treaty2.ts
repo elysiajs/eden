@@ -1062,11 +1062,12 @@ interface ValidationError {
 
 	const { data } = await treaty(app).get()
 
+	// a body typed `undefined` (none sent) is read as `''`
 	expectTypeOf<typeof data>().toEqualTypeOf<
 		| 'a'
 		| AsyncGenerator<1 | 2 | 3, 'a' | undefined, unknown>
 		| null
-		| undefined
+		| ''
 	>()
 }
 

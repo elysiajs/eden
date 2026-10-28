@@ -498,13 +498,41 @@ export namespace Treaty {
 	//     [K in keyof T]: Awaited<T[K]>
 	// }
 
+	/**
+	 * A response body as the client reads it, per member: a multipart body
+	 * arrives as a plain object, and one Elysia types `undefined` (no body:
+	 * 204, an empty handler return) is read as `''`
+	 */
+	type ClientBody<T> = T extends undefined
+		? ''
+		: T extends FormData & { ['~ely-form']: infer Data }
+			? Data
+			: T
+
+	/**
+	 * A body Elysia serves at a status it only knows as `number`
+	 * (`status(code as number, ...)`), keyed `default` (OpenAPI's "any other
+	 * status"). That status may be a 2xx, read as `data`, or any other, read
+	 * as an `error` at some `number` status
+	 */
+	type DefaultResponse<Res> = 'default' extends keyof Res
+		? ClientBody<Res['default' & keyof Res]>
+		: never
+
+	type DefaultError<Res> = 'default' extends keyof Res
+		? { status: number; value: DefaultResponse<Res> }
+		: never
+
 	export type TreatyResponse<Res extends Record<number, unknown>> =
 		| {
-				data: Res[Extract<keyof Res, SuccessCodes>] extends FormData & {
-					['~ely-form']: infer Data
-				}
-					? Data
-					: Res[Extract<keyof Res, SuccessCodes>]
+				data: [
+					Res[Extract<keyof Res, SuccessCodes | 'default'>]
+				] extends [never]
+					? // nothing declared, the body is unknown
+						unknown
+					:
+							| ClientBody<Res[Extract<keyof Res, SuccessCodes>]>
+							| DefaultResponse<Res>
 				error: null
 				response: Response
 				status: number
@@ -512,22 +540,24 @@ export namespace Treaty {
 		  }
 		| {
 				data: null
-				error: Exclude<keyof Res, SuccessCodes> extends never
-					? {
-							status: unknown
-							value: unknown
-						}
-					: {
-							[Status in keyof Res]: {
-								status: Status
-								// ? see the `FormData &` note above
-								value: Res[Status] extends FormData & {
-									['~ely-form']: infer Data
-								}
-									? Data
-									: Res[Status]
+				error: Exclude<
+					keyof Res,
+					SuccessCodes | 'default'
+				> extends never
+					? 'default' extends keyof Res
+						? DefaultError<Res>
+						: {
+								status: unknown
+								value: unknown
 							}
-						}[Exclude<keyof Res, SuccessCodes>]
+					:
+							| {
+									[Status in keyof Res]: {
+										status: Status
+										value: ClientBody<Res[Status]>
+									}
+							  }[Exclude<keyof Res, SuccessCodes | 'default'>]
+							| DefaultError<Res>
 				response: Response
 				status: number
 				headers: ResponseInit['headers']
