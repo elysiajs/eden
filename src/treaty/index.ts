@@ -1,4 +1,4 @@
-import type { Elysia, InputSchema } from 'elysia'
+import type { AnyElysia, InputSchema } from 'elysia'
 import { EdenFetchError } from '../errors'
 import { composePath } from './utils'
 import type { EdenTreaty } from './types'
@@ -353,7 +353,7 @@ const createProxy = (
     }) as unknown as Record<string, unknown>
 
 export const edenTreaty = <
-    App extends Elysia<any, any, any, any, any, any, any>
+    App extends AnyElysia
 >(
     domain: string,
     config: EdenTreaty.Config = {

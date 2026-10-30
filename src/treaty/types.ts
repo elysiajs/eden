@@ -1,5 +1,5 @@
 /// <reference lib="dom" />
-import { Elysia } from 'elysia'
+import type { AnyElysia } from 'elysia'
 import type { EdenWS } from './index'
 import type { IsUnknown, IsNever, MapError, Prettify } from '../types'
 import type { EdenFetchError } from '../errors'
@@ -16,7 +16,7 @@ type MaybeArray<T> = T | T[]
 
 export namespace EdenTreaty {
     export type Create<
-        App extends Elysia<any, any, any, any, any, any, any>
+        App extends AnyElysia
     > = App extends {
         '~Routes': infer Schema extends Record<string, unknown>
     }

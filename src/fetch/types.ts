@@ -1,4 +1,4 @@
-import type { Elysia } from 'elysia'
+import type { AnyElysia } from 'elysia'
 import type { EdenFetchError } from '../errors'
 import type {
 	ClientBody,
@@ -11,7 +11,7 @@ import type {
 } from '../types'
 
 export namespace EdenFetch {
-	export type Create<App extends Elysia<any, any, any, any, any, any, any>> =
+	export type Create<App extends AnyElysia> =
 		App extends {
 			'~Routes': infer Schema extends Record<string, unknown>
 		}

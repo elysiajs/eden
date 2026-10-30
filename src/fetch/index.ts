@@ -1,4 +1,4 @@
-import type { Elysia } from 'elysia'
+import type { AnyElysia } from 'elysia'
 
 import { EdenFetchError } from '../errors'
 import type { EdenFetch } from './types'
@@ -72,7 +72,7 @@ const handleResponse = async (
 }
 
 export const edenFetch =
-    <App extends Elysia<any, any, any, any, any, any, any>>(
+    <App extends AnyElysia>(
         server: string,
         config?: EdenFetch.Config
     ): EdenFetch.Create<App> =>
