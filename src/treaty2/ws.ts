@@ -1,5 +1,6 @@
 import type { InputSchema } from 'elysia'
 import type { Treaty } from './types'
+import type { Serializable } from '../types'
 import { parseMessageEvent } from '../utils/parse'
 
 export class EdenWS<in out Schema extends InputSchema<any> = {}> {
@@ -9,7 +10,7 @@ export class EdenWS<in out Schema extends InputSchema<any> = {}> {
         this.ws = new WebSocket(url)
     }
 
-    send(data: Schema['body'] | Schema['body'][]) {
+    send(data: Serializable<Schema['body']> | Serializable<Schema['body']>[]) {
         if (Array.isArray(data)) {
             data.forEach((datum) => this.send(datum))
 
