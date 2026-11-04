@@ -18,7 +18,8 @@ const method = [
 	'options',
 	'head',
 	'connect',
-	'subscribe'
+	'subscribe',
+	'query'
 ] as const
 
 const shouldThrow = (

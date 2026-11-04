@@ -1363,6 +1363,30 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
 			]
 		})
 	})
+
+	it('handle HTTP QUERY method', async () => {
+		const app = new Elysia().route(
+			'QUERY' as any,
+			'/search',
+			({ body }) => body,
+			{
+				body: t.Object({
+					q: t.String()
+				})
+			}
+		)
+
+		const api = treaty(app)
+
+		const { data, status } = await (api as any).search.query({
+			q: 'search query'
+		})
+
+		expect(status).toEqual(200)
+		expect(data).toEqual({
+			q: 'search query'
+		})
+	})
 })
 
 describe('Treaty2 - parseDate configuration', () => {
