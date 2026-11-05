@@ -1366,7 +1366,7 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
 
 	it('handle HTTP QUERY method', async () => {
 		const app = new Elysia().route(
-			'QUERY' as any,
+			'QUERY',
 			'/search',
 			({ body }) => body,
 			{
@@ -1378,13 +1378,35 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
 
 		const api = treaty(app)
 
-		const { data, status } = await (api as any).search.query({
+		const { data, status } = await api.search.QUERY({
 			q: 'search query'
 		})
 
 		expect(status).toEqual(200)
 		expect(data).toEqual({
 			q: 'search query'
+		})
+
+		const lowerRes = await (api as any).search.query({
+			q: 'lowercase query'
+		})
+
+		expect(lowerRes.status).toEqual(200)
+		expect(lowerRes.data).toEqual({
+			q: 'lowercase query'
+		})
+	})
+
+	it('preserve dynamic route params under /query/:id', async () => {
+		const app = new Elysia().get('/query/:id', ({ params }) => params)
+
+		const api = treaty(app)
+
+		const { data, status } = await api.query({ id: '42' }).get()
+
+		expect(status).toEqual(200)
+		expect(data).toEqual({
+			id: '42'
 		})
 	})
 })
