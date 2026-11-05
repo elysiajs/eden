@@ -18,7 +18,9 @@ const method = [
 	'options',
 	'head',
 	'connect',
-	'subscribe'
+	'subscribe',
+	'query',
+	'QUERY'
 ] as const
 
 const shouldThrow = (
@@ -247,12 +249,30 @@ const createProxy = (
 			return createProxy(domain, config, [...paths, param], elysia)
 		},
 		apply(_, __, [body, options]) {
+			const lastPath = paths.at(-1)
+			const isMethodPath = method.includes(lastPath as any)
+			const firstValue =
+				body && typeof body === 'object'
+					? Object.values(body)[0]
+					: undefined
+			const isAmbiguousParamOrMethod =
+				isMethodPath &&
+				Boolean(body) &&
+				!options &&
+				typeof body === 'object' &&
+				!Array.isArray(body) &&
+				!(body instanceof FormData) &&
+				!isFile(body) &&
+				Object.keys(body).length === 1 &&
+				(typeof firstValue === 'string' || typeof firstValue === 'number')
+
 			if (
 				!body ||
 				options ||
 				(typeof body === 'object' && Object.keys(body).length !== 1) ||
-				method.includes(paths.at(-1) as any)
+				isMethodPath
 			) {
+				const executeRequest = () => {
 				const methodPaths = [...paths]
 				const method = methodPaths.pop()
 				const path = '/' + methodPaths.join('/')
@@ -665,6 +685,40 @@ const createProxy = (
 						headers: response.headers
 					}
 				})()
+				}
+
+				if (!isAmbiguousParamOrMethod) return executeRequest()
+
+				const paramProxy = createProxy(
+					domain,
+					config,
+					[...paths, firstValue as string],
+					elysia
+				)
+				let requestPromise: Promise<any> | undefined
+				const getRequestPromise = () =>
+					(requestPromise ??= executeRequest())
+
+				return new Proxy(() => {}, {
+					get(_, prop: string | symbol) {
+						if (
+							prop === 'then' ||
+							prop === 'catch' ||
+							prop === 'finally'
+						) {
+							const promise = getRequestPromise()
+							const fn = (promise as any)[prop]
+							return typeof fn === 'function'
+								? fn.bind(promise)
+								: fn
+						}
+
+						return paramProxy[prop as any]
+					},
+					apply(_, thisArg, argArray) {
+						return Reflect.apply(paramProxy, thisArg, argArray)
+					}
+				})
 			}
 
 			if (typeof body === 'object')
