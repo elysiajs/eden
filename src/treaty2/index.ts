@@ -127,6 +127,7 @@ function parseSSEBlock(
 ): Record<string, unknown> | null {
 	const lines = block.split('\n')
 	const result: Record<string, unknown> = {}
+	const dataLines: string[] = []
 
 	for (const line of lines) {
 		if (!line || line.startsWith(':')) continue
@@ -137,8 +138,16 @@ function parseSSEBlock(
 			// Per SSE spec, strip single leading space if present
 			const value = line.slice(colonIndex + 1).replace(/^ /, '')
 			// Preserve empty strings per SSE spec (e.g. "data:" with no value)
+			if (key === 'data') {
+				dataLines.push(value)
+				continue
+			}
 			result[key] = value ? parseStringifiedValue(value, options) : value
 		}
+	}
+	if (dataLines.length) {
+		const data = dataLines.join('\n')
+		result.data = data ? parseStringifiedValue(data, options) : data
 	}
 
 	return Object.keys(result).length > 0 ? result : null
