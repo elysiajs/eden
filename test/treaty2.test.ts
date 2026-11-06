@@ -1144,6 +1144,55 @@ function createChunkedSSEResponse(chunks: Array<string>): Response {
 }
 
 describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
+	it('joins multiple data lines in one SSE event', async () => {
+		const response = createChunkedSSEResponse([
+			'event: message\ndata: line 1\ndata: line 2\ndata: line 3\n\n'
+		])
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([
+			{ event: 'message', data: 'line 1\nline 2\nline 3' }
+		])
+	})
+
+	it('SSE regression: preserves empty data fields and lines', async () => {
+		const response = createChunkedSSEResponse([
+			'event: empty\ndata:\n\nevent: message\ndata: first\ndata:\ndata: last\n\n'
+		])
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([
+			{ event: 'empty', data: '' },
+			{ event: 'message', data: 'first\n\nlast' }
+		])
+	})
+
+	it('SSE regression: repeated non-data fields keep their last values', async () => {
+		const response = createChunkedSSEResponse([
+			'event: first\nid: 1\nretry: 100\ndata: hello\nevent: last\nid: 2\nretry: 200\ndata: world\n\n'
+		])
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([
+			{ event: 'last', id: 2, retry: 200, data: 'hello\nworld' }
+		])
+	})
+
+	it('SSE regression: parses JSON after joining data lines', async () => {
+		const response = createChunkedSSEResponse([
+			'event: message\ndata: {"message":\ndata: "hello"}\n\n'
+		])
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([
+			{ event: 'message', data: { message: 'hello' } }
+		])
+	})
+
 	it('handles SSE event split across chunks (data: broken mid-line)', async () => {
 		const chunks = ['event: message\nda', 'ta: hello world\n\n']
 		const response = createChunkedSSEResponse(chunks)
