@@ -121,7 +121,7 @@ const processHeaders = async (
 	}
 }
 
-/** Parse one SSE event block, joining data lines before value parsing. */
+/** Parse one SSE event block, preserving joined data lines as text. */
 function parseSSEBlock(
 	block: string,
 	options?: { parseDate?: boolean }
@@ -148,13 +148,10 @@ function parseSSEBlock(
 	}
 	if (dataLines.length) {
 		const data = dataLines.join('\n')
-		const parsed = data ? parseStringifiedValue(data, options) : data
-		// Numeric and date coercion can discard newlines from multiple data fields.
 		result.data =
-			dataLines.length > 1 &&
-			(typeof parsed === 'number' || parsed instanceof Date)
-				? data
-				: parsed
+			dataLines.length === 1 && data
+				? parseStringifiedValue(data, options)
+				: data
 	}
 
 	return Object.keys(result).length > 0 ? result : null
