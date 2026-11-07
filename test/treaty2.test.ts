@@ -1169,6 +1169,30 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
 		])
 	})
 
+	it('preserves leading and trailing empty data lines around numeric values', async () => {
+		const response = createChunkedSSEResponse([
+			'data: 1\ndata:\n\n',
+			'data:\ndata: 1\n\n',
+			'data:\ndata: 1\ndata:\ndata:\n\n',
+			'data: 0\ndata:\n\n',
+			'data: -2.5\ndata:\n\n',
+			'data: 1e3\ndata:\n\n',
+			'data: 2025-01-01T00:00:00.000Z\ndata:\n\n'
+		])
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([
+			{ data: '1\n' },
+			{ data: '\n1' },
+			{ data: '\n1\n\n' },
+			{ data: '0\n' },
+			{ data: '-2.5\n' },
+			{ data: '1e3\n' },
+			{ data: '2025-01-01T00:00:00.000Z\n' }
+		])
+	})
+
 	it('SSE regression: repeated non-data fields keep their last values', async () => {
 		const response = createChunkedSSEResponse([
 			'event: first\nid: 1\nretry: 100\ndata: hello\nevent: last\nid: 2\nretry: 200\ndata: world\n\n'
