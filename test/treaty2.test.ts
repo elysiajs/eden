@@ -1205,7 +1205,7 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
 		])
 	})
 
-	it('SSE regression: parses JSON after joining data lines', async () => {
+	it('SSE regression: preserves joined multiline JSON as text', async () => {
 		const response = createChunkedSSEResponse([
 			'event: message\ndata: {"message":\ndata: "hello"}\n\n'
 		])
@@ -1213,7 +1213,20 @@ describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
 		for await (const event of streamResponse(response)) events.push(event)
 
 		expect(events).toEqual([
-			{ event: 'message', data: { message: 'hello' } }
+			{ event: 'message', data: '{"message":\n"hello"}' }
+		])
+	})
+
+	it('preserves typed parsing for single-line SSE data', async () => {
+		const response = createChunkedSSEResponse([
+			'data: {"message":"hello"}\n\ndata: 42\n\n'
+		])
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([
+			{ data: { message: 'hello' } },
+			{ data: 42 }
 		])
 	})
 
