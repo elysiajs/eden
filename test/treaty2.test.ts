@@ -1144,6 +1144,173 @@ function createChunkedSSEResponse(chunks: Array<string>): Response {
 }
 
 describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
+	test.each<[string, string[]]>([
+		['CRLF', ['data: one\r\ndata: two\r\n\r\n']],
+		[
+			'CRLF split across chunks',
+			['data: one\r', '', '\ndata: two\r', '\n\r', '\n']
+		],
+		[
+			'CRLF split at every character',
+			'data: one\r\ndata: two\r\n\r\n'.split('')
+		],
+		['mixed LF and CRLF', ['data: one\ndata: two\r\n\n']],
+		['CR', ['data: one\rdata: two\r\r']],
+		['CR split across chunks', ['data: one\r', 'data: two\r', '\r']]
+	])('joins multiline SSE data with %s line endings', async (_, chunks) => {
+		const response = createChunkedSSEResponse(chunks)
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([{ data: 'one\ntwo' }])
+	})
+
+	it('keeps mixed LF and CRLF events separate in one stream', async () => {
+		const response = createChunkedSSEResponse([
+			'data: one\ndata: two\n\ndata: three\r\ndata: four\r\n\r\ndata: five\n\n'
+		])
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([
+			{ data: 'one\ntwo' },
+			{ data: 'three\nfour' },
+			{ data: 'five' }
+		])
+	})
+
+	test.each(['\n', '\r\n', '\r'])(
+		'emits a complete SSE event before EOF with %j line endings',
+		async (newline) => {
+			let sent = false
+			const response = new Response(
+				new ReadableStream<Uint8Array>(
+					{
+						pull(controller) {
+							if (sent) throw new Error('Read past a complete SSE event')
+							sent = true
+							controller.enqueue(
+								new TextEncoder().encode(
+									`data: one${newline}data: two${newline}${newline}`
+								)
+							)
+						}
+					},
+					{ highWaterMark: 0 }
+				),
+				{ headers: { 'Content-Type': 'text/event-stream' } }
+			)
+			const events = streamResponse(response)
+			try {
+				expect(await events.next()).toEqual({
+					done: false,
+					value: { data: 'one\ntwo' }
+				})
+			} finally {
+				await events.return()
+			}
+		}
+	)
+
+	test.each(['\n', '\r\n', '\r'])(
+		'preserves numeric data with a trailing empty line as text with %j line endings',
+		async (newline) => {
+			const response = createChunkedSSEResponse([
+				`data: 1${newline}data:${newline}${newline}`
+			])
+			const events: Array<unknown> = []
+			for await (const event of streamResponse(response)) events.push(event)
+
+			expect(events).toEqual([{ data: '1\n' }])
+		}
+	)
+
+	it('joins multiple data lines in one SSE event', async () => {
+		const response = createChunkedSSEResponse([
+			'event: message\ndata: line 1\ndata: line 2\ndata: line 3\n\n'
+		])
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([
+			{ event: 'message', data: 'line 1\nline 2\nline 3' }
+		])
+	})
+
+	it('SSE regression: preserves empty data fields and lines', async () => {
+		const response = createChunkedSSEResponse([
+			'event: empty\ndata:\n\nevent: message\ndata: first\ndata:\ndata: last\n\n'
+		])
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([
+			{ event: 'empty', data: '' },
+			{ event: 'message', data: 'first\n\nlast' }
+		])
+	})
+
+	it('preserves leading and trailing empty data lines around numeric values', async () => {
+		const response = createChunkedSSEResponse([
+			'data: 1\ndata:\n\n',
+			'data:\ndata: 1\n\n',
+			'data:\ndata: 1\ndata:\ndata:\n\n',
+			'data: 0\ndata:\n\n',
+			'data: -2.5\ndata:\n\n',
+			'data: 1e3\ndata:\n\n',
+			'data: 2025-01-01T00:00:00.000Z\ndata:\n\n'
+		])
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([
+			{ data: '1\n' },
+			{ data: '\n1' },
+			{ data: '\n1\n\n' },
+			{ data: '0\n' },
+			{ data: '-2.5\n' },
+			{ data: '1e3\n' },
+			{ data: '2025-01-01T00:00:00.000Z\n' }
+		])
+	})
+
+	it('SSE regression: repeated non-data fields keep their last values', async () => {
+		const response = createChunkedSSEResponse([
+			'event: first\nid: 1\nretry: 100\ndata: hello\nevent: last\nid: 2\nretry: 200\ndata: world\n\n'
+		])
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([
+			{ event: 'last', id: 2, retry: 200, data: 'hello\nworld' }
+		])
+	})
+
+	it('SSE regression: preserves joined multiline JSON as text', async () => {
+		const response = createChunkedSSEResponse([
+			'event: message\ndata: {"message":\ndata: "hello"}\n\n'
+		])
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([
+			{ event: 'message', data: '{"message":\n"hello"}' }
+		])
+	})
+
+	it('preserves typed parsing for single-line SSE data', async () => {
+		const response = createChunkedSSEResponse([
+			'data: {"message":"hello"}\n\ndata: 42\n\n'
+		])
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([
+			{ data: { message: 'hello' } },
+			{ data: 42 }
+		])
+	})
+
 	it('handles SSE event split across chunks (data: broken mid-line)', async () => {
 		const chunks = ['event: message\nda', 'ta: hello world\n\n']
 		const response = createChunkedSSEResponse(chunks)

@@ -121,12 +121,14 @@ const processHeaders = async (
 	}
 }
 
+/** Parse one SSE event block, preserving joined data lines as text. */
 function parseSSEBlock(
 	block: string,
 	options?: { parseDate?: boolean }
 ): Record<string, unknown> | null {
 	const lines = block.split('\n')
 	const result: Record<string, unknown> = {}
+	const dataLines: string[] = []
 
 	for (const line of lines) {
 		if (!line || line.startsWith(':')) continue
@@ -137,8 +139,19 @@ function parseSSEBlock(
 			// Per SSE spec, strip single leading space if present
 			const value = line.slice(colonIndex + 1).replace(/^ /, '')
 			// Preserve empty strings per SSE spec (e.g. "data:" with no value)
+			if (key === 'data') {
+				dataLines.push(value)
+				continue
+			}
 			result[key] = value ? parseStringifiedValue(value, options) : value
 		}
+	}
+	if (dataLines.length) {
+		const data = dataLines.join('\n')
+		result.data =
+			dataLines.length === 1 && data
+				? parseStringifiedValue(data, options)
+				: data
 	}
 
 	return Object.keys(result).length > 0 ? result : null
@@ -179,18 +192,24 @@ export async function* streamResponse(
 
 	if (response.headers.get('Content-Type')?.startsWith('text/event-stream')) {
 		const bufferRef = { value: '' }
+		let skipLF = false
 
 		try {
 			while (true) {
 				const { done, value } = await reader.read()
 				if (done) break
 
-				const chunk =
+				let chunk =
 					typeof value === 'string'
 						? value
 						: decoder.decode(value, { stream: true })
 
-				bufferRef.value += chunk
+				if (chunk) {
+					// Normalize CR now, skipping its LF even across chunk boundaries.
+					if (skipLF && chunk.startsWith('\n')) chunk = chunk.slice(1)
+					skipLF = chunk.endsWith('\r')
+					bufferRef.value += chunk.replace(/\r\n?/g, '\n')
+				}
 
 				yield* extractEvents(bufferRef, options)
 			}
