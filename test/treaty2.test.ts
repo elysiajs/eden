@@ -1144,6 +1144,87 @@ function createChunkedSSEResponse(chunks: Array<string>): Response {
 }
 
 describe('Treaty2 - SSE Chunk Splitting (fast streaming edge cases)', () => {
+	test.each<[string, string[]]>([
+		['CRLF', ['data: one\r\ndata: two\r\n\r\n']],
+		[
+			'CRLF split across chunks',
+			['data: one\r', '', '\ndata: two\r', '\n\r', '\n']
+		],
+		[
+			'CRLF split at every character',
+			'data: one\r\ndata: two\r\n\r\n'.split('')
+		],
+		['mixed LF and CRLF', ['data: one\ndata: two\r\n\n']],
+		['CR', ['data: one\rdata: two\r\r']],
+		['CR split across chunks', ['data: one\r', 'data: two\r', '\r']]
+	])('joins multiline SSE data with %s line endings', async (_, chunks) => {
+		const response = createChunkedSSEResponse(chunks)
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([{ data: 'one\ntwo' }])
+	})
+
+	it('keeps mixed LF and CRLF events separate in one stream', async () => {
+		const response = createChunkedSSEResponse([
+			'data: one\ndata: two\n\ndata: three\r\ndata: four\r\n\r\ndata: five\n\n'
+		])
+		const events: Array<unknown> = []
+		for await (const event of streamResponse(response)) events.push(event)
+
+		expect(events).toEqual([
+			{ data: 'one\ntwo' },
+			{ data: 'three\nfour' },
+			{ data: 'five' }
+		])
+	})
+
+	test.each(['\n', '\r\n', '\r'])(
+		'emits a complete SSE event before EOF with %j line endings',
+		async (newline) => {
+			let sent = false
+			const response = new Response(
+				new ReadableStream<Uint8Array>(
+					{
+						pull(controller) {
+							if (sent) throw new Error('Read past a complete SSE event')
+							sent = true
+							controller.enqueue(
+								new TextEncoder().encode(
+									`data: one${newline}data: two${newline}${newline}`
+								)
+							)
+						}
+					},
+					{ highWaterMark: 0 }
+				),
+				{ headers: { 'Content-Type': 'text/event-stream' } }
+			)
+			const events = streamResponse(response)
+			try {
+				expect(await events.next()).toEqual({
+					done: false,
+					value: { data: 'one\ntwo' }
+				})
+			} finally {
+				await events.return()
+			}
+		}
+	)
+
+	test.each(['\n', '\r\n', '\r'])(
+		'preserves numeric data with a trailing empty line as text with %j line endings',
+		async (newline) => {
+			const response = createChunkedSSEResponse([
+				`data: 1${newline}data:${newline}${newline}`
+			])
+			const events: Array<unknown> = []
+			for await (const event of streamResponse(response)) events.push(event)
+
+			expect(events).toEqual([{ data: '1\n' }])
+		}
+	)
+
 	it('joins multiple data lines in one SSE event', async () => {
 		const response = createChunkedSSEResponse([
 			'event: message\ndata: line 1\ndata: line 2\ndata: line 3\n\n'
