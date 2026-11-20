@@ -1109,6 +1109,82 @@ describe('Treaty2 - Using endpoint URL', () => {
 		expect(data).toBe('application/json!' as any)
 	})
 
+	it('use custom content-type in any casing', async () => {
+		const app = new Elysia().post(
+			'/',
+			({ headers }) => headers['content-type']
+		)
+
+		const client = treaty(app)
+
+		for (const body of [{}, 'a']) {
+			const { data } = await client.post(body, {
+				headers: {
+					'Content-Type': 'application/json!'
+				}
+			})
+
+			expect(data).toBe('application/json!' as any)
+		}
+	})
+
+	it('set single default content-type with fetch headers in any casing', async () => {
+		const app = new Elysia().post(
+			'/',
+			({ headers }) => headers['content-type']
+		)
+
+		const client = treaty(app)
+
+		for (const [body, type] of [
+			[{}, 'application/json'],
+			['a', 'text/plain']
+		] as const) {
+			const { data } = await client.post(body, {
+				fetch: { headers: { 'Content-Type': 'application/json!' } }
+			})
+
+			expect(data).toBe(type as any)
+		}
+	})
+
+	it('set default content-type with Headers or tuple fetch headers', async () => {
+		const app = new Elysia().post(
+			'/',
+			({ headers }) => headers['content-type']
+		)
+
+		const client = treaty(app)
+
+		for (const headers of [
+			new Headers({ 'x-a': 'a' }),
+			[['x-a', 'a']] as [string, string][]
+		])
+			for (const [body, type] of [
+				[{}, 'application/json'],
+				['a', 'text/plain']
+			] as const) {
+				const { data } = await client.post(body, {
+					fetch: { headers }
+				})
+
+				expect(data).toBe(type as any)
+			}
+	})
+
+	it('not mutate reused fetch headers', async () => {
+		const app = new Elysia().post('/', () => 'a')
+
+		const client = treaty(app)
+
+		const options = { fetch: { headers: { 'x-a': 'a' } } }
+
+		await client.post({}, options)
+		await client.post('a', options)
+
+		expect(options.fetch.headers).toEqual({ 'x-a': 'a' })
+	})
+
 	it('stream non-sse response', async () => {
 		const responses = <any[]>[]
 

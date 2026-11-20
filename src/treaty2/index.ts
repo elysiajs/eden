@@ -334,14 +334,16 @@ const createProxy = (
 						headers
 					} satisfies RequestInit
 
+					const requestHeaders = await processHeaders(
+						// For GET and HEAD, options is moved to body (1st param)
+						isGetOrHead ? body?.headers : options?.headers,
+						path,
+						fetchInit
+					)
+
 					fetchInit.headers = {
 						...headers,
-						...(await processHeaders(
-							// For GET and HEAD, options is moved to body (1st param)
-							isGetOrHead ? body?.headers : options?.headers,
-							path,
-							fetchInit
-						))
+						...requestHeaders
 					}
 
 					const fetchOpts =
@@ -388,6 +390,14 @@ const createProxy = (
 
 					// ? Duplicate because end-user might add a body in onRequest
 					if (isGetOrHead) delete fetchInit.body
+
+					// fetch.headers may be the caller's own object, Headers or tuples:
+					// copy into a request-owned, lowercase record before defaulting
+					fetchInit.headers = await processHeaders(
+						fetchInit.headers as Treaty.Config['headers'],
+						path,
+						fetchInit
+					)
 
 					if (hasFile(body)) {
 						const formData = new FormData()
@@ -533,10 +543,10 @@ const createProxy = (
 						}
 					}
 
-					if (options?.headers?.['content-type'])
+					if (requestHeaders['content-type'])
 						// @ts-ignore
 						fetchInit.headers['content-type'] =
-							options?.headers['content-type']
+							requestHeaders['content-type']
 
 					const url = domain + path + q
 
