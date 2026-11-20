@@ -39,6 +39,23 @@ const isFile = (v: any) => {
 	return v instanceof FileList || v instanceof File
 }
 
+const isStream = (v: unknown): v is ReadableStream =>
+	typeof ReadableStream !== 'undefined' && v instanceof ReadableStream
+
+const isBlob = (v: unknown): v is Blob =>
+	typeof Blob !== 'undefined' && v instanceof Blob
+
+const isURLSearchParams = (v: unknown): v is URLSearchParams =>
+	typeof URLSearchParams !== 'undefined' && v instanceof URLSearchParams
+
+// Body that fetch accepts as is, and must not be JSON.stringify-ed
+const isRawBody = (v: unknown) =>
+	isStream(v) ||
+	isBlob(v) ||
+	isURLSearchParams(v) ||
+	v instanceof ArrayBuffer ||
+	ArrayBuffer.isView(v)
+
 // FormData is 1 level deep
 const hasFile = (obj: Record<string, any>) => {
 	if (!obj) return false
@@ -389,7 +406,31 @@ const createProxy = (
 					// ? Duplicate because end-user might add a body in onRequest
 					if (isGetOrHead) delete fetchInit.body
 
-					if (hasFile(body)) {
+					if (isRawBody(body)) {
+						// fetch.headers may be the caller's own object, Headers or tuples:
+						// copy into a request-owned, lowercase record before defaulting
+						const fetchHeaders = await processHeaders(
+							fetchInit.headers as Treaty.Config['headers'],
+							path,
+							fetchInit
+						)
+						fetchInit.headers = fetchHeaders
+
+						// URLSearchParams content-type is set by fetch
+						if (
+							!fetchHeaders['content-type'] &&
+							!isURLSearchParams(body)
+						)
+							fetchHeaders['content-type'] =
+								(isBlob(body) && body.type) ||
+								'application/octet-stream'
+
+						// Required by Node and browsers to send a stream
+						if (isStream(body))
+							(
+								fetchInit as RequestInit & { duplex?: 'half' }
+							).duplex = 'half'
+					} else if (hasFile(body)) {
 						const formData = new FormData()
 
 						const shouldStringify = (value: any): boolean => {

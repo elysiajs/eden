@@ -1452,3 +1452,193 @@ describe('Treaty2 - parseDate configuration', () => {
 		expect(data).toBe('2024-01-15T10:30:00.000Z')
 	})
 })
+
+describe('Treaty2 - Raw body', () => {
+	const rawApp = new Elysia().post(
+		'/raw',
+		async ({ request }) => ({
+			type: request.headers.get('content-type'),
+			body: [...new Uint8Array(await request.arrayBuffer())]
+		}),
+		{ parse: 'none' }
+	)
+
+	const client = treaty(rawApp)
+
+	const bytes = [0, 1, 2, 253, 254, 255]
+
+	const createStream = (chunks: Uint8Array[]) =>
+		new ReadableStream<Uint8Array>({
+			start(controller) {
+				for (const chunk of chunks) controller.enqueue(chunk)
+				controller.close()
+			}
+		})
+
+	it('send ReadableStream as is', async () => {
+		const { data } = await client.raw.post(
+			createStream([new Uint8Array(bytes)])
+		)
+
+		expect(data).toEqual({
+			type: 'application/octet-stream',
+			body: bytes
+		})
+	})
+
+	it('send Blob as is with its type', async () => {
+		const { data } = await client.raw.post(
+			new Blob([new Uint8Array(bytes)], { type: 'image/png' })
+		)
+
+		expect(data).toEqual({ type: 'image/png', body: bytes })
+	})
+
+	it('send untyped Blob as octet-stream', async () => {
+		const { data } = await client.raw.post(
+			new Blob([new Uint8Array(bytes)])
+		)
+
+		expect(data).toEqual({
+			type: 'application/octet-stream',
+			body: bytes
+		})
+	})
+
+	it('send File as is with its type', async () => {
+		const { data } = await client.raw.post(
+			new File([new Uint8Array(bytes)], 'a.pdf', {
+				type: 'application/pdf'
+			})
+		)
+
+		expect(data).toEqual({ type: 'application/pdf', body: bytes })
+	})
+
+	it('send ArrayBuffer as is', async () => {
+		const { data } = await client.raw.post(new Uint8Array(bytes).buffer)
+
+		expect(data).toEqual({
+			type: 'application/octet-stream',
+			body: bytes
+		})
+	})
+
+	it('send typed array as is', async () => {
+		const { data } = await client.raw.post(new Uint8Array(bytes))
+
+		expect(data).toEqual({
+			type: 'application/octet-stream',
+			body: bytes
+		})
+	})
+
+	it('send DataView as is', async () => {
+		const { data } = await client.raw.post(
+			new DataView(new Uint8Array(bytes).buffer)
+		)
+
+		expect(data).toEqual({
+			type: 'application/octet-stream',
+			body: bytes
+		})
+	})
+
+	it('send URLSearchParams as form', async () => {
+		const { data } = await client.raw.post(
+			new URLSearchParams({ a: '1', b: 'c' })
+		)
+
+		expect(data).toEqual({
+			type: 'application/x-www-form-urlencoded;charset=UTF-8',
+			body: [...new TextEncoder().encode('a=1&b=c')]
+		})
+	})
+
+	it('keep content-type given in request headers', async () => {
+		const { data } = await client.raw.post(
+			createStream([new Uint8Array(bytes)]),
+			{ headers: { 'content-type': 'application/x-ndjson' } }
+		)
+
+		expect(data).toEqual({ type: 'application/x-ndjson', body: bytes })
+	})
+
+	it('keep content-type given in config headers', async () => {
+		const client = treaty(rawApp, {
+			headers: { 'Content-Type': 'application/x-ndjson' }
+		})
+
+		const { data } = await client.raw.post(new Uint8Array(bytes))
+
+		expect(data).toEqual({ type: 'application/x-ndjson', body: bytes })
+	})
+
+	it('keep content-type given in fetch headers in any casing', async () => {
+		const { data } = await client.raw.post(new Uint8Array(bytes), {
+			fetch: { headers: { 'Content-Type': 'application/x-ndjson' } }
+		})
+
+		expect(data).toEqual({ type: 'application/x-ndjson', body: bytes })
+	})
+
+	it('set default content-type with Headers or tuple fetch headers', async () => {
+		for (const headers of [
+			new Headers({ 'x-a': 'a' }),
+			[['x-a', 'a']] as [string, string][]
+		]) {
+			const { data } = await client.raw.post(new Uint8Array(bytes), {
+				fetch: { headers }
+			})
+
+			expect(data).toEqual({
+				type: 'application/octet-stream',
+				body: bytes
+			})
+		}
+	})
+
+	it('not mutate reused fetch headers', async () => {
+		const options = { fetch: { headers: { 'x-a': 'a' } } }
+
+		await client.raw.post(
+			new Blob([new Uint8Array(bytes)], { type: 'image/png' }),
+			options
+		)
+
+		const { data } = await client.raw.post(
+			new Blob([new Uint8Array(bytes)], { type: 'image/jpeg' }),
+			options
+		)
+
+		expect(options.fetch.headers).toEqual({ 'x-a': 'a' })
+		expect(data).toEqual({ type: 'image/jpeg', body: bytes })
+	})
+
+	it('send plain object as JSON', async () => {
+		const { data } = await client.raw.post({ a: 'a' })
+
+		expect(data).toEqual({
+			type: 'application/json',
+			body: [...new TextEncoder().encode('{"a":"a"}')]
+		})
+	})
+
+	it('send every chunk of a stream over network', async () => {
+		const server = rawApp.listen(0)
+		const client = treaty<typeof rawApp>(
+			`http://localhost:${server.server!.port}`
+		)
+
+		const chunk = new Uint8Array(64 * 1024).map((_, i) => i % 256)
+		const chunks = Array.from({ length: 16 }, () => chunk)
+
+		const { data } = await client.raw.post(createStream(chunks))
+
+		server.stop()
+
+		expect(data?.type).toBe('application/octet-stream')
+		expect(data?.body.length).toBe(chunk.length * chunks.length)
+		expect(data?.body).toEqual(chunks.flatMap((chunk) => [...chunk]))
+	})
+})
