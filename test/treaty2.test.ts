@@ -1574,6 +1574,47 @@ describe('Treaty2 - Raw body', () => {
 		expect(data).toEqual({ type: 'application/x-ndjson', body: bytes })
 	})
 
+	it('keep content-type given in fetch headers in any casing', async () => {
+		const { data } = await client.raw.post(new Uint8Array(bytes), {
+			fetch: { headers: { 'Content-Type': 'application/x-ndjson' } }
+		})
+
+		expect(data).toEqual({ type: 'application/x-ndjson', body: bytes })
+	})
+
+	it('set default content-type with Headers or tuple fetch headers', async () => {
+		for (const headers of [
+			new Headers({ 'x-a': 'a' }),
+			[['x-a', 'a']] as [string, string][]
+		]) {
+			const { data } = await client.raw.post(new Uint8Array(bytes), {
+				fetch: { headers }
+			})
+
+			expect(data).toEqual({
+				type: 'application/octet-stream',
+				body: bytes
+			})
+		}
+	})
+
+	it('not mutate reused fetch headers', async () => {
+		const options = { fetch: { headers: { 'x-a': 'a' } } }
+
+		await client.raw.post(
+			new Blob([new Uint8Array(bytes)], { type: 'image/png' }),
+			options
+		)
+
+		const { data } = await client.raw.post(
+			new Blob([new Uint8Array(bytes)], { type: 'image/jpeg' }),
+			options
+		)
+
+		expect(options.fetch.headers).toEqual({ 'x-a': 'a' })
+		expect(data).toEqual({ type: 'image/jpeg', body: bytes })
+	})
+
 	it('send plain object as JSON', async () => {
 		const { data } = await client.raw.post({ a: 'a' })
 

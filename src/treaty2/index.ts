@@ -407,10 +407,14 @@ const createProxy = (
 					if (isGetOrHead) delete fetchInit.body
 
 					if (isRawBody(body)) {
-						const fetchHeaders = fetchInit.headers as Record<
-							string,
-							string
-						>
+						// fetch.headers may be the caller's own object, Headers or tuples:
+						// copy into a request-owned, lowercase record before defaulting
+						const fetchHeaders = await processHeaders(
+							fetchInit.headers as Treaty.Config['headers'],
+							path,
+							fetchInit
+						)
+						fetchInit.headers = fetchHeaders
 
 						// URLSearchParams content-type is set by fetch
 						if (
